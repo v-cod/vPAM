@@ -5,13 +5,8 @@ init()
 	block = [];
 
 	if (map == "mp_stalingrad") {
-		block[0].min = (0, 0, 0);
-		block[0].max = (1, 1, 1);
-	}
-
-	if ("A" != "a") {
-		iPrintLnBold("Watch out, string comparison with capitals!");
-		logPrint("Watch out, string comparison with capitals!"\n);
+		block[0]["min"] = (2048, -216, 168);
+		block[0]["max"] = (2464,   -8, 292);
 	}
 
 	level.wrs_fence_blocks = block;
@@ -23,24 +18,45 @@ monitor()
 		return;
 	}
 
-	while (1) {
+	while (self.sessionstate == "playing") {
 		for (i = 0; i < level.wrs_fence_blocks.size; i++) {
-			iPrintLnBold(level.wrs_fence_blocks[i].min);
-			iPrintLnBold(self.origin);
-			iPrintLnBold(level.wrs_fence_blocks[i].max);
-			// Check if origin is located within coordinates of the block points
-			result = self.origin - level.wrs_fence_blocks[i].min;
-			if (result[0] < 0 || result[1] < 0 || result[2] < 0) {
+			if (!(self _is_in_block(level.wrs_fence_blocks[i]))) {
 				continue;
 			}
-
-			result = level.wrs_fence_blocks[i].max - self.origin;
-			if (result[0] < 0 || result[1] < 0 || result[2] < 0) {
-				continue;
-			}
-
-			self iPrintLnBold("im gonna to kik u");
+			
+			self _eliminate(level.wrs_fence_blocks[i]);
 		}
-		wait 5;
+		wait 1;
 	}
+}
+
+_eliminate(block)
+{
+	self iPrintLnBold("This spot is ^1not ^7allowed.");
+	i = 5;
+	while (self _is_in_block(block)) {
+		self iPrintLn(i);
+		i--;
+		wait 1;
+		if (i <= 0) {
+			self suicide();
+			return;
+		}
+	}
+}
+
+// Check if self.origin is located within coordinates of the block points
+_is_in_block(block)
+{
+	result = self.origin - block["min"];
+	if (result[0] < 0 || result[1] < 0 || result[2] < 0) {
+		return false;
+	}
+
+	result = block["max"] - self.origin;
+	if (result[0] < 0 || result[1] < 0 || result[2] < 0) {
+		return false;
+	}
+
+	return true;
 }

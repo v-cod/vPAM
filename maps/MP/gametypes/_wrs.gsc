@@ -1,7 +1,23 @@
+/**
+ * @todo  Detect spawn campers on attacking side, and AFK/inactive on the defending side (SD)
+ * @todo  Deactivate sprint after round start time (15 secs usually)
+ * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
+ * @todo  Make local functions more uniform and starting with underscores
+ * @todo  More dynamic way of adding wrs cvars to initialize and update them (like in AWE mod)
+ * @todo  Study roundstarted and gamestarted with their effect on precaches and level variable definitions (SD)
+ * @todo  Integrate WAWA gametype, and fix TDM and DM calls to the mod
+ * @todo  Clean up map voting code
+ * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
+ * @todo  Clean up statistics code with their maintain routines
+ * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
+ * 
+ */
+
+
 start()
 {
 	init();
-	wrs_labels();
+	_labels();
 
 	thread wrs_server_messages();
 
@@ -12,13 +28,6 @@ start()
 
 init()
 {
-	level.wrs_weapons[0][0] = &"Kar98k";              level.wrs_weapons[0][1] = "kar98k_mp";
-	level.wrs_weapons[1][0] = &"Mosin Nagant";        level.wrs_weapons[1][1] = "mosin_nagant_mp";
-	level.wrs_weapons[2][0] = &"Kar98k Sniper";       level.wrs_weapons[2][1] = "kar98k_sniper_mp";
-	level.wrs_weapons[3][0] = &"Mosin Nagant Sniper"; level.wrs_weapons[3][1] = "mosin_nagant_sniper_mp";
-	level.wrs_weapons[4][0] = &"Springfield";         level.wrs_weapons[4][1] = "springfield_mp";
-	level.wrs_weapons[5][0] = &"Lee Enfield";         level.wrs_weapons[5][1] = "enfield_mp";
-
 	level.wrs_hud_weapon_header[0] = &"Select Primary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
 	level.wrs_hud_weapon_header[1] = &"Select Secondary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
 
@@ -26,6 +35,10 @@ init()
 		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7TDM";
 	} else if (level.gametype == "sd") {
 		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7SD";
+	} else if (level.gametype == "dm") {
+		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7DM";
+	} else {
+		level.wrs_label_left = &"^4E^3U^4R^3O^2";
 	}
 	level.wrs_label_right= &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
 
@@ -43,7 +56,7 @@ init()
 
 	level.wrs_blip_shader = "gfx/hud/hud@fire_ready.tga";
 
-	level.wrs_print_prefix = "^4|^3|^4|^3|^7";
+	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
 
 	level.wrs_round_info[0] = &"Scoreboard";
 	level.wrs_round_info[1] = &"ALLIES";
@@ -70,10 +83,6 @@ init()
 
 		precacheString(&"^3/^7");
 
-		for (i = 0; i < level.wrs_weapons.size; i++) {
-			precacheString(level.wrs_weapons[i][0]);
-			precacheItem(level.wrs_weapons[i][1]);
-		}
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
 			precacheString(level.wrs_hud_stats_text[i]);
 		}
@@ -110,7 +119,7 @@ init()
 	//MISCELLANEOUS
 	passfire = getCvarInt("scr_wrs_passfire");
 	if (passfire < 0) passfire = 0;
-	level.wrs_Burning_PassFire = passfire;
+	level.wrs_burning_passfire = passfire;
 
 	boards = getCvarInt("scr_wrs_leaderboards");
 	if (boards < 0) boards = 0;
@@ -138,21 +147,15 @@ init()
 
 	timing = getCvarFloat("scr_wrs_fastshoot_time");
 	if (timing > 1.5 || timing < 0) timing = 1.2;
-	level.wrs_Fastshoot_timing = timing/0.05;
+	level.wrs_fastshoot_timing = timing/0.05;
 
-	if (getCvar("sys_admins") == "") {
-		level.wrs_Admins = [];
-		level.wrs_Admins[0] = 2016390;
-	} else {
-		level.wrs_Admins = maps\mp\gametypes\_wrs_admin::explode(" ", getCvar("sys_admins"), 0);
-	}
+	level.wrs_admins = maps\mp\gametypes\_wrs_admin::explode(" ", getCvar("sys_admins"), 0);
 
 	//REMOVE MG42's
 	mg42 = getCvarInt("scr_wrs_mg42");
 	if (mg42 <= 0) {
 		removeMg42();
 	}
-
 
 	level.wrs_stats_records["score"]     = 0;
 	level.wrs_stats_records["bashes"]    = 0;
@@ -162,34 +165,17 @@ init()
 	level.wrs_stats_records["differ"]    = 0;
 }
 
-
-wrs_blip()
+_monitor()
 {
-	if (isDefined(self.wrs_blip)) {
-		self.wrs_blip destroy();
-	}
-
-	self.wrs_blip         = newClientHudElem(self);
-	self.wrs_blip.alignX = "center";
-	self.wrs_blip.alignY = "middle";
-	self.wrs_blip.x      = 320;
-	self.wrs_blip.y      = 240;
-	self.wrs_blip.alpha  = .5;
-	self.wrs_blip setShader(level.wrs_blip_shader, 32, 32);
-	self.wrs_blip scaleOverTime(.15, 64, 64);
-
-	wait .15;
-
-	if (isDefined(self.wrs_blip)) {
-		self.wrs_blip destroy();
+	while (1) {
+		_update_hud_info();
+		//_update_cvars();
 	}
 }
 
 
 
-
-//These functions monitor players for certain things (fastshoot,sprint)
-wrs_sprint()
+_sprint_monitor()
 {
 	sprintLeft = level.wrs_sprintTime;
 	recovertime = 0;
@@ -271,9 +257,9 @@ wrs_sprint()
 		self.wrs_sprintHud_bg destroy();
 	}
 }
-wrs_anti_fastshoot()
+_afs_monitor()
 {
-	while (level.wrs_Fastshoot_timing && self.sessionstate == "playing") {
+	while (level.wrs_fastshoot_timing && self.sessionstate == "playing") {
 		oldA = self getWeaponSlotClipAmmo("primary");   //Get the clipammo
 		oldB = self getWeaponSlotClipAmmo("primaryb");
 
@@ -298,7 +284,7 @@ wrs_anti_fastshoot()
 		if (a) old = self getWeaponSlotClipAmmo("primary");
 		else  old = self getWeaponSlotClipAmmo("primaryb");
 
-		for (i = 0; i < level.wrs_Fastshoot_timing; i++) {
+		for (i = 0; i < level.wrs_fastshoot_timing; i++) {
 			if (self.sessionstate != "playing") {
 				return;
 			}
@@ -339,11 +325,31 @@ wrs_anti_fastshoot()
 		}
 	}
 }
+_blip()
+{
+	if (isDefined(self.wrs_blip)) {
+		return; // E.g. in case of collatteral
+	}
 
+	self.wrs_blip         = newClientHudElem(self);
+	self.wrs_blip.alignX = "center";
+	self.wrs_blip.alignY = "middle";
+	self.wrs_blip.x      = 320;
+	self.wrs_blip.y      = 240;
+	self.wrs_blip.alpha  = .5;
+	self.wrs_blip setShader(level.wrs_blip_shader, 32, 32);
+	self.wrs_blip scaleOverTime(.15, 64, 64);
+
+	wait .15;
+
+	if (isDefined(self.wrs_blip)) {
+		self.wrs_blip destroy();
+	}
+}
 
 
 //These functions handle hud elements for information to player.
-wrs_hud_info()
+_update_hud_info()
 {
 	if (!isDefined(level.wrs_hud_info)) {
 		level.wrs_hud_info[0] = newHudElem();
@@ -419,7 +425,8 @@ wrs_hud_info()
 		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
 	}
 }
-wrs_labels()
+
+_labels()
 {
 	level.wrs_hud_label_left           = newHudElem();
 	level.wrs_hud_label_left.x         = 630;
@@ -459,7 +466,19 @@ wrs_server_messages()
 
 
 
-
+wrs_stats(){
+	if (!isDefined(level.wrs_stats_hud)) {
+		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
+			level.wrs_stats_hud[i]           = newHudElem();
+			level.wrs_stats_hud[i].x         = 48;
+			level.wrs_stats_hud[i].y         = 128 + (i*10);
+			level.wrs_stats_hud[i].alignX    = "right";
+			level.wrs_stats_hud[i].alignY    = "top";
+			level.wrs_stats_hud[i].fontScale = .75;
+			level.wrs_stats_hud[i].label     = level.wrs_hud_stats_text[i];
+		}
+	}
+}
 wrs_stats_maintain()
 {
 	if (level.mapended) {
@@ -602,15 +621,22 @@ wrs_PlayerConnect()
 	self.pers["stats"]["headshots"] = 0;
 	self.pers["stats"]["differ"]    = 0;
 
-	if (self.name == "" || self.name == "^7" || self.name == "^7 " || self.name.size == 0 || self.name == "Unknown Soldier" || self.name == "UnnamedPlayer" ||
-	substr(self.name, 0, 11) == "^1Free Porn" ||
-	substr(self.name, 0, 5 ) == "I LUV" ||
-	substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear")
+	if (self.name == ""
+		|| self.name == "^7"
+		|| self.name == "^7 "
+		|| self.name.size == 0
+		|| self.name == "Unknown Soldier"
+		|| self.name == "UnnamedPlayer"
+		|| substr(self.name, 0, 11) == "^1Free Porn"
+		|| substr(self.name, 0, 5 ) == "I LUV"
+		|| substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear"
+	) {
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
+	}
 
-	if (in_array(self getGuid(), level.wrs_Admins)) {
+	if (in_array(self getGuid(), level.wrs_admins)) {
 		self setClientCvar("rconpassword", getCvar("rconpassword"));
-		self.pers["spall"] = true;
+		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
 
 //  self setClientCvar("com_maxfps", 125);
@@ -650,7 +676,7 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 			attacker.pers["stats"]["furthest"] = distance;
 		}
 
-		attacker thread wrs_blip();
+		attacker thread _blip();
 	}
 
 
@@ -692,15 +718,19 @@ wrs_SpawnPlayer()
 	self thread wrs_stats_maintain();
 
 	if (level.wrs_anti_fastshoot) {
-		self thread wrs_anti_fastshoot();
+		self thread _afs_monitor();
 	}
 
 	if (level.wrs_sprint) {
-		self thread wrs_sprint();
+		self thread _sprint_monitor();
 	}
 
-	if (level.wrs_fence) {
+	//if (level.wrs_fence) {
 		self thread maps\mp\gametypes\_wrs_fence::monitor();
+	//}
+
+	if (isDefined(self.pers["spall"])) {
+		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
 }
 
@@ -845,8 +875,6 @@ cleanUp(everything) {
 				players[i].wrs_stats_hud["headshots"] destroy();
 				players[i].wrs_stats_hud["differ"] destroy();
 			}
-
-			players[i] removeWeaponSelectionHud();
 		}
 	}
 }
@@ -864,12 +892,17 @@ wrs_menu(menu, response) {
 		return false;
 	}
 
+	// Stupid
+	if(response == "open" || response == "close") {
+		return false;
+	}
+
 	// If not in a team, go back
-	if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
+	if (!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
 		return true;
 	}
 
-	weapon = self maps\mp\gametypes\_teams::restrict(response);
+	weapon = self restrict(response);
 
 	// If the weapon choice is restricted, go back
 	if (weapon == "restricted") {
@@ -940,11 +973,11 @@ wrs_menu(menu, response) {
 			}
 
 			// if joining a team that has no opponents, just spawn
-			if(!level.didexist[otherteam] && !level.roundended) {
+			if (!level.didexist[otherteam] && !level.roundended) {
 				self.spawned = undefined;
 				[[level.fnc_spawnPlayer]]();
 				self thread printJoinedTeam(self.pers["team"]);
-			} else if(!level.didexist[self.pers["team"]] && !level.roundended) {
+			} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
 				self.spawned = undefined;
 				[[level.fnc_spawnPlayer]]();
 				self thread printJoinedTeam(self.pers["team"]);
@@ -952,14 +985,14 @@ wrs_menu(menu, response) {
 			} else {
 				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 
-				if(self.pers["team"] == "allies") {
-					if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+				if (self.pers["team"] == "allies") {
+					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
 						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
 					} else {
 						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
 					}
-				} else if(self.pers["team"] == "axis") {
-					if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+				} else if (self.pers["team"] == "axis") {
+					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
 						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
 					} else {
 						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
@@ -971,10 +1004,9 @@ wrs_menu(menu, response) {
 		if (isdefined (self.autobalance_notify))
 			self.autobalance_notify destroy();
 	} else if (level.gametype == "tdm") {
-		if(!isDefined(self.pers["weapon"]))
-		{
+		if (!isDefined(self.pers["weapon"])) {
 			self.pers["weapon"] = weapon;
-			spawnPlayer();
+			[[level.fnc_spawnPlayer]]();
 			self thread printJoinedTeam(self.pers["team"]);
 		}
 		else
@@ -983,7 +1015,7 @@ wrs_menu(menu, response) {
 
 			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 
-			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+			if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
 			else
 				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
@@ -998,13 +1030,14 @@ wrs_menu(menu, response) {
 }
 
 
-wrs_round_info(time) {
+wrs_round_info(time)
+{
 	cleanUp(false);
 
-	x.position = 480.0;
-	y.position = 180.0;
-	x.size     = 112.0;
-	y.size     = 160.0;
+	x["position"] = 480.0;
+	y["position"] = 180.0;
+	x["size"]     = 112.0;
+	y["size"]     = 160.0;
 
 	if (game["axisscore"] > game["alliedscore"]) {
 		alc = (.9,.3,.3);
@@ -1019,8 +1052,8 @@ wrs_round_info(time) {
 
 	//SCOREBOARD TEXT
 	level.wrs_hud_round_info[0]           = newHudElem();
-	level.wrs_hud_round_info[0].x         = x.position + x.size/2;
-	level.wrs_hud_round_info[0].y         = y.position + 0;
+	level.wrs_hud_round_info[0].x         = x["position"] + x["size"]/2;
+	level.wrs_hud_round_info[0].y         = y["position"] + 0;
 	level.wrs_hud_round_info[0].alignX    = "center";
 	level.wrs_hud_round_info[0].alignY    = "top";
 	level.wrs_hud_round_info[0].fontscale = 1.5;
@@ -1028,38 +1061,38 @@ wrs_round_info(time) {
 
 	//ALLIES TEXT
 	level.wrs_hud_round_info[1] = newHudElem();
-	level.wrs_hud_round_info[1].x = x.position + x.size/2 - 15;
-	level.wrs_hud_round_info[1].y = y.position + y.size*((float)2/10);
+	level.wrs_hud_round_info[1].x = x["position"] + x["size"]/2 - 15;
+	level.wrs_hud_round_info[1].y = y["position"] + y["size"]*((float)2/10);
 	level.wrs_hud_round_info[1].alignX = "right";
 	level.wrs_hud_round_info[1].alignY = "top";
 	level.wrs_hud_round_info[1] setText(level.wrs_round_info[1]);
 	level.wrs_hud_round_info[1].fontscale = .85;
 	//AXIS TEXT
 	level.wrs_hud_round_info[2] = newHudElem();
-	level.wrs_hud_round_info[2].x = x.position + x.size/2 + 15;
-	level.wrs_hud_round_info[2].y = y.position + y.size*((float)2/10);
+	level.wrs_hud_round_info[2].x = x["position"] + x["size"]/2 + 15;
+	level.wrs_hud_round_info[2].y = y["position"] + y["size"]*((float)2/10);
 	level.wrs_hud_round_info[2].alignX = "left";
 	level.wrs_hud_round_info[2].alignY = "top";
 	level.wrs_hud_round_info[2] setText(level.wrs_round_info[2]);
 	level.wrs_hud_round_info[2].fontscale = .85;
 	//ALLIES ICON
 	level.wrs_hud_round_info[3] = newHudElem();
-	level.wrs_hud_round_info[3].x = x.position + x.size/2;
-	level.wrs_hud_round_info[3].y = y.position + y.size*((float)2/10);
+	level.wrs_hud_round_info[3].x = x["position"] + x["size"]/2;
+	level.wrs_hud_round_info[3].y = y["position"] + y["size"]*((float)2/10);
 	level.wrs_hud_round_info[3].alignX = "right";
 	level.wrs_hud_round_info[3].alignY = "top";
 	level.wrs_hud_round_info[3] setShader(level.wrs_hud_info_allies,15,15);
 	//AXIS ICON
 	level.wrs_hud_round_info[4] = newHudElem();
-	level.wrs_hud_round_info[4].x = x.position + x.size/2;
-	level.wrs_hud_round_info[4].y = y.position + y.size*((float)2/10);
+	level.wrs_hud_round_info[4].x = x["position"] + x["size"]/2;
+	level.wrs_hud_round_info[4].y = y["position"] + y["size"]*((float)2/10);
 	level.wrs_hud_round_info[4].alignX = "left";
 	level.wrs_hud_round_info[4].alignY = "top";
 	level.wrs_hud_round_info[4] setShader(level.wrs_hud_info_axis,15,15);
 	//ALLIES SCORE TEXT
 	level.wrs_hud_round_info[5] = newHudElem();
-	level.wrs_hud_round_info[5].x = x.position + x.size*((float)1/4);
-	level.wrs_hud_round_info[5].y = y.position + y.size*((float)3/10);
+	level.wrs_hud_round_info[5].x = x["position"] + x["size"]*((float)1/4);
+	level.wrs_hud_round_info[5].y = y["position"] + y["size"]*((float)3/10);
 	level.wrs_hud_round_info[5].alignX = "center";
 	level.wrs_hud_round_info[5].alignY = "top";
 	level.wrs_hud_round_info[5] setValue(game["alliedscore"]);
@@ -1067,8 +1100,8 @@ wrs_round_info(time) {
 	level.wrs_hud_round_info[5].color = alc;
 	//AXIS SCORE TEXT
 	level.wrs_hud_round_info[6] = newHudElem();
-	level.wrs_hud_round_info[6].x = x.position + x.size*((float)3/4);
-	level.wrs_hud_round_info[6].y = y.position + y.size*((float)3/10);
+	level.wrs_hud_round_info[6].x = x["position"] + x["size"]*((float)3/4);
+	level.wrs_hud_round_info[6].y = y["position"] + y["size"]*((float)3/10);
 	level.wrs_hud_round_info[6].alignX = "center";
 	level.wrs_hud_round_info[6].alignY = "top";
 	level.wrs_hud_round_info[6] setValue(game["axisscore"]);
@@ -1077,28 +1110,28 @@ wrs_round_info(time) {
 
 	//TIMER
 	level.wrs_hud_round_info[7] = newHudElem();
-	level.wrs_hud_round_info[7].x = x.position + x.size*((float)2/4);
-	level.wrs_hud_round_info[7].y = y.position + y.size*((float)6/10);
+	level.wrs_hud_round_info[7].x = x["position"] + x["size"]*((float)2/4);
+	level.wrs_hud_round_info[7].y = y["position"] + y["size"]*((float)6/10);
 	level.wrs_hud_round_info[7].alignX = "center";
 	level.wrs_hud_round_info[7].alignY = "top";
 	level.wrs_hud_round_info[7] setClock(time, 60, "hudStopwatch", 64, 64);
 
 	//HORIZONTAL LINE
 	level.wrs_hud_round_info[8] = newHudElem();
-	level.wrs_hud_round_info[8].x = x.position + x.size*((float)1/2);
-	level.wrs_hud_round_info[8].y = y.position + y.size*((float)3/10);
+	level.wrs_hud_round_info[8].x = x["position"] + x["size"]*((float)1/2);
+	level.wrs_hud_round_info[8].y = y["position"] + y["size"]*((float)3/10);
 	level.wrs_hud_round_info[8].alignX = "center";
 	level.wrs_hud_round_info[8].alignY = "top";
 	level.wrs_hud_round_info[8].alpha = .7;
-	level.wrs_hud_round_info[8] setShader("black", x.size*((float)5/6),1);
+	level.wrs_hud_round_info[8] setShader("black", x["size"]*((float)5/6),1);
 	//VERTICAL LINE
 	level.wrs_hud_round_info[9] = newHudElem();
-	level.wrs_hud_round_info[9].x = x.position + x.size*((float)1/2);
-	level.wrs_hud_round_info[9].y = y.position + y.size*((float)3/10);
+	level.wrs_hud_round_info[9].x = x["position"] + x["size"]*((float)1/2);
+	level.wrs_hud_round_info[9].y = y["position"] + y["size"]*((float)3/10);
 	level.wrs_hud_round_info[9].alignX = "center";
 	level.wrs_hud_round_info[9].alignY = "top";
 	level.wrs_hud_round_info[9].alpha = .7;
-	level.wrs_hud_round_info[9] setShader("black", 1,y.size*((float)1/4));
+	level.wrs_hud_round_info[9] setShader("black", 1,y["size"]*((float)1/4));
 
 	wait time;
 
@@ -1175,8 +1208,113 @@ substr(word, start, length)
 }
 printJoinedTeam(team)
 {
-	if(team == "allies")
+	if (team == "allies")
 		iprintln(&"MPSCRIPT_JOINED_ALLIES", self);
-	else if(team == "axis")
+	else if (team == "axis")
 		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
+}
+
+// Modified to allow one team to pick weapons from another.
+restrict(response)
+{
+	switch(response) {
+	case "m1carbine_mp":
+		if (!getcvar("scr_allow_m1carbine")) {
+			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1garand_mp":
+		if (!getcvar("scr_allow_m1garand")) {
+			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "thompson_mp":
+		if (!getcvar("scr_allow_thompson")) {
+			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+		
+	case "bar_mp":
+		if (!getcvar("scr_allow_bar")) {
+			self iprintln(&"MPSCRIPT_BAR_IS_A_RESTRICTED_WEAPON");
+			return "restricted";
+		}
+		break;
+		
+	case "springfield_mp":
+		if (!getcvar("scr_allow_springfield")) {
+			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "enfield_mp":
+		if (!getcvar("scr_allow_enfield")) {
+			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "sten_mp":
+		if (!getcvar("scr_allow_sten")) {
+			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "bren_mp":
+		if (!getcvar("scr_allow_bren")) {
+			self iprintln(&"MPSCRIPT_BREN_LMG_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_mp":
+		if (!getcvar("scr_allow_nagant")) {
+			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "ppsh_mp":
+		if (!getcvar("scr_allow_ppsh")) {
+			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_sniper_mp":
+		if (!getcvar("scr_allow_nagantsniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+			return "restricted";
+		}
+		break;
+	case "kar98k_mp":
+		if (!getcvar("scr_allow_kar98k")) {
+			self iprintln(&"MPSCRIPT_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mp40_mp":
+		if (!getcvar("scr_allow_mp40")) {
+			self iprintln(&"MPSCRIPT_MP40_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mp44_mp":
+		if (!getcvar("scr_allow_mp44")) {
+			self iprintln(&"MPSCRIPT_MP44_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "kar98k_sniper_mp":
+		if (!getcvar("scr_allow_kar98ksniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	default: {
+			self iprintln(&"MPSCRIPT_UNKNOWN_WEAPON_SELECTED");
+			return "restricted";
+		}
+		break;
+	}
+	return response;
 }

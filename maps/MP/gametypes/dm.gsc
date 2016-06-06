@@ -1,18 +1,18 @@
 /*
-	Team Deathmatch
-	Objective: 	Score points for your team by eliminating players on the opposing team
-	Map ends:	When one team reaches the score limit, or time limit is reached
-	Respawning:	No wait / Near teammates
+	Deathmatch
+	Objective: 	Score points by eliminating other players
+	Map ends:	When one player reaches the score limit, or time limit is reached
+	Respawning:	No wait / Away from other players
 
 	Level requirements
 	------------------
 		Spawnpoints:
-			classname		mp_teamdeathmatch_spawn
-			All players spawn from these. The spawnpoint chosen is dependent on the current locations of teammates and enemies
-			at the time of spawn. Players generally spawn behind their teammates relative to the direction of enemies.
+			classname		mp_deathmatch_spawn
+			All players spawn from these. The spawnpoint chosen is dependent on the current locations of enemies at the time of spawn.
+			Players generally spawn away from enemies.
 
 		Spectator Spawnpoints:
-			classname		mp_teamdeathmatch_intermission
+			classname		mp_deathmatch_intermission
 			Spectators spawn from these and intermission is viewed from these positions.
 			Atleast one is required, any more and they are randomly chosen between.
 
@@ -21,11 +21,11 @@
 		Team Definitions:
 			game["allies"] = "american";
 			game["axis"] = "german";
-			This sets the nationalities of the teams. Allies can be american, british, or russian. Axis can be german.
-
+			Because Deathmatch doesn't have teams with regard to gameplay or scoring, this effectively sets the available weapons.
+	
 		If using minefields or exploders:
 			maps\mp\_load::main();
-
+		
 	Optional level script settings
 	------------------------------
 		Soldier Type and Variation:
@@ -34,17 +34,17 @@
 			game["german_soldiertype"] = "wehrmacht";
 			game["german_soldiervariation"] = "normal";
 			This sets what models are used for each nationality on a particular map.
-
+			
 			Valid settings:
 				american_soldiertype		airborne
 				american_soldiervariation	normal, winter
-
+				
 				british_soldiertype		airborne, commando
 				british_soldiervariation	normal, winter
-
+				
 				russian_soldiertype		conscript, veteran
 				russian_soldiervariation	normal, winter
-
+				
 				german_soldiertype		waffen, wehrmacht, fallschirmjagercamo, fallschirmjagergrey, kriegsmarine
 				german_soldiervariation		normal, winter
 
@@ -56,20 +56,20 @@
 			Use the outsideMapEnts console command to keep models such as trees from vanishing when noclipping outside of the map.
 */
 
-/*QUAKED mp_teamdeathmatch_spawn (0.0 0.0 1.0) (-16 -16 0) (16 16 72)
-Players spawn away from enemies and near their team at one of these positions.
+/*QUAKED mp_deathmatch_spawn (1.0 0.5 0.0) (-16 -16 0) (16 16 72)
+Players spawn away from enemies at one of these positions.
 */
 
-/*QUAKED mp_teamdeathmatch_intermission (1.0 0.0 1.0) (-16 -16 -16) (16 16 16)
+/*QUAKED mp_deathmatch_intermission (1.0 0.0 1.0) (-16 -16 -16) (16 16 16)
 Intermission is randomly viewed from one of these positions.
 Spectators spawn randomly at one of these positions.
 */
 
 main()
 {
-	spawnpointname = "mp_teamdeathmatch_spawn";
+	spawnpointname = "mp_deathmatch_spawn";
 	spawnpoints = getentarray(spawnpointname, "classname");
-
+	
 	if(!spawnpoints.size)
 	{
 		maps\mp\gametypes\_callbacksetup::AbortLevel();
@@ -84,69 +84,54 @@ main()
 	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
 	level.callbackPlayerDamage = ::Callback_PlayerDamage;
 	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-	// WRS {
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
 	level.wrs = getCvarInt("scr_wrs");
 	if(level.wrs){
-		level.fnc_spawnPlayer       = ::spawnPlayer;
-		level.fnc_spawnSpectator    = ::spawnSpectator;
+		level.fnc_spawnPlayer = ::spawnPlayer;
+		level.fnc_spawnSpectator = ::spawnSpectator;
 		level.fnc_spawnIntermission = ::spawnIntermission;
 
-		level.gametype = "tdm";
+		level.gametype = "dm";
 	}
-	// } // END WRS
-
+	//****//
+	//
 	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
 
-	allowed[0] = "tdm";
+	allowed[0] = "dm";
 	maps\mp\gametypes\_gameobjects::main(allowed);
+	
+	if(getCvar("scr_dm_timelimit") == "")		// Time limit per map
+		setCvar("scr_dm_timelimit", "30");
+	else if(getCvarFloat("scr_dm_timelimit") > 1440)
+		setCvar("scr_dm_timelimit", "1440");
+	level.timelimit = getCvarFloat("scr_dm_timelimit");
+	setCvar("ui_dm_timelimit", level.timelimit);
+	makeCvarServerInfo("ui_dm_timelimit", "30");
 
-	if(getCvar("scr_tdm_timelimit") == "")		// Time limit per map
-		setCvar("scr_tdm_timelimit", "30");
-	else if(getCvarFloat("scr_tdm_timelimit") > 1440)
-		setCvar("scr_tdm_timelimit", "1440");
-	level.timelimit = getCvarFloat("scr_tdm_timelimit");
-	setCvar("ui_tdm_timelimit", level.timelimit);
-	makeCvarServerInfo("ui_tdm_timelimit", "30");
-
-	if(getCvar("scr_tdm_scorelimit") == "")		// Score limit per map
-		setCvar("scr_tdm_scorelimit", "100");
-	level.scorelimit = getCvarInt("scr_tdm_scorelimit");
-	setCvar("ui_tdm_scorelimit", level.scorelimit);
-	makeCvarServerInfo("ui_tdm_scorelimit", "100");
+	if(getCvar("scr_dm_scorelimit") == "")		// Score limit per map
+		setCvar("scr_dm_scorelimit", "50");
+	level.scorelimit = getCvarInt("scr_dm_scorelimit");
+	setCvar("ui_dm_scorelimit", level.scorelimit);
+	makeCvarServerInfo("ui_dm_scorelimit", "50");
 
 	if(getCvar("scr_forcerespawn") == "")		// Force respawning
 		setCvar("scr_forcerespawn", "0");
-
-	if(getCvar("scr_teambalance") == "")		// Auto Team Balancing
-		setCvar("scr_teambalance", "0");
-	level.teambalance = getCvarInt("scr_teambalance");
-	level.teambalancetimer = 0;
 
 	killcam = getCvar("scr_killcam");
 	if(killcam == "")				// Kill cam
 		killcam = "1";
 	setCvar("scr_killcam", killcam, true);
 	level.killcam = getCvarInt("scr_killcam");
-
-	if(getCvar("scr_drawfriend") == "")		// Draws a team icon over teammates
-		setCvar("scr_drawfriend", "0");
-	level.drawfriend = getCvarInt("scr_drawfriend");
-
-	teamscorepenalty = getCvar("scr_teamscorepenalty");
-	if(teamscorepenalty == "")			// Decrement teamscore for team kills and suicides
-		teamscorepenalty = "0";
-	setCvar("scr_teamscorepenalty", teamscorepenalty);
-
+	
 	if(!isDefined(game["state"]))
 		game["state"] = "playing";
 
+	level.QuickMessageToAll = true;
 	level.mapended = false;
 	level.healthqueue = [];
 	level.healthqueuecurrent = 0;
-
-	level.team["allies"] = 0;
-	level.team["axis"] = 0;
-
+	
 	if(level.killcam >= 1)
 		setarchive(true);
 }
@@ -187,8 +172,13 @@ Callback_StartGameType()
 
 	precacheMenu(game["menu_serverinfo"]);
 	precacheMenu(game["menu_team"]);
-	precacheMenu(game["menu_weapon_allies"]);
-	precacheMenu(game["menu_weapon_axis"]);
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(!level.wrs){
+		precacheMenu(game["menu_weapon_allies"]);
+		precacheMenu(game["menu_weapon_axis"]);
+	}
+	//****//
 	precacheMenu(game["menu_viewmap"]);
 	precacheMenu(game["menu_callvote"]);
 	precacheMenu(game["menu_quickcommands"]);
@@ -197,51 +187,54 @@ Callback_StartGameType()
 
 	precacheShader("black");
 	precacheShader("hudScoreboard_mp");
+	precacheShader("gfx/hud/hud@mpflag_none.tga");
 	precacheShader("gfx/hud/hud@mpflag_spectator.tga");
 	precacheStatusIcon("gfx/hud/hud@status_dead.tga");
 	precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
 	precacheItem("item_health");
 
-	// WRS {
-	if (level.wrs) {
-		maps\mp\gametypes\_wrs::start();
-		maps\mp\gametypes\_wrs::wrs_stats();
-	}
-	// } // END WRS
-
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::precache();
-	maps\mp\gametypes\_teams::scoreboard();
 	maps\mp\gametypes\_teams::initGlobalCvars();
 	maps\mp\gametypes\_teams::initWeaponCvars();
 	maps\mp\gametypes\_teams::restrictPlacedWeapons();
 	thread maps\mp\gametypes\_teams::updateGlobalCvars();
 	thread maps\mp\gametypes\_teams::updateWeaponCvars();
 
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		level.wrs_Players = getEntArray("player", "classname");
+		maps\mp\gametypes\_wrs::startWalrus();
+		maps\mp\gametypes\_wrs::wrs_Stats();
+	}
+	//****//
+
 	setClientNameMode("auto_change");
 
 	thread startGame();
-	//thread addBotClients(); // For development testing
+//	thread addBotClients(); // For development testing
 	thread updateGametypeCvars();
 }
 
 Callback_PlayerConnect()
 {
-	// WRS {
-	maps\mp\gametypes\_wrs::wrs_PlayerConnect();
-	// } // END WRS
-
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
+	}
+	//****//
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
 	self.statusicon = "";
-	self.pers["teamTime"] = 1000000;
 
 	iprintln(&"MPSCRIPT_CONNECTED", self);
 
 	lpselfnum = self getEntityNumber();
-	lpGuid = self getGuid();
-	logPrint("J;" + lpGuid + ";" + lpselfnum + ";" + self.name + "\n");
-
+	lpselfguid = self getGuid();
+	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
+	
 	if(game["state"] == "intermission")
 	{
 		spawnIntermission();
@@ -253,30 +246,29 @@ Callback_PlayerConnect()
 	if(isDefined(self.pers["team"]) && self.pers["team"] != "spectator")
 	{
 		self setClientCvar("ui_weapontab", "1");
+		self.sessionteam = "none";
 
 		if(self.pers["team"] == "allies")
-		{
-			self.sessionteam = "allies";
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-		}
 		else
-		{
-			self.sessionteam = "axis";
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-		}
 
 		if(isDefined(self.pers["weapon"]))
 			spawnPlayer();
 		else
 		{
 			spawnSpectator();
-			// WRS {
-			self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*			if(self.pers["team"] == "allies")
-				self openMenu(game["menu_weapon_allies"]);
-			else
-				self openMenu(game["menu_weapon_axis"]);
-*/			// } // END WRS
+			//**WALEDIT**//
+			//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+			if(level.wrs){
+				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
+			}else{
+				if(self.pers["team"] == "allies")
+					self openMenu(game["menu_weapon_allies"]);
+				else
+					self openMenu(game["menu_weapon_axis"]);
+			}
+			//****//
 		}
 	}
 	else
@@ -296,14 +288,13 @@ Callback_PlayerConnect()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
-
-		// WRS {
-		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::wrs_menu(menu, response) == true) {
-				continue;
-			}
+		//**WALEDIT**//
+		//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+		if(level.wrs){
+			maps\mp\gametypes\_wrs::wrs_PlayerMenu(menu, response);
+			continue;
 		}
-		// } // END WRS
+		//****//
 
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
@@ -323,43 +314,30 @@ Callback_PlayerConnect()
 			case "autoassign":
 				if(response == "autoassign")
 				{
-					numonteam["allies"] = 0;
-					numonteam["axis"] = 0;
-
-					players = getentarray("player", "classname");
-					for(i = 0; i < players.size; i++)
-					{
-						player = players[i];
-
-						if(!isDefined(player.pers["team"]) || player.pers["team"] == "spectator" || player == self)
-							continue;
-
-						numonteam[player.pers["team"]]++;
-					}
-
-					// if teams are equal return the team with the lowest score
-					if(numonteam["allies"] == numonteam["axis"])
-					{
-						if(getTeamScore("allies") == getTeamScore("axis"))
-						{
-							teams[0] = "allies";
-							teams[1] = "axis";
-							response = teams[randomInt(2)];
-						}
-						else if(getTeamScore("allies") < getTeamScore("axis"))
-							response = "allies";
-						else
-							response = "axis";
-					}
-					else if(numonteam["allies"] < numonteam["axis"])
-						response = "allies";
-					else
-						response = "axis";
-					skipbalancecheck = true;
+					teams[0] = "allies";
+					teams[1] = "axis";
+					response = teams[randomInt(2)];
 				}
 
-				if(response == self.pers["team"] && (self.sessionstate == "playing" || self.sessionstate == "dead"))
-				{
+				if(response == self.pers["team"] && self.sessionstate == "playing")
+					break;
+
+				if(response != self.pers["team"] && self.sessionstate == "playing")
+					self suicide();
+
+				self notify("end_respawn");
+
+				self.pers["team"] = response;
+				self.pers["weapon"] = undefined;
+				self.pers["savedmodel"] = undefined;
+
+				self setClientCvar("ui_weapontab", "1");
+
+				//**WALEDIT**//
+				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+				if(level.wrs){
+					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
+				}else{
 					if(self.pers["team"] == "allies")
 					{
 						self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
@@ -370,99 +348,17 @@ Callback_PlayerConnect()
 						self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
 						self openMenu(game["menu_weapon_axis"]);
 					}
-					break;
 				}
-
-				//Check if the teams will become unbalanced when the player goes to this team...
-				//------------------------------------------------------------------------------
-				if ( (level.teambalance > 0) && (!isdefined (skipbalancecheck)) )
-				{
-					//Get a count of all players on Axis and Allies
-					players = maps\mp\gametypes\_teams::CountPlayers();
-
-					if (self.sessionteam != "spectator")
-					{
-						if (((players[response] + 1) - (players[self.pers["team"]] - 1)) > level.teambalance)
-						{
-							if (response == "allies")
-							{
-								if (game["allies"] == "american")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED",&"PATCH_1_3_AMERICAN");
-								else if (game["allies"] == "british")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED",&"PATCH_1_3_BRITISH");
-								else if (game["allies"] == "russian")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED",&"PATCH_1_3_RUSSIAN");
-							}
-							else
-								self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED",&"PATCH_1_3_GERMAN");
-							break;
-						}
-					}
-					else
-					{
-						if (response == "allies")
-							otherteam = "axis";
-						else
-							otherteam = "allies";
-						if (((players[response] + 1) - players[otherteam]) > level.teambalance)
-						{
-							if (response == "allies")
-							{
-								if (game["allies"] == "american")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED2",&"PATCH_1_3_AMERICAN");
-								else if (game["allies"] == "british")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED2",&"PATCH_1_3_BRITISH");
-								else if (game["allies"] == "russian")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_ALLIED2",&"PATCH_1_3_RUSSIAN");
-							}
-							else
-							{
-								if (game["allies"] == "american")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_AXIS",&"PATCH_1_3_AMERICAN");
-								else if (game["allies"] == "british")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_AXIS",&"PATCH_1_3_BRITISH");
-								else if (game["allies"] == "russian")
-									self iprintlnbold(&"PATCH_1_3_CANTJOINTEAM_AXIS",&"PATCH_1_3_RUSSIAN");
-							}
-							break;
-						}
-					}
-				}
-				skipbalancecheck = undefined;
-				//------------------------------------------------------------------------------
-
-				if(response != self.pers["team"] && self.sessionstate == "playing")
-					self suicide();
-
-				self notify("end_respawn");
-
-				self.pers["team"] = response;
-				self.pers["teamTime"] = (gettime() / 1000);
-				self.pers["weapon"] = undefined;
-				self.pers["savedmodel"] = undefined;
-
-				self setClientCvar("ui_weapontab", "1");
-
-				if(self.pers["team"] == "allies")
-				{
-					self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-					self openMenu(game["menu_weapon_allies"]);
-				}
-				else
-				{
-					self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-					self openMenu(game["menu_weapon_axis"]);
-				}
+				//****//
 				break;
 
 			case "spectator":
 				if(self.pers["team"] != "spectator")
 				{
 					self.pers["team"] = "spectator";
-					self.pers["teamTime"] = 1000000;
 					self.pers["weapon"] = undefined;
 					self.pers["savedmodel"] = undefined;
-
+					
 					self.sessionteam = "spectator";
 					self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 					self setClientCvar("ui_weapontab", "0");
@@ -471,10 +367,23 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
+				//**WALEDIT**//
+				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+				if(level.wrs){
+					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
+				}else{
+					if(self.pers["team"] == "allies")
+					{
+						self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
+						self openMenu(game["menu_weapon_allies"]);
+					}
+					else
+					{
+						self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+						self openMenu(game["menu_weapon_axis"]);
+					}
+				}
+				//****//
 				break;
 
 			case "viewmap":
@@ -486,7 +395,29 @@ Callback_PlayerConnect()
 				break;
 			}
 		}
-		else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
+		//**WALEDIT**//
+		else if(level.wrs && menu == "menu_weapon1"){
+			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][0])) && self.pers["weapon"][0] == response)
+				continue;
+			self.pers["weapon"][0] = response;
+		}
+		else if(level.wrs && menu == "menu_weapon2"){
+			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][1])) && self.pers["weapon"][1] == response)
+				continue;
+			if(!isDefined(self.pers["weapon"][1])){
+				self.pers["weapon"][1] = response;
+				spawnPlayer();
+			}
+			else{
+				self.pers["weapon"][1] = response;
+				
+				self iPrintLn("You will spawn with new weapons");
+			}
+			if (isdefined (self.autobalance_notify))
+				self.autobalance_notify destroy();
+		}
+		else if(!level.wrs && (menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"]))
+		//****//
 		{
 			if(response == "team")
 			{
@@ -506,7 +437,7 @@ Callback_PlayerConnect()
 
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
-
+				
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 
 			if(weapon == "restricted")
@@ -522,21 +453,18 @@ Callback_PlayerConnect()
 			{
 				self.pers["weapon"] = weapon;
 				spawnPlayer();
-				self thread printJoinedTeam(self.pers["team"]);
 			}
 			else
 			{
 				self.pers["weapon"] = weapon;
-
+				
 				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
+				
 				if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 					self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
 				else
 					self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
 			}
-			if (isdefined (self.autobalance_notify))
-				self.autobalance_notify destroy();
 		}
 		else if(menu == game["menu_viewmap"])
 		{
@@ -547,10 +475,17 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
+				//**WALEDIT**//
+				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+				if(level.wrs){
+					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
+				}else{
+					if(self.pers["team"] == "allies")
+						self openMenu(game["menu_weapon_allies"]);
+					else if(self.pers["team"] == "axis")
+						self openMenu(game["menu_weapon_axis"]);
+				}
+				//****//
 				break;
 
 			case "callvote":
@@ -567,10 +502,17 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
+				//**WALEDIT**//
+				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+				if(level.wrs){
+					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
+				}else{
+					if(self.pers["team"] == "allies")
+						self openMenu(game["menu_weapon_allies"]);
+					else if(self.pers["team"] == "axis")
+						self openMenu(game["menu_weapon_axis"]);
+				}
+				//****//
 				break;
 
 			case "viewmap":
@@ -589,15 +531,18 @@ Callback_PlayerConnect()
 
 Callback_PlayerDisconnect()
 {
-	// WRS {
-	self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
-	// } // END WRS
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
+	}
+	//****//
 
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
 	lpselfnum = self getEntityNumber();
-	lpGuid = self getGuid();
-	logPrint("Q;" + lpGuid + ";" + lpselfnum + ";" + self.name + "\n");
+	lpselfguid = self getGuid();
+	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 }
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
@@ -605,93 +550,48 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	// WRS {
-	self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-	// } // END WRS
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	}
+	//****//
 
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
 
-	// check for completely getting out of the damage
-	if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
-	{
-		if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
-		{
-			// WRS {
-/*			if(level.friendlyfire == "0")
-			{
-*/				return;
-/*			}
-			else if(level.friendlyfire == "1")
-			{
-				// Make sure at least one point of damage is done
-				if(iDamage < 1)
-					iDamage = 1;
+	// Make sure at least one point of damage is done
+	if(iDamage < 1)
+		iDamage = 1;
 
-				self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-			}
-			else if(level.friendlyfire == "2")
-			{
-				eAttacker.friendlydamage = true;
-
-				iDamage = iDamage * .5;
-
-				// Make sure at least one point of damage is done
-				if(iDamage < 1)
-					iDamage = 1;
-
-				eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-				eAttacker.friendlydamage = undefined;
-
-				friendly = true;
-			}
-			else if(level.friendlyfire == "3")
-			{
-				eAttacker.friendlydamage = true;
-
-				iDamage = iDamage * .5;
-
-				// Make sure at least one point of damage is done
-				if(iDamage < 1)
-					iDamage = 1;
-
-				self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-				eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-				eAttacker.friendlydamage = undefined;
-
-				friendly = true;
-			}
-*/			// } // END WRS
-		}
-		// WRS {
-		else if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
-			if(!isDefined(self.protected) && !isDefined(eAttacker.protected) && !isDefined(self.wrs_Jumper)){
-				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
-					iDamage = 100;
-
-				self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-			}
-		}
-		// } // END WRS
-		else
-		{
-			// Make sure at least one point of damage is done
-			if(iDamage < 1)
-				iDamage = 1;
-
-			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-		}
-	}
-
-	// WRS {
-/*	// Do debug print if it's enabled
+	// Do debug print if it's enabled
 	if(getCvarInt("g_debugDamage"))
 	{
 		println("client:" + self getEntityNumber() + " health:" + self.health +
 			" damage:" + iDamage + " hitLoc:" + sHitLoc);
 	}
-	if(self.sessionstate != "dead")
+
+
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		if(!isDefined(self.protected) && !isDefined(eAttacker.protected) && !isDefined(self.wrs_Jumper)){
+			if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
+				iDamage = 100;
+
+			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+		}
+	} else if (!level.wrs) {
+		// Apply the damage to the player
+		self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	}
+	//****//
+
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS ISN'T ENABLED**//
+	if(!level.wrs && self.sessionstate != "dead")
+	//****//
 	{
 		lpselfnum = self getEntityNumber();
 		lpselfname = self.name;
@@ -714,16 +614,8 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			lpattackerteam = "world";
 		}
 
-		if(isDefined(friendly))
-		{
-			lpattacknum = lpselfnum;
-			lpattackname = lpselfname;
-			lpattackGuid = lpselfGuid;
-		}
-
 		logPrint("D;" + lpselfGuid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackGuid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 	}
-*/	// } // END WRS
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
@@ -742,14 +634,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 	self.sessionstate = "dead";
 	self.statusicon = "gfx/hud/hud@status_dead.tga";
-	self.headicon = "";
-	if (!isdefined (self.autobalance))
-		self.deaths++;
+	self.deaths++;
 
 	lpselfnum = self getEntityNumber();
 	lpselfname = self.name;
+	lpselfteam = "";
 	lpselfguid = self getGuid();
-	lpselfteam = self.pers["team"];
 	lpattackerteam = "";
 
 	attackerNum = -1;
@@ -758,55 +648,21 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		if(attacker == self) // killed himself
 		{
 			doKillcam = false;
-			if (!isdefined (self.autobalance))
-			{
-				attacker.score--;
 
-				if ( getCvar("scr_teamscorepenalty") )
-				{
-					// suicides should affect teamscore
-					teamscore = getTeamScore(attacker.pers["team"]);
-					teamscore--;
-					setTeamScore(attacker.pers["team"], teamscore);
-				}
-			}
-
-			if(isDefined(attacker.friendlydamage))
-				clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT");
+			attacker.score--;
 		}
 		else
 		{
 			attackerNum = attacker getEntityNumber();
 			doKillcam = true;
 
-			if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
-			{
-				attacker.score--;
-
-				if ( getCvar("scr_teamscorepenalty") )
-				{
-					// team kills should affect teamscore
-					teamscore = getTeamScore(attacker.pers["team"]);
-					teamscore--;
-					setTeamScore(attacker.pers["team"], teamscore);
-				}
-			}
-			else
-			{
-				attacker.score++;
-
-				teamscore = getTeamScore(attacker.pers["team"]);
-				teamscore++;
-				setTeamScore(attacker.pers["team"], teamscore);
-
-				checkScoreLimit();
-			}
+			attacker.score++;
+			attacker checkScoreLimit();
 		}
 
 		lpattacknum = attacker getEntityNumber();
 		lpattackguid = attacker getGuid();
 		lpattackname = attacker.name;
-		lpattackerteam = attacker.pers["team"];
 	}
 	else // If you weren't killed by a player, you were in the wrong place at the wrong time
 	{
@@ -815,56 +671,93 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		self.score--;
 
 		lpattacknum = -1;
-		lpattackname = "";
 		lpattackguid = "";
-		lpattackerteam = "world";
+		lpattackname = "";
 	}
-	// WRS {
-	self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
-
+	
 	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
-
-	// Make the player drop his weapon
-//	self dropItem(self getcurrentweapon());
-
-	// Make the player drop health
-//	self dropHealth();
-	self.autobalance = undefined;
-	body = self cloneplayer();
 
 	// Stop thread if map ended on this death
 	if(level.mapended)
 		return;
-	// } // END WRS
+		
+//	self updateDeathArray();
+
+
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
+		self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	}else{
+		// Make the player drop his weapon
+		self dropItem(self getcurrentweapon());
+
+		// Make the player drop health
+		self dropHealth();
+	}
+	//****//
+
+	body = self cloneplayer();
 
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
-
+	
 	if((getCvarInt("scr_killcam") <= 0) || (getCvarInt("scr_forcerespawn") > 0))
 		doKillcam = false;
-
+	
 	if(doKillcam)
 		self thread killcam(attackerNum, delay);
 	else
 		self thread respawn();
 }
 
+updateDeathArray()
+{
+	if(!isDefined(level.deatharray))
+	{
+		level.deatharray[0] = self.origin;
+		level.deatharraycurrent = 1;
+		return;
+	}
+
+	if(level.deatharraycurrent < 31)
+		level.deatharray[level.deatharraycurrent] = self.origin;
+	else
+	{
+		level.deatharray[0] = self.origin;
+		level.deatharraycurrent = 1;
+		return;
+	}
+
+	level.deatharraycurrent++;
+}
+
 spawnPlayer()
 {
+	//**WALEDIT**//
+	if(level.wrs && self.pers["team"] == "spectator")
+		return;
+	//****//
+
 	self notify("spawned");
 	self notify("end_respawn");
 
 	resettimeout();
 
-	self.sessionteam = self.pers["team"];
+//	if(isDefined(self.shocked))
+//	{
+//		self stopShellshock();
+//		self.shocked = undefined;
+//	}
+
+	self.sessionteam = "none";
 	self.sessionstate = "playing";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-	self.friendlydamage = undefined;
-
-	spawnpointname = "mp_teamdeathmatch_spawn";
+		
+	spawnpointname = "mp_deathmatch_spawn";
 	spawnpoints = getentarray(spawnpointname, "classname");
-	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_NearTeam(spawnpoints);
+	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_DM(spawnpoints);
 
 	if(isDefined(spawnpoint))
 		self spawn(spawnpoint.origin, spawnpoint.angles);
@@ -880,10 +773,11 @@ spawnPlayer()
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 
-	// WRS {
-	if (level.wrs) {
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
 		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
-	} else {
+	}else{
 		maps\mp\gametypes\_teams::givePistol();
 		maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
 
@@ -891,48 +785,36 @@ spawnPlayer()
 		self giveMaxAmmo(self.pers["weapon"]);
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
-	// } // END WRS
-
-	if(self.pers["team"] == "allies")
-		self setClientCvar("cg_objectiveText", &"TDM_KILL_AXIS_PLAYERS");
-	else if(self.pers["team"] == "axis")
-		self setClientCvar("cg_objectiveText", &"TDM_KILL_ALLIED_PLAYERS");
-
-	if(level.drawfriend)
-	{
-		if(self.pers["team"] == "allies")
-		{
-			self.headicon = game["headicon_allies"];
-			self.headiconteam = "allies";
-		}
-		else
-		{
-			self.headicon = game["headicon_axis"];
-			self.headiconteam = "axis";
-		}
-	}
+	//****//
+	
+	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
 }
 
 spawnSpectator(origin, angles)
 {
 	self notify("spawned");
 	self notify("end_respawn");
-
+	
 	resettimeout();
+
+//	if(isDefined(self.shocked))
+//	{
+//		self stopShellshock();
+//		self.shocked = undefined;
+//	}
 
 	self.sessionstate = "spectator";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-	self.friendlydamage = undefined;
 
 	if(self.pers["team"] == "spectator")
 		self.statusicon = "";
-
+	
 	if(isDefined(origin) && isDefined(angles))
 		self spawn(origin, angles);
 	else
 	{
-         	spawnpointname = "mp_teamdeathmatch_intermission";
+		spawnpointname = "mp_deathmatch_intermission";
 		spawnpoints = getentarray(spawnpointname, "classname");
 		spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
 
@@ -942,27 +824,32 @@ spawnSpectator(origin, angles)
 			maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
 	}
 
-	self setClientCvar("cg_objectiveText", &"TDM_ALLIES_KILL_AXIS_PLAYERS");
+	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
 
-	// WRS {
-	if(isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
+	//**WALEDIT**//
+	if(level.wrs && isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
 		self thread maps\mp\gametypes\_wrs::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
-	// } // END WRS
+	//****//
 }
 
 spawnIntermission()
 {
 	self notify("spawned");
 	self notify("end_respawn");
-
+	
 	resettimeout();
+
+//	if(isDefined(self.shocked))
+//	{
+//		self stopShellshock();
+//		self.shocked = undefined;
+//	}
 
 	self.sessionstate = "intermission";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-	self.friendlydamage = undefined;
 
-	spawnpointname = "mp_teamdeathmatch_intermission";
+	spawnpointname = "mp_deathmatch_intermission";
 	spawnpoints = getentarray(spawnpointname, "classname");
 	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
 
@@ -1060,7 +947,7 @@ killcam(attackerNum, delay)
 	self.sessionstate = "spectator";
 	self.spectatorclient = attackerNum;
 	self.archivetime = delay + 7;
-
+	
 	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
 	wait 0.05;
 
@@ -1069,7 +956,7 @@ killcam(attackerNum, delay)
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
-
+		
 		self thread respawn();
 		return;
 	}
@@ -1142,7 +1029,7 @@ killcam(attackerNum, delay)
 	self.spectatorclient = -1;
 	self.archivetime = 0;
 	self.sessionstate = "dead";
-
+	
 	//self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
 	self thread respawn();
 }
@@ -1217,62 +1104,57 @@ endMap()
 	game["state"] = "intermission";
 	level notify("intermission");
 
-	alliedscore = getTeamScore("allies");
-	axisscore = getTeamScore("axis");
+	players = getentarray("player", "classname");
+	for(i = 0; i < players.size; i++)
+	{
+		player = players[i];
 
-	if(alliedscore == axisscore)
-	{
-		winningteam = "tie";
-		losingteam = "tie";
-		text = "MPSCRIPT_THE_GAME_IS_A_TIE";
-	}
-	else if(alliedscore > axisscore)
-	{
-		winningteam = "allies";
-		losingteam = "axis";
-		text = &"MPSCRIPT_ALLIES_WIN";
-	}
-	else
-	{
-		winningteam = "axis";
-		losingteam = "allies";
-		text = &"MPSCRIPT_AXIS_WIN";
-	}
+		if(isDefined(player.pers["team"]) && player.pers["team"] == "spectator")
+			continue;
 
-	if((winningteam == "allies") || (winningteam == "axis"))
-	{
-		winners = "";
-		losers = "";
+		if(!isDefined(highscore))
+		{
+			highscore = player.score;
+			playername = player;
+			name = player.name;
+			guid = player getGuid();
+			continue;
+		}
+
+		if(player.score == highscore)
+			tied = true;
+		else if(player.score > highscore)
+		{
+			tied = false;
+			highscore = player.score;
+			playername = player;
+			name = player.name;
+			guid = player getGuid();
+		}
 	}
-	// WRS {
-	if (level.wrs) {
+	//**WALEDIT**//
+	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+	if(level.wrs){
 		maps\mp\gametypes\_wrs::wrs_EndMap(text);
-	} else {
+	}else{
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
 		{
 			player = players[i];
-			if((winningteam == "allies") || (winningteam == "axis"))
-			{
-				lpGuid = player getGuid();
-				if((isDefined(player.pers["team"])) && (player.pers["team"] == winningteam))
-						winners = (winners + ";" + lpGuid + ";" + player.name);
-				else if((isDefined(player.pers["team"])) && (player.pers["team"] == losingteam))
-						losers = (losers + ";" + lpGuid + ";" + player.name);
-			}
+
 			player closeMenu();
 			player setClientCvar("g_scriptMainMenu", "main");
-			player setClientCvar("cg_objectiveText", text);
+
+			if(isDefined(tied) && tied == true)
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
+			else if(isDefined(playername))
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
+			
 			player spawnIntermission();
 		}
 	}
-	// } // END WRS
-	if((winningteam == "allies") || (winningteam == "axis"))
-	{
-		logPrint("W;" + winningteam + winners + "\n");
-		logPrint("L;" + losingteam + losers + "\n");
-	}
-
+	if(isDefined(name))
+		logPrint("W;;" + guid + ";" + name + "\n");
 	wait 10;
 	exitLevel(false);
 }
@@ -1285,17 +1167,8 @@ checkTimeLimit()
 	timepassed = (getTime() - level.starttime) / 1000;
 	timepassed = timepassed / 60.0;
 
-	//**WALEDIT**/
-	if(timepassed < level.timelimit){
-		cd = level.wrs_Countdown;
-		if(cd && level.timelimit - timepassed < ((float)(cd+1)/60)){
-			secondsleft = (float)(level.timelimit - timepassed) * 60;
-			level.clock setTenthsTimer(secondsleft);
-			level.clock.color = (1,secondsleft/cd,0);
-		}
+	if(timepassed < level.timelimit)
 		return;
-	}
-	// } // END WRS
 
 	if(level.mapended)
 		return;
@@ -1310,7 +1183,7 @@ checkScoreLimit()
 	if(level.scorelimit <= 0)
 		return;
 
-	if(getTeamScore("allies") < level.scorelimit && getTeamScore("axis") < level.scorelimit)
+	if(self.score < level.scorelimit)
 		return;
 
 	if(level.mapended)
@@ -1325,17 +1198,17 @@ updateGametypeCvars()
 {
 	for(;;)
 	{
-		timelimit = getCvarFloat("scr_tdm_timelimit");
+		timelimit = getCvarFloat("scr_dm_timelimit");
 		if(level.timelimit != timelimit)
 		{
 			if(timelimit > 1440)
 			{
 				timelimit = 1440;
-				setCvar("scr_tdm_timelimit", "1440");
+				setCvar("scr_dm_timelimit", "1440");
 			}
 
 			level.timelimit = timelimit;
-			setCvar("ui_tdm_timelimit", level.timelimit);
+			setCvar("ui_dm_timelimit", level.timelimit);
 			level.starttime = getTime();
 
 			if(level.timelimit > 0)
@@ -1360,53 +1233,15 @@ updateGametypeCvars()
 			checkTimeLimit();
 		}
 
-		scorelimit = getCvarInt("scr_tdm_scorelimit");
+		scorelimit = getCvarInt("scr_dm_scorelimit");
 		if(level.scorelimit != scorelimit)
 		{
 			level.scorelimit = scorelimit;
-			setCvar("ui_tdm_scorelimit", level.scorelimit);
-		}
-		checkScoreLimit();
+			setCvar("ui_dm_scorelimit", level.scorelimit);
 
-		drawfriend = getCvarFloat("scr_drawfriend");
-		if(level.drawfriend != drawfriend)
-		{
-			level.drawfriend = drawfriend;
-
-			if(level.drawfriend)
-			{
-				// for all living players, show the appropriate headicon
-				players = getentarray("player", "classname");
-				for(i = 0; i < players.size; i++)
-				{
-					player = players[i];
-
-					if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
-					{
-						if(player.pers["team"] == "allies")
-						{
-							player.headicon = game["headicon_allies"];
-							player.headiconteam = "allies";
-						}
-						else
-						{
-							player.headicon = game["headicon_axis"];
-							player.headiconteam = "axis";
-						}
-					}
-				}
-			}
-			else
-			{
-				players = getentarray("player", "classname");
-				for(i = 0; i < players.size; i++)
-				{
-					player = players[i];
-
-					if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
-						player.headicon = "";
-				}
-			}
+			players = getentarray("player", "classname");
+			for(i = 0; i < players.size; i++)
+				players[i] checkScoreLimit();
 		}
 
 		killcam = getCvarInt("scr_killcam");
@@ -1418,52 +1253,28 @@ updateGametypeCvars()
 			else
 				setarchive(false);
 		}
-
-		teambalance = getCvarInt("scr_teambalance");
-		if (level.teambalance != teambalance)
-		{
-			level.teambalance = getCvarInt("scr_teambalance");
-			if (level.teambalance > 0)
-			{
-				level thread maps\mp\gametypes\_teams::TeamBalance_Check();
-				level.teambalancetimer = 0;
-			}
+		
+		//**WALEDIT**//
+		//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
+		if(level.wrs){
+			thread maps\mp\gametypes\_wrs::wrs_UpdateGametypeCvars();
 		}
-
-
-
-		if (level.teambalance > 0)
-		{
-			level.teambalancetimer++;
-			if (level.teambalancetimer >= 60)
-			{
-				level thread maps\mp\gametypes\_teams::TeamBalance_Check();
-				level.teambalancetimer = 0;
-			}
-		}
-
+		//****//
+		
 		wait 1;
 	}
 }
 
-printJoinedTeam(team)
-{
-	if(team == "allies")
-		iprintln(&"MPSCRIPT_JOINED_ALLIES", self);
-	else if(team == "axis")
-		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
-}
-// WRS {
-/*dropHealth()
+dropHealth()
 {
 	if(isDefined(level.healthqueue[level.healthqueuecurrent]))
 		level.healthqueue[level.healthqueuecurrent] delete();
-
+	
 	level.healthqueue[level.healthqueuecurrent] = spawn("item_health", self.origin + (0, 0, 1));
 	level.healthqueue[level.healthqueuecurrent].angles = (0, randomint(360), 0);
 
 	level.healthqueuecurrent++;
-
+	
 	if(level.healthqueuecurrent >= 16)
 		level.healthqueuecurrent = 0;
 }
@@ -1502,4 +1313,3 @@ addBotClients()
 		}
 	}
 }
-*/

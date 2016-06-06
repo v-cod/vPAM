@@ -345,7 +345,7 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::start();
-		//maps\mp\gametypes\_wrs::wrs_stats();
+		maps\mp\gametypes\_wrs::wrs_stats();
 	}
 	// } // END WRS
 
@@ -438,6 +438,7 @@ Callback_PlayerConnect()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
+
 		// WRS {
 		if (level.wrs) {
 			if (maps\mp\gametypes\_wrs::wrs_menu(menu, response) == true) {
