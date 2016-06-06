@@ -1,15 +1,16 @@
-wrs_start()
+start()
 {
-	wrs_init();
+	init();
+	wrs_labels();
 
-	level.wrs_Players = getEntArray("player", "classname");
-
-	thread maps\mp\gametypes\_wrs_admin::wrs_init();
-
-	thread wrs_Labels();
 	thread wrs_server_messages();
+
+	maps\mp\gametypes\_wrs_admin::init();
+	maps\mp\gametypes\_wrs_fence::init();
+	maps\mp\gametypes\_wrs_mapvote::init();
 }
-wrs_init()
+
+init()
 {
 	level.wrs_weapons[0][0] = &"Kar98k";              level.wrs_weapons[0][1] = "kar98k_mp";
 	level.wrs_weapons[1][0] = &"Mosin Nagant";        level.wrs_weapons[1][1] = "mosin_nagant_mp";
@@ -17,25 +18,6 @@ wrs_init()
 	level.wrs_weapons[3][0] = &"Mosin Nagant Sniper"; level.wrs_weapons[3][1] = "mosin_nagant_sniper_mp";
 	level.wrs_weapons[4][0] = &"Springfield";         level.wrs_weapons[4][1] = "springfield_mp";
 	level.wrs_weapons[5][0] = &"Lee Enfield";         level.wrs_weapons[5][1] = "enfield_mp";
-
-	level.wrs_maps[0][0]  = "mp_bocage";     level.wrs_maps[0][1]  = &"Bocage";     level.wrs_maps[0][2]  = "Bocage";
-	level.wrs_maps[1][0]  = "mp_brecourt";   level.wrs_maps[1][1]  = &"Brecourt";   level.wrs_maps[1][2]  = "Brecourt";
-	level.wrs_maps[2][0]  = "mp_carentan";   level.wrs_maps[2][1]  = &"Carentan";   level.wrs_maps[2][2]  = "Carentan";
-	level.wrs_maps[3][0]  = "mp_chateau";    level.wrs_maps[3][1]  = &"Chateau";    level.wrs_maps[3][2]  = "Chateau";
-	level.wrs_maps[4][0]  = "mp_dawnville";  level.wrs_maps[4][1]  = &"Dawnville";  level.wrs_maps[4][2]  = "Dawnville";
-	level.wrs_maps[5][0]  = "mp_depot";      level.wrs_maps[5][1]  = &"Depot";      level.wrs_maps[5][2]  = "Depot";
-	level.wrs_maps[6][0]  = "mp_harbor";     level.wrs_maps[6][1]  = &"Harbor";     level.wrs_maps[6][2]  = "Harbor";
-	level.wrs_maps[7][0]  = "mp_hurtgen";    level.wrs_maps[7][1]  = &"Hurtgen";    level.wrs_maps[7][2]  = "Hurtgen";
-	level.wrs_maps[8][0]  = "mp_neuville";   level.wrs_maps[8][1]  = &"Neuville";   level.wrs_maps[8][2]  = "Neuville";
-	level.wrs_maps[9][0]  = "mp_pavlov";     level.wrs_maps[9][1]  = &"Pavlov";     level.wrs_maps[9][2]  = "Pavlov";
-	level.wrs_maps[10][0] = "mp_powcamp";    level.wrs_maps[10][1] = &"POW Camp";   level.wrs_maps[10][2] = "POW Camp";
-	level.wrs_maps[11][0] = "mp_railyard";   level.wrs_maps[11][1] = &"Railyard";   level.wrs_maps[11][2] = "Railyard";
-	level.wrs_maps[12][0] = "mp_rocket";     level.wrs_maps[12][1] = &"Rocket";     level.wrs_maps[12][2] = "Rocket";
-	level.wrs_maps[13][0] = "mp_ship";       level.wrs_maps[13][1] = &"Ship";       level.wrs_maps[13][2] = "Ship";
-	level.wrs_maps[14][0] = "mp_stalingrad"; level.wrs_maps[14][1] = &"Stalingrad"; level.wrs_maps[14][2] = "Stalingrad";
-	level.wrs_maps[15][0] = "mp_tigertown";  level.wrs_maps[15][1] = &"Tigertown";  level.wrs_maps[15][2] = "Tigertown";
-
-	level.wrs_hud_mapvote_header = &"Map                                    Votes";
 
 	level.wrs_hud_weapon_header[0] = &"Select Primary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
 	level.wrs_hud_weapon_header[1] = &"Select Secondary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
@@ -85,16 +67,12 @@ wrs_init()
 		precacheString(level.wrs_hud_weapon_header[1]);
 		precacheString(level.wrs_label_left);
 		precacheString(level.wrs_label_right);
-		precacheString(level.wrs_hud_mapvote_header);
 
 		precacheString(&"^3/^7");
 
 		for (i = 0; i < level.wrs_weapons.size; i++) {
 			precacheString(level.wrs_weapons[i][0]);
 			precacheItem(level.wrs_weapons[i][1]);
-		}
-		for (i = 0; i < level.wrs_maps.size; i++) {
-			precacheString(level.wrs_maps[i][1]);
 		}
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
 			precacheString(level.wrs_hud_stats_text[i]);
@@ -418,13 +396,13 @@ wrs_hud_info()
 	allies = 0;
 	axis = 0;
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		if (!isAlive(level.wrs_Players[i]))
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		if (!isAlive(players[i]))
 			continue;
-		if (level.wrs_Players[i].pers["team"] == "allies" && level.wrs_Players[i].sessionstate == "playing")
+		if (players[i].pers["team"] == "allies" && players[i].sessionstate == "playing")
 			allies++;
-		else if (level.wrs_Players[i].pers["team"] == "axis" && level.wrs_Players[i].sessionstate == "playing")
+		else if (players[i].pers["team"] == "axis" && players[i].sessionstate == "playing")
 			axis++;
 	}
 
@@ -441,7 +419,7 @@ wrs_hud_info()
 		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
 	}
 }
-wrs_Labels()
+wrs_labels()
 {
 	level.wrs_hud_label_left           = newHudElem();
 	level.wrs_hud_label_left.x         = 630;
@@ -545,10 +523,10 @@ wrs_stats_maintain_CheckStat(stat) {
 	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
 		level.wrs_stats_records[stat] = self.pers["stats"][stat];
 
-		level.wrs_Players = getEntArray("player", "classname");
-		for (j = 0;j < level.wrs_Players.size;j++) {
-			if (isDefined(level.wrs_Players[j].wrs_stats_hud)) {
-				level.wrs_Players[j].wrs_stats_hud[stat].color = (1,1,1);
+		players = getEntArray("player", "classname");
+		for (j = 0;j < players.size;j++) {
+			if (isDefined(players[j].wrs_stats_hud)) {
+				players[j].wrs_stats_hud[stat].color = (1,1,1);
 			}
 		}
 
@@ -559,10 +537,10 @@ wrs_stats_maintain_CheckLevStat(stat, element) {
 	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
 		level.wrs_stats_records[stat] = self.pers["stats"][stat];
 
-//      level.wrs_Players = getEntArray("player", "classname");
-//      for (j = 0;j < level.wrs_Players.size;j++)
-//          if (isDefined(level.wrs_Players[j].wrs_stats_hud))
-//              level.wrs_Players[j].wrs_stats_hud[stat][element].color = (1,1,1);
+//      players = getEntArray("player", "classname");
+//      for (j = 0;j < players.size;j++)
+//          if (isDefined(players[j].wrs_stats_hud))
+//              players[j].wrs_stats_hud[stat][element].color = (1,1,1);
 
 		self.wrs_stats_hud[stat][element].color = (0,0,1);
 	}
@@ -571,10 +549,10 @@ wrs_stats_maintain_CheckSprStat(stat, element) {
 	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
 		level.wrs_stats_records[stat] = self.pers["stats"][stat];
 
-		level.wrs_Players = getEntArray("player", "classname");
-		for (j = 0;j < level.wrs_Players.size;j++)
-			if (isDefined(level.wrs_Players[j].wrs_stats_hud))
-				level.wrs_Players[j].wrs_stats_hud[element].color = (1,1,1);
+		players = getEntArray("player", "classname");
+		for (j = 0;j < players.size;j++)
+			if (isDefined(players[j].wrs_stats_hud))
+				players[j].wrs_stats_hud[element].color = (1,1,1);
 
 		self.wrs_stats_hud[element].color = (0,0,1);
 	}
@@ -582,9 +560,9 @@ wrs_stats_maintain_CheckSprStat(stat, element) {
 wrs_stats_maintain_CheckAllStat(stat) {
 	record = self;
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		player = level.wrs_Players[i];
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		player = players[i];
 
 		if (!isDefined(player.pers) || !isDefined(player.pers["stats"]))
 			continue;
@@ -593,8 +571,8 @@ wrs_stats_maintain_CheckAllStat(stat) {
 			record = player;
 		}
 	}
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		player = level.wrs_Players[i];
+	for (i = 0; i < players.size; i++) {
+		player = players[i];
 
 		if (!isDefined(player.pers) || !isDefined(player.pers["stats"]) || !isDefined(player.wrs_stats_hud))
 			continue;
@@ -623,7 +601,6 @@ wrs_PlayerConnect()
 	self.pers["stats"]["spree"]     = 0; self.pers["spree"] = 0;
 	self.pers["stats"]["headshots"] = 0;
 	self.pers["stats"]["differ"]    = 0;
-	self.pers["stats"]["xp"]        = 0;
 
 	if (self.name == "" || self.name == "^7" || self.name == "^7 " || self.name.size == 0 || self.name == "Unknown Soldier" || self.name == "UnnamedPlayer" ||
 	substr(self.name, 0, 11) == "^1Free Porn" ||
@@ -649,9 +626,7 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
-	score = 0;
-
-	if (isPlayer(attacker) && attacker != self) {     //He got killed by a player
+	if (isPlayer(attacker) && attacker != self) { //He got killed by a player
 		// Raise the spree
 		if (attacker.pers["spree"] < 0) {
 			attacker.pers["spree"] = 0;
@@ -670,21 +645,15 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 		}
 
 		// Calculate the distance
-		rawDistance = ((float)((int)(((distance(attacker.origin, self.origin) * (170 / 68))/100)*100))/100);
-		if (rawDistance > attacker.pers["stats"]["furthest"]) {
-			attacker.pers["stats"]["furthest"] = rawDistance;
-		}
-		if (rawDistance > 40) {
-			iPrintLn(level.wrs_print_prefix + attacker.name + " ^7shot an enemy from ^1" + rawDistance + "^7m!");
+		distance = (int)(distance(attacker.origin, self.origin) * 170 / 68 / 100); // 170/68 is unit to centimeter ratio (estimate)
+		if (distance > attacker.pers["stats"]["furthest"]) {
+			attacker.pers["stats"]["furthest"] = distance;
 		}
 
 		attacker thread wrs_blip();
 	}
 
 
-	self.pers["stats"]["xp"]--;
-	if (self.pers["stats"]["xp"] < 0)
-		self.pers["stats"]["xp"] = 0;
 
 	if (self.pers["spree"] <= 0) {
 		self.pers["spree"]--;
@@ -713,6 +682,13 @@ wrs_SpawnPlayer()
 
 	self setSpawnWeapon(self.pers["weapon1"]);
 
+	if (!isDefined(self.pers["welcomed"]) || self.pers["welcomed"] == false) {
+		self.pers["welcomed"] = true;
+
+		self iPrintLnBold("Stick to the rules, soldier " + self.name);
+		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com");
+	}
+
 	self thread wrs_stats_maintain();
 
 	if (level.wrs_anti_fastshoot) {
@@ -723,20 +699,17 @@ wrs_SpawnPlayer()
 		self thread wrs_sprint();
 	}
 
-	if (!isDefined(self.pers["welcomed"]) || self.pers["welcomed"] == false) {
-		self.pers["welcomed"] = true;
-
-		self iPrintLnBold("Stick to the rules, soldier " + self.name);
-		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com");
+	if (level.wrs_fence) {
+		self thread maps\mp\gametypes\_wrs_fence::monitor();
 	}
 }
 
 wrs_EndMap(text) {
 	cleanUp(true);
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		player = level.wrs_Players[i];
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		player = players[i];
 
 		player closeMenu();
 		player [[level.fnc_spawnSpectator]]();
@@ -762,11 +735,11 @@ wrs_EndMap(text) {
 		maps\mp\gametypes\_wrs_mapvote::wrs_MapVote(10);
 	}
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		if ((!isDefined(level.wrs_Players[i].sessionstate) || level.wrs_Players[i].sessionstate != "spectator")) //Prevents bug?
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		if ((!isDefined(players[i].sessionstate) || players[i].sessionstate != "spectator")) //Prevents bug?
 			continue;
-		level.wrs_Players[i] [[level.fnc_spawnIntermission]]();
+		players[i] [[level.fnc_spawnIntermission]]();
 	}
 }
 
@@ -780,9 +753,9 @@ wrs_leaderboards()
 	winner["headshots"][0]  = 0; winner["headshots"][1] = "^3Most Headshots^7: ^40";
 	winner["differ"][0]     = 0; winner["differ"][1]    = "^3Best Differential^7: ^40";
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
-		player = level.wrs_Players[i];
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		player = players[i];
 		if (player.pers["stats"]["score"] > winner["score"][0]) {
 			winner["score"][0] = player.pers["stats"]["score"];
 			winner["score"][1] = "^3Best Score^7: ^4" + player.pers["stats"]["score"] + "^7 | by " + player.name;
@@ -854,26 +827,26 @@ cleanUp(everything) {
 			}
 		}
 	}
-	level.wrs_Players = getEntArray("player", "classname");
-	for (i = 0; i < level.wrs_Players.size; i++) {
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
 
-		if (isDefined(level.wrs_Players[i].wrs_sprintHud))
-			level.wrs_Players[i].wrs_sprintHud destroy();
-		if (isDefined(level.wrs_Players[i].wrs_sprintHud_back))
-			level.wrs_Players[i].wrs_sprintHud_bg destroy();
+		if (isDefined(players[i].wrs_sprintHud))
+			players[i].wrs_sprintHud destroy();
+		if (isDefined(players[i].wrs_sprintHud_back))
+			players[i].wrs_sprintHud_bg destroy();
 
 		if (everything) {
-			if (isDefined(level.wrs_Players[i].wrs_stats_hud)) {
-				level.wrs_Players[i].wrs_stats_hud["score"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["bashes"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["furthest"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["spree"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["spreemax"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["headshots"] destroy();
-				level.wrs_Players[i].wrs_stats_hud["differ"] destroy();
+			if (isDefined(players[i].wrs_stats_hud)) {
+				players[i].wrs_stats_hud["score"] destroy();
+				players[i].wrs_stats_hud["bashes"] destroy();
+				players[i].wrs_stats_hud["furthest"] destroy();
+				players[i].wrs_stats_hud["spree"] destroy();
+				players[i].wrs_stats_hud["spreemax"] destroy();
+				players[i].wrs_stats_hud["headshots"] destroy();
+				players[i].wrs_stats_hud["differ"] destroy();
 			}
 
-			level.wrs_Players[i] removeWeaponSelectionHud();
+			players[i] removeWeaponSelectionHud();
 		}
 	}
 }

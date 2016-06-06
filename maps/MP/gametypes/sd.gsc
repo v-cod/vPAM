@@ -344,8 +344,8 @@ Callback_StartGameType()
 	}
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::wrs_start();
-		maps\mp\gametypes\_wrs::wrs_Stats();
+		maps\mp\gametypes\_wrs::start();
+		//maps\mp\gametypes\_wrs::wrs_stats();
 	}
 	// } // END WRS
 
@@ -1419,8 +1419,7 @@ startRound()
 	level.clock.font = "bigfixed";
 	level.clock setTimer(level.roundlength * 60);
 
-	// WRS {
-/*	if (getCvar("g_autodemo") == "1")
+	if (getCvar("g_autodemo") == "1")
 	{
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1430,7 +1429,6 @@ startRound()
 			player autoDemoStart();
 		}
 	}
-*/	// } // END WRS
 	if(game["matchstarted"])
 	{
 		level.clock.color = (0, 1, 0);

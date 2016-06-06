@@ -1,3 +1,33 @@
+init()
+{
+	level.wrs_maps[0][0]  = "mp_bocage";     level.wrs_maps[0][1]  = &"Bocage";     level.wrs_maps[0][2]  = "Bocage";
+	level.wrs_maps[1][0]  = "mp_brecourt";   level.wrs_maps[1][1]  = &"Brecourt";   level.wrs_maps[1][2]  = "Brecourt";
+	level.wrs_maps[2][0]  = "mp_carentan";   level.wrs_maps[2][1]  = &"Carentan";   level.wrs_maps[2][2]  = "Carentan";
+	level.wrs_maps[3][0]  = "mp_chateau";    level.wrs_maps[3][1]  = &"Chateau";    level.wrs_maps[3][2]  = "Chateau";
+	level.wrs_maps[4][0]  = "mp_dawnville";  level.wrs_maps[4][1]  = &"Dawnville";  level.wrs_maps[4][2]  = "Dawnville";
+	level.wrs_maps[5][0]  = "mp_depot";      level.wrs_maps[5][1]  = &"Depot";      level.wrs_maps[5][2]  = "Depot";
+	level.wrs_maps[6][0]  = "mp_harbor";     level.wrs_maps[6][1]  = &"Harbor";     level.wrs_maps[6][2]  = "Harbor";
+	level.wrs_maps[7][0]  = "mp_hurtgen";    level.wrs_maps[7][1]  = &"Hurtgen";    level.wrs_maps[7][2]  = "Hurtgen";
+	level.wrs_maps[8][0]  = "mp_neuville";   level.wrs_maps[8][1]  = &"Neuville";   level.wrs_maps[8][2]  = "Neuville";
+	level.wrs_maps[9][0]  = "mp_pavlov";     level.wrs_maps[9][1]  = &"Pavlov";     level.wrs_maps[9][2]  = "Pavlov";
+	level.wrs_maps[10][0] = "mp_powcamp";    level.wrs_maps[10][1] = &"POW Camp";   level.wrs_maps[10][2] = "POW Camp";
+	level.wrs_maps[11][0] = "mp_railyard";   level.wrs_maps[11][1] = &"Railyard";   level.wrs_maps[11][2] = "Railyard";
+	level.wrs_maps[12][0] = "mp_rocket";     level.wrs_maps[12][1] = &"Rocket";     level.wrs_maps[12][2] = "Rocket";
+	level.wrs_maps[13][0] = "mp_ship";       level.wrs_maps[13][1] = &"Ship";       level.wrs_maps[13][2] = "Ship";
+	level.wrs_maps[14][0] = "mp_stalingrad"; level.wrs_maps[14][1] = &"Stalingrad"; level.wrs_maps[14][2] = "Stalingrad";
+	level.wrs_maps[15][0] = "mp_tigertown";  level.wrs_maps[15][1] = &"Tigertown";  level.wrs_maps[15][2] = "Tigertown";
+
+	level.wrs_hud_mapvote_header = &"Map                                    Votes";
+
+	if (!isDefined(game["gamestarted"])) {
+		for (i = 0; i < level.wrs_maps.size; i++) {
+			precacheString(level.wrs_maps[i][1]);
+		}
+
+		precacheString(level.wrs_hud_mapvote_header);
+	}
+}
+
 //These functions handle the mapvoting
 wrs_MapVote(seconds)
 {
@@ -6,9 +36,9 @@ wrs_MapVote(seconds)
 	createMapVotingHud(level.wrs_Candidate.size);
 	level.wrs_MapVote_hud_timer setClock(seconds, 60, "hudStopwatch", 64, 64);
 
-	level.wrs_Players = getEntArray("player", "classname");
-	for(i = 0; i < level.wrs_Players.size; i++) {
-		level.wrs_Players[i] thread MapVotingPlayer();
+	players = getEntArray("player", "classname");
+	for(i = 0; i < players.size; i++) {
+		players[i] thread MapVotingPlayer();
 	}
 
 	wait seconds;                   //Let people vote for seconds
@@ -108,13 +138,13 @@ MapVotingCandidates(cndts)
 {
 	rotation = getCvar("sv_maprotation");
 	if(rotation == ""){
-		if(level.wrs_MapVote_Maps.size < cndts)
-			cndts = level.wrs_MapVote_Maps.size;
+		if(level.wrs_maps.size < cndts)
+			cndts = level.wrs_maps.size;
 
 		for(i = 0;i < cndts;i++){
-			candidate[i]["name"]    = level.wrs_MapVote_Maps[i][0];
-			candidate[i]["iString"] = level.wrs_MapVote_Maps[i][1];
-			candidate[i]["title"]   = level.wrs_MapVote_Maps[i][2];
+			candidate[i]["name"]    = level.wrs_maps[i][0];
+			candidate[i]["iString"] = level.wrs_maps[i][1];
+			candidate[i]["title"]   = level.wrs_maps[i][2];
 			candidate[i]["votes"]   = 0;
 		}
 	}
@@ -306,9 +336,9 @@ removeMapVotingHud()
 
 getMapIString(name)
 {
-	for(i = 0;i < level.wrs_MapVote_Maps.size;i++){
-		if(level.wrs_MapVote_Maps[i][0] == name){
-			return level.wrs_MapVote_Maps[i][1];
+	for(i = 0;i < level.wrs_maps.size;i++){
+		if(level.wrs_maps[i][0] == name){
+			return level.wrs_maps[i][1];
 		}
 	}
 
@@ -317,9 +347,9 @@ getMapIString(name)
 getMapTitle(name)
 {
 	title = 0;
-	for(i = 0;i < level.wrs_MapVote_Maps.size;i++)
-		if(level.wrs_MapVote_Maps[i][0] == name){
-			title = level.wrs_MapVote_Maps[i][2];
+	for(i = 0;i < level.wrs_maps.size;i++)
+		if(level.wrs_maps[i][0] == name){
+			title = level.wrs_maps[i][2];
 			break;
 		}
 

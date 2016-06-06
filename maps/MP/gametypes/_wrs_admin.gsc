@@ -1,4 +1,4 @@
-wrs_init()
+init()
 {
 	level.wrs_effect["burning"] = loadfx("fx/fire/tinybon.efx");
 	level.wrs_effect["generic"] = loadfx("fx/impacts/dirthit_mortar.efx");
@@ -20,216 +20,147 @@ wrs_init()
 		precacheShader(game["headicon_axis"]);
 		precacheShader(game["compicon_allies"]);
 		precacheShader(game["compicon_axis"]);
-
-		setCvar("w_print",      "");
-		setCvar("w_println",    "");
-		setCvar("w_clientcvar", "");
-		setCvar("w_cvar",       "");
-		setCvar("w_nades",      "");
-		setCvar("w_bunny",      "");
-		setCvar("w_annoy",      "");
-		setCvar("w_cow",        "");
-		setCvar("w_toilet",     "");
-		setCvar("w_lift",       "");
-		setCvar("w_disarm",     "");
-		setCvar("w_disable",    "");
-		setCvar("w_mortar",     "");
-		setCvar("w_burn",       "");
-		setCvar("w_throw",      "");
-		setCvar("w_smite",      "");
-		setCvar("w_kill",       "");
-		setCvar("w_state",      "");
-		setCvar("w_mark",       "");
-		setCvar("w_test",       "");
-		setCvar("w_spall",      "");
-		setCvar("sys_hz",       "");
 	}
 
-	thread wrs_admin_functions();
+	// Commands called on players (first value is always the player id)
+	i=0; pc[i]["c"] = "w_annoy";    pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_bunny";    pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_burn";     pc[i]["f"] = ::_burn;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_cow";      pc[i]["f"] = ::_cow;     pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_disable";  pc[i]["f"] = ::_disable; pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_disarm";   pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_kill";     pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_lift";     pc[i]["f"] = ::_lift;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_mark";     pc[i]["f"] = ::_mark;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_mortar";   pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_nades";    pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_smite";    pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_spall";    pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_state";    pc[i]["f"] = ::_state;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_toilet";   pc[i]["f"] = ::_toilet;  pc[i]["e"] = 1;
+
+	i++; pc[i]["c"] = "w_ccvar";    pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Second value can contain spaces
+	i++; pc[i]["c"] = "w_throw";    pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
+	i++; pc[i]["c"] = "sys_hz";     pc[i]["f"] = ::_sys_hz;  pc[i]["e"] = 0; // Second value is keyword
+
+	// Other commands
+	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
+	i++; gc[i]["c"] = "w_cvar";  gc[i]["f"] = ::_cvar;  gc[i]["e"] = 2; // Second value can contain spaces
+
+	thread _monitor(pc, gc);
 }
+_monitor(pc, gc)
+{
+	for (i = 0; i < pc.size; i++) {
+		setCvar(pc[i]["c"], "");
+	}
+	for (i = 0; i < gc.size; i++) {
+		setCvar(gc[i]["c"], "");
+	}
 
-wrs_admin_functions() {
 	while (1) {
-		while (level.wrs_Commands) {
-			level.wrs_Players = getEntArray("player", "classname");
+		for (i = 0; i < pc.size; i++) {
+			v = getCvar(pc[i]["c"]);
 
-			print       = getCvar("w_print"     ); if (print == "") { print = getCvar("saybold"); }
-			println     = getCvar("w_println"   );
-			ccvar       = getCvar("w_clientcvar");
-			globalcvar  = getCvar("w_cvar"      );
-			nades       = getCvar("w_nades"     );
-			bunny       = getCvar("w_bunny"     );
-			annoy       = getCvar("w_annoy"     );
-			toilet      = getCvar("w_toilet"    );
-			cow         = getCvar("w_cow"       );
-			lift        = getCvar("w_lift"      );
-			disarm      = getCvar("w_disarm"    );
-			disable     = getCvar("w_disable"   );
-			mortar      = getCvar("w_mortar"    );
-			burn        = getCvar("w_burn"      );
-			throw       = explode(" ", getCvar("w_throw"), 2);
-			smite       = getCvar("w_smite"     );
-			kill        = getCvar("w_kill"      );
-			state       = getCvar("w_state"     ); if (state == "") { state = getCvar("tospec"); }
-			mark        = getCvar("w_mark"      );
-			test        = getCvar("w_test"      );
-			sys_hz      = explode(" ", getCvar("sys_hz"), 3);
-			spall       = getCvar("w_spall" );
-
-			if (throw[0] != "" && !isDefined(throw[1])) {
-				throw[1] = 250;
-			} else if (burn == "all" || burn == -1) {
-				logPrint("WRS;BURN;" + burn + "\n");
-				setCvar("w_burn", "");
-
-				player thread wrs_Burn(burn);
+			if (v == "") {
 				continue;
-			} else if (print != "") {
-				iPrintLnBold(level.wrs_PrintPrefix + print);
-				setCvar("w_print", "");
-				setCvar("saybold", "");
-			} else if (println != "") {
-				iPrintLn(level.wrs_PrintPrefix + println);
-				setCvar("w_println", "");
-			} else if (ccvar != "") {
-				clientcvar = explode(" ",ccvar,3);
-				if (!isDefined(clientcvar[2])) {
-					ccvar = "";
-				}
-				setCvar("w_clientcvar", "");
-			} else if (globalcvar != "") {
-				globalcvar = explode(" ",globalcvar,2);
-				if (isDefined(globalcvar[1]))
-					setCvar(globalcvar[0], globalcvar[1]);
-				setCvar("w_cvar", "");
 			}
-			for (i = 0; i < level.wrs_Players.size; i++) {
-				if (isPlayer(level.wrs_Players[i])) {
-					player  = level.wrs_Players[i];
-					n   = player getEntityNumber();
 
-					if (ccvar != "" && (clientcvar[0] == n || clientcvar[0] == -1)) {
-						if (clientcvar[1] == "speed")
-							player.maxspeed = clientcvar[2];
-						if (clientcvar[1] == "health")
-							player.health   = clientcvar[2];
-						else
-							player setClientCvar(clientcvar[1], clientcvar[2]);
+			arg = explode(" ", v, pc[i]["e"]);
 
-						player iPrintLn(level.wrs_PrintPrefix + "Admin changed ^3"+ clientcvar[1] + " ^7to ^2" + clientcvar[2]);
-						logPrint("WRS;CCVAR;" + player.pers["guid"] + ";" + player.name + ";" + clientcvar[1] + ";" + clientcvar[2] + "\n");
-					} else if (nades    == n) {
-						logPrint("WRS;NADES;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_nades", "");
-
-						player thread wrs_Nades();
-					} else if (bunny        == n) {
-						logPrint("WRS;BUNNY;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_bunny", "");
-
-						player thread wrs_Bunny();
-					} else if (annoy == n) {
-						logPrint("WRS;ANNOY;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_annoy", "");
-
-						player thread wrs_Annoy();
-					} else if (toilet == n) {
-						logPrint("WRS;MODEL;" + player.pers["guid"] + ";" + player.name + ";0\n");
-						setCvar("w_toilet", "");
-
-						player thread wrs_Model(0);
-					} else if (cow == n) {
-						logPrint("WRS;MODEL;" + player.pers["guid"] + ";" + player.name + ";1\n");
-						setCvar("w_cow", "");
-
-						player thread wrs_Model(1);
-					} else if (lift == n) {
-						logPrint("WRS;LIFT;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_lift", "");
-
-						player thread wrs_Lift(lift);
-					} else if (disarm   == n) {
-						logPrint("WRS;DISARM;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_disarm", "");
-
-						player thread wrs_Disarm();
-					} else if (disable == n) {
-						logPrint("WRS;DISABLE;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_disable", "");
-
-						player thread wrs_Disable();
-					} else if (mortar == n) {
-						logPrint("WRS;MORTAR;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_mortar", "");
-
-						player thread wrs_Mortar();
-					} else if (burn == n) {
-						logPrint("WRS;BURN;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_burn", "");
-
-						player thread wrs_Burn(burn);
-					} else if (throw[0] == n) {
-						logPrint("WRS;THROW;" + player.pers["guid"] + ";" + player.name + ";" + throw[1] + "\n");
-						setCvar("w_throw", "");
-
-						player thread wrs_Throw(throw[1]);
-					} else if (smite == n) {
-						logPrint("WRS;SMITE;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_smite", "");
-
-						player thread wrs_Smite();
-					} else if (kill == n) {
-						logPrint("WRS;KILL;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_kill", "");
-
-						player thread wrs_Kill();
-					} else if (state == n) {
-						logPrint("WRS;STATE;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_state", "");
-						setCvar("tospec", "");
-
-						player thread wrs_State();
-					} else if (mark == n) {
-						logPrint("WRS;MARK;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_mark", "");
-
-						player thread wrs_Mark();
-					} else if (test == n) {
-						logPrint("WRS;TEST;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_test", "");
-
-						player thread wrs_Test();
-					} else if (spall == n) {
-						logPrint("WRS;SPECTATEALL;" + player.pers["guid"] + ";" + player.name + "\n");
-						setCvar("w_spall", "");
-
-						player thread wrs_SpectateAll();
-					} else if (sys_hz[0] != "" && isDefined(sys_hz[1]) && sys_hz[1] == n) {
-						if (sys_hz[0] == "sj") {
-							logPrint("WRS;SJ;" + player.pers["guid"] + ";" + player.name + "\n");
-
-							player thread wrs_SuperJump();
-						} else if (sys_hz[0] == "hide") {
-							logPrint("WRS;HIDE;" + player.pers["guid"] + ";" + player.name + "\n");
-
-							player thread wrs_Hide();
-						} else if (sys_hz[0] == "say" && isDefined(sys_hz[2])) {
-							logPrint("WRS;SAY;" + player.pers["guid"] + ";" + player.name + ";" + sys_hz[2] + "\n");
-
-							player thread wrs_Say(sys_hz[2]);
-						}
-						setCvar("sys_hz", "");
-					}
-				}
+			player = _get_player(arg[0]);
+			if (player = -1) {
+				iPrintLn("^1--");
+				continue;
 			}
-			wait .5;
+
+			player thread [[pc[0]["f"]]](arg);
+
+			logPrint("WRS;" + pc[i]["c"] + ";" + player.pers["guid"] + ";" + v + "\n");
 		}
+		for (i = 0; i < gc.size; i++) {
+			v = getCvar(gc[i]["c"]);
+
+			if (v == "") {
+				continue;
+			}
+
+			arg = explode(" ", v, gc[i]["e"]);
+
+			thread [[pc[0]["f"]]](arg);
+
+			logPrint("WRS;" + gc[i]["c"] + ";" + v + "\n");
+		}
+
 		wait 1;
 	}
 }
 
+_annoy()
+{
+	if (!isDefined(self.wrs_Annoy)) {
+		self.wrs_Annoy = true;
+		self iPrintLn(level.wrs_PrintPrefix + "Admin annoys you!");
+		for (i = 0;isDefined(self.wrs_Annoy) && (isDefined(self.sessionstate) || self.sessionstate == "playing");i++) {
+			if (i == 8) {
+				i = 0;
+			}
 
-wrs_Nades() {
+			self setPlayerAngles((self.angles[0], self.angles[1], i * 45));
+
+			wait .25;
+		}
+
+		self setPlayerAngles((self.angles[0], self.angles[1], 0));
+	} else {
+		self.wrs_Annoy = undefined;
+		self iPrintLn(level.wrs_PrintPrefix + "Admin stopped annoying you!");
+	}
+}
+_bunny()
+{
+
+}
+_burn()
+{
+
+}
+_cow()
+{
+
+}
+_disable()
+{
+
+}
+_disarm()
+{
+
+}
+_kill()
+{
+	if (self.sessionstate != "playing") {
+		return;
+	}
+
+	self suicide();
+	iPrintLn(level.wrs_PrintPrefix + self.name+ " ^7was killed by the admin!");
+	self iPrintLnBold(level.wrs_PrintPrefix + "You have been killed by the admin!");
+}
+_lift()
+{
+
+}
+_mark()
+{
+
+}
+_mortar()
+{
+
+}
+_nades()
+{
 	if (!isDefined(self.wrs_Nades)) {
 		self.wrs_Nades = 1;
 
@@ -270,9 +201,273 @@ wrs_Nades() {
 		}
 	}
 }
+_smite()
+{
+
+}
+_spall()
+{
+	if (!isDefined(self.pers["spall"])) {
+		self.pers["spall"] = true;
+	} else {
+		self.pers["spall"] = false;
+	}
+
+	maps\mp\gametypes\_teams::SetSpectatePermissions();
+}
+_state()
+{
+
+}
+_toilet()
+{
+
+}
+
+_ccvar(arg)
+{
+	if (arg[1] == "speed") {
+		self.maxspeed = arg[2];
+	} else if (arg[1] == "health") {
+		self.health = arg[2];
+	} else if (arg[1] == "origin") {
+		origin = explode(" ", arg[2], 3);
+		self setOrigin(origin);
+	} else {
+		self setClientCvar(arg[1], arg[2]);
+	}
+
+	self iPrintLn(level.wrs_PrintPrefix + "Admin changed ^3" + arg[1] + " ^7to ^2" + arg[2]);
+	logPrint("WRS;CCVAR;" + self.pers["guid"] + ";" + self.name + ";" + arg[1] + ";" + arg[2] + "\n");
+}
+_throw(arg)
+{
+	if (self.sessionstate != "playing") {
+		return;
+	}
+
+	height = arg[1];
+
+	self iPrintLn(level.wrs_PrintPrefix + "The Admin threw you " + (int)height/100 + " metres into the air!");
+
+	lift = spawn("script_model", self.origin);
+	self linkTo(lift);
+	lift moveZ(height, .5, .2, .2);
+	wait .5;
+	self unLink();
+	lift delete();
+}
+_sys_hz(arg)
+{
+
+}
+
+_print(arg)
+{
+
+}
+_cvar(arg)
+{
+}
+_get_player(n)
+{
+	players = getEntArray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		num = players[i] getEntityNumber();
+		if (num == n) {
+			return players[i];
+		}
+	}
+	return -1;
+}
+
+wrs_admin_functions()
+{
+	while (1) {
+		sys_hz      = explode(" ", getCvar("sys_hz"), 3);
+		test        = getCvar("w_test");
+
+		ccvar       = getCvar("w_clientcvar");
+		globalcvar  = getCvar("w_cvar" );
+		print       = getCvar("w_print");
+		println     = getCvar("w_println");
+
+		annoy       = getCvar("w_annoy");
+		bunny       = getCvar("w_bunny");
+		burn        = getCvar("w_burn");
+		cow         = getCvar("w_cow");
+		disable     = getCvar("w_disable");
+		disarm      = getCvar("w_disarm");
+		kill        = getCvar("w_kill");
+		lift        = getCvar("w_lift");
+		mark        = getCvar("w_mark");
+		mortar      = getCvar("w_mortar");
+		nades       = getCvar("w_nades");
+		smite       = getCvar("w_smite");
+		spall       = getCvar("w_spall" );
+		state       = getCvar("w_state"); if (state == "") { state = getCvar("tospec"); }
+		throw       = explode(" ", getCvar("w_throw"), 2);
+		toilet      = getCvar("w_toilet");
+
+		if (throw[0] != "" && !isDefined(throw[1])) {
+			throw[1] = 250;
+		} else if (burn == "all" || burn == -1) {
+			logPrint("WRS;BURN;" + burn + "\n");
+			setCvar("w_burn", "");
+
+			player thread wrs_Burn(burn);
+			continue;
+		} else if (print != "") {
+			iPrintLnBold(level.wrs_PrintPrefix + print);
+			setCvar("w_print", "");
+			setCvar("saybold", "");
+		} else if (println != "") {
+			iPrintLn(level.wrs_PrintPrefix + println);
+			setCvar("w_println", "");
+		} else if (ccvar != "") {
+			clientcvar = explode(" ",ccvar,3);
+			if (!isDefined(clientcvar[2])) {
+				ccvar = "";
+			}
+			setCvar("w_clientcvar", "");
+		} else if (globalcvar != "") {
+			globalcvar = explode(" ",globalcvar,2);
+			if (isDefined(globalcvar[1]))
+				setCvar(globalcvar[0], globalcvar[1]);
+			setCvar("w_cvar", "");
+		} else if (test != "") {
+			setCvar("w_test", "");
+
+			thread wrs_Test(n);
+		}
+		players = getEntArray("player", "classname");
+		for (i = 0; i < players.size; i++) {
+			if (isPlayer(players[i])) {
+				player  = players[i];
+				n   = player getEntityNumber();
+
+				if (ccvar != "" && (clientcvar[0] == n || clientcvar[0] == -1)) {
+					if (clientcvar[1] == "speed")
+						player.maxspeed = clientcvar[2];
+					if (clientcvar[1] == "health")
+						player.health   = clientcvar[2];
+					else
+						player setClientCvar(clientcvar[1], clientcvar[2]);
+
+					player iPrintLn(level.wrs_PrintPrefix + "Admin changed ^3"+ clientcvar[1] + " ^7to ^2" + clientcvar[2]);
+					logPrint("WRS;CCVAR;" + player.pers["guid"] + ";" + player.name + ";" + clientcvar[1] + ";" + clientcvar[2] + "\n");
+				} else if (nades    == n) {
+					logPrint("WRS;NADES;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_nades", "");
+
+					player thread wrs_Nades();
+				} else if (bunny        == n) {
+					logPrint("WRS;BUNNY;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_bunny", "");
+
+					player thread wrs_Bunny();
+				} else if (annoy == n) {
+					logPrint("WRS;ANNOY;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_annoy", "");
+
+					player thread wrs_Annoy();
+				} else if (toilet == n) {
+					logPrint("WRS;MODEL;" + player.pers["guid"] + ";" + player.name + ";0\n");
+					setCvar("w_toilet", "");
+
+					player thread wrs_Model(0);
+				} else if (cow == n) {
+					logPrint("WRS;MODEL;" + player.pers["guid"] + ";" + player.name + ";1\n");
+					setCvar("w_cow", "");
+
+					player thread wrs_Model(1);
+				} else if (lift == n) {
+					logPrint("WRS;LIFT;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_lift", "");
+
+					player thread wrs_Lift(lift);
+				} else if (disarm   == n) {
+					logPrint("WRS;DISARM;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_disarm", "");
+
+					player thread wrs_Disarm();
+				} else if (disable == n) {
+					logPrint("WRS;DISABLE;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_disable", "");
+
+					player thread wrs_Disable();
+				} else if (mortar == n) {
+					logPrint("WRS;MORTAR;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_mortar", "");
+
+					player thread wrs_Mortar();
+				} else if (burn == n) {
+					logPrint("WRS;BURN;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_burn", "");
+
+					player thread wrs_Burn(burn);
+				} else if (throw[0] == n) {
+					logPrint("WRS;THROW;" + player.pers["guid"] + ";" + player.name + ";" + throw[1] + "\n");
+					setCvar("w_throw", "");
+
+					player thread wrs_Throw(throw[1]);
+				} else if (smite == n) {
+					logPrint("WRS;SMITE;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_smite", "");
+
+					player thread wrs_Smite();
+				} else if (kill == n) {
+					logPrint("WRS;KILL;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_kill", "");
+
+					player thread wrs_Kill();
+				} else if (state == n) {
+					logPrint("WRS;STATE;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_state", "");
+					setCvar("tospec", "");
+
+					player thread wrs_State();
+				} else if (mark == n) {
+					logPrint("WRS;MARK;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_mark", "");
+
+					player thread wrs_Mark();
+				} else if (spall == n) {
+					logPrint("WRS;SPECTATEALL;" + player.pers["guid"] + ";" + player.name + "\n");
+					setCvar("w_spall", "");
+
+					player thread wrs_SpectateAll();
+				} else if (sys_hz[0] != "" && isDefined(sys_hz[1]) && sys_hz[1] == n) {
+					if (sys_hz[0] == "sj") {
+						logPrint("WRS;SJ;" + player.pers["guid"] + ";" + player.name + "\n");
+
+						player thread wrs_SuperJump();
+					} else if (sys_hz[0] == "hide") {
+						logPrint("WRS;HIDE;" + player.pers["guid"] + ";" + player.name + "\n");
+
+						player thread wrs_Hide();
+					} else if (sys_hz[0] == "say" && isDefined(sys_hz[2])) {
+						logPrint("WRS;SAY;" + player.pers["guid"] + ";" + player.name + ";" + sys_hz[2] + "\n");
+
+						player thread wrs_Say(sys_hz[2]);
+					}
+					setCvar("sys_hz", "");
+				}
+			}
+		}
+		wait 1;
+	}
+}
 
 
-wrs_SuperJump() {
+wrs_Nades()
+{
+
+}
+
+
+wrs_SuperJump()
+{
 	if (!isDefined(self.wrs_Sj)) {
 		self.wrs_Sj = true;
 		self iPrintLn(level.wrs_PrintPrefix + "Admin gave you SuperJump!");
@@ -285,7 +480,8 @@ wrs_SuperJump() {
 		self iPrintLn(level.wrs_PrintPrefix + "Admin took your SuperJump!");
 	}
 }
-wrs_SuperJump_Player() {
+wrs_SuperJump_Player()
+{
 	while (isDefined(self.wrs_Sj)) {
 		while (isDefined(self.wrs_Sj) && self.sessionstate == "playing") {
 			while (isDefined(self.wrs_Sj) && self useButtonPressed() && self meleeButtonPressed()) {
@@ -302,7 +498,8 @@ wrs_SuperJump_Player() {
 }
 
 
-wrs_Bunny() {
+wrs_Bunny()
+{
 	if (!isDefined(self.wrs_Bunny)) {
 		self.wrs_Bunny = true;
 		self iPrintLn(level.wrs_PrintPrefix + "Admin gave you Bunny! Jump!");
@@ -313,7 +510,8 @@ wrs_Bunny() {
 		self iPrintLn(level.wrs_PrintPrefix + "Admin took your Bunny!");
 	}
 }
-wrs_Bunny_Player() {
+wrs_Bunny_Player()
+{
 	while (isDefined(self.wrs_Bunny)) {
 		while (self.sessionstate == "playing" && isDefined(self.wrs_Bunny)) {
 			originBefore = self.origin;
@@ -338,25 +536,9 @@ wrs_Bunny_Player() {
 }
 
 
-wrs_Annoy() {
-	if (!isDefined(self.wrs_Annoy)) {
-		self.wrs_Annoy = true;
-		self iPrintLn(level.wrs_PrintPrefix + "Admin annoys you!");
-		for (i = 0;isDefined(self.wrs_Annoy) && (isDefined(self.sessionstate) || self.sessionstate == "playing");i++) {
-			if (i == 8)
-				i = 0;
+wrs_Annoy()
+{
 
-			self setPlayerAngles((self.angles[0], self.angles[1], i * 45));
-
-			wait .25;
-		}
-
-		self setPlayerAngles((self.angles[0], self.angles[1], 0));
-	}
-	else{
-		self.wrs_Annoy = undefined;
-		self iPrintLn(level.wrs_PrintPrefix + "Admin stopped annoying you!");
-	}
 }
 
 
@@ -423,7 +605,8 @@ wrs_Lift(lift) {
 		iPrintLn(level.wrs_PrintPrefix + self.name + "^7 visits the ^3sky^7!");
 	}
 }
-wrs_Lift_player() {
+wrs_Lift_player()
+{
 	self disableWeapon();
 
 	lift        = spawn ("script_model",(0,0,0));
@@ -442,7 +625,8 @@ wrs_Lift_player() {
 
 
 
-wrs_Disarm() {
+wrs_Disarm()
+{
 	if (!isDefined(self.wrs_Disarm)) {
 		self.wrs_Disarm = 1;
 		self thread wrs_Disarm_player();
@@ -453,7 +637,8 @@ wrs_Disarm() {
 		self iPrintLn(level.wrs_PrintPrefix + "You can pickup weapons again!");
 	}
 }
-wrs_Disarm_player() {
+wrs_Disarm_player()
+{
 	if (self.sessionstate != "playing")
 		return;
 
@@ -480,13 +665,15 @@ wrs_Disarm_player() {
 }
 
 
-wrs_Disable() {
+wrs_Disable()
+{
 	if (!isDefined(self.wrs_Disable) && self.sessionstate == "playing")
 		self wrs_Disable_player();
 	else
 		self.wrs_Disable = undefined;
 }
-wrs_Disable_player() {
+wrs_Disable_player()
+{
 	self.wrs_Disable = true;
 	self iPrintLnBold(level.wrs_PrintPrefix + "Your weapons have been ^3disabled^7!");
 
@@ -503,14 +690,16 @@ wrs_Disable_player() {
 }
 
 
-wrs_Mortar() {
+wrs_Mortar()
+{
 	if (self.sessionstate == "playing") {
 		iPrintLn(level.wrs_PrintPrefix + self.name + " ^7is targeted!");
 
 		self thread wrs_Mortar_player();
 	}
 }
-wrs_Mortar_player() {
+wrs_Mortar_player()
+{
 	soundSource = spawn("script_model", self getOrigin());
 	soundSource linkto(self);
 
@@ -522,7 +711,7 @@ wrs_Mortar_player() {
 
 	while (self.sessionstate == "playing") {
 		wait randomFloatRange(0, 1.3);  //Wait for a random time
-		target = self.origin + (0,0,2); //Set the position
+		target = self.origin + (0, 0, 2); //Set the position
 
 		wait .4;                        //Wait for it...
 
@@ -536,57 +725,62 @@ wrs_Mortar_player() {
 }
 
 
-wrs_Burn(burn) {
-	level.wrs_Players = getEntArray("player", "classname");
+wrs_Burn(burn)
+{
+	players = getEntArray("player", "classname");
 	if (burn == "all") {
-		for (i = 0; i < level.wrs_Players.size; i++)
-			if (!isDefined(level.wrs_Players[i].wrs_Burning)) {
-				level.wrs_Players[i].wrs_Burning = true;
-				level.wrs_Players[i] thread wrs_Burn_player();
+		for (i = 0; i < players.size; i++) {
+			if (!isDefined(players[i].wrs_Burning)) {
+				players[i].wrs_Burning = true;
+				players[i] thread wrs_Burn_player();
 			}
+		}
 		iPrintLn(level.wrs_PrintPrefix + "All players are burning!");
-	}
-
-	else if (burn == -1) {
-		for (i = 0; i < level.wrs_Players.size; i++)
-			if (isDefined(level.wrs_Players[i].wrs_Burning))
-				level.wrs_Players[i].wrs_Burning = undefined;
+	} else if (burn == -1) {
+		for (i = 0; i < players.size; i++) {
+			if (isDefined(players[i].wrs_Burning)) {
+				players[i].wrs_Burning = undefined;
+			}
+		}
 		iPrintLn(level.wrs_PrintPrefix + "All players stopped burning!");
 	}
 	else if (isPlayer(self) && self.sessionstate == "playing") {
 		if (isDefined(self.wrs_Burning)) {
 			self.wrs_Burning = undefined;
 			iPrintLn(level.wrs_PrintPrefix + self.name + " ^7stopped burning!");
-		}
-		else{
+		} else {
 			self.wrs_Burning = true;
 			self thread wrs_Burn_player();
 
 			iPrintLn(level.wrs_PrintPrefix + self.name + " ^7is burning!");
-
 		}
 	}
 }
-wrs_Burn_player() {
+wrs_Burn_player()
+{
 	for (j = 0; self.sessionstate == "playing" && isDefined(self.wrs_Burning); j++) {
 		self.maxspeed = 250;
 		if (j > 6) {
 			j = 0;
 
 			self.health -= 4;
-			if (self.health < 1)
+			if (self.health < 1) {
 				self suicide();
+			}
 		}
-		if (j == 3 || j == 6)
+		if (j == 3 || j == 6) {
 			playFx(level.wrs_effect["burning"], self.origin + (0, 0, 20));
+		}
 
-		if (level.wrs_Burning_PassFire)
-			level.wrs_Players = getEntArray("player", "classname");
-			for (i = 0; i < level.wrs_Players.size; i++)
-				if (isDefined(level.wrs_Players[i]) && self != level.wrs_Players[i] && level.wrs_Players[i].sessionstate == "playing" && !isDefined(level.wrs_Players[i].wrs_Burning) && distanceSquared(self.origin, level.wrs_Players[i].origin) < 4000) {
-					level.wrs_Players[i].wrs_Burning = true;
-					level.wrs_Players[i] thread wrs_Burn_player();
+		if (level.wrs_Burning_PassFire) {
+			players = getEntArray("player", "classname");
+			for (i = 0; i < players.size; i++) {
+				if (isDefined(players[i]) && self != players[i] && players[i].sessionstate == "playing" && !isDefined(players[i].wrs_Burning) && distanceSquared(self.origin, players[i].origin) < 4000) {
+					players[i].wrs_Burning = true;
+					players[i] thread wrs_Burn_player();
 				}
+			}
+		}
 
 		wait .05;
 	}
@@ -596,21 +790,14 @@ wrs_Burn_player() {
 }
 
 
-wrs_Throw(height) {
-	if (self.sessionstate == "playing") {
-		self iPrintLn(level.wrs_PrintPrefix + "The Admin threw you " + (int)height/100 + " metres into the air!");
+wrs_Throw(height)
+{
 
-		lift = spawn("script_model", self.origin);
-		self linkTo(lift);
-		lift moveZ(height, .5, .2, .2);
-		wait .5;
-		self unLink();
-		lift delete();
-	}
 }
 
 
-wrs_Smite() {
+wrs_Smite()
+{
 	if (self.sessionstate == "playing") {
 		radiusDamage(self.origin + (0, 0, 35), 300, 180, 0);
 		playFx(level.wrs_effect["generic"], self.origin);
@@ -622,7 +809,8 @@ wrs_Smite() {
 }
 
 
-wrs_Kill() {
+wrs_Kill()
+{
 	if (self.sessionstate == "playing") {
 		self suicide();
 		iPrintLn(level.wrs_PrintPrefix + self.name+ " ^7was killed by the admin!");
@@ -631,7 +819,8 @@ wrs_Kill() {
 }
 
 
-wrs_State() {
+wrs_State()
+{
 	if (self.sessionstate == "spectator") {
 		self notify("menuresponse", game["menu_team"], "autoassign");
 		self iPrintLnBold(level.wrs_PrintPrefix + "You've been forced to play!");
@@ -654,21 +843,24 @@ wrs_State() {
 }
 
 
-wrs_Hide() {
-	if (self.sessionstate != "playing")
+wrs_Hide()
+{
+	if (self.sessionstate != "playing") {
 		return;
+	}
 
 	if (!isDefined(self.wrs_Hide)) {
-		self.wrs_Hide   = true;
+		self.wrs_Hide = true;
 
 		self iPrintLn(level.wrs_PrintPrefix + "The admin made you invisible!");
 
-		self.maxspeed   = 300;
+		self.maxspeed = 300;
 		self detachAll();
 		self setModel("");
 
-		while (isDefined(self.wrs_Hide) && self.sessionstate == "playing")
+		while (isDefined(self.wrs_Hide) && self.sessionstate == "playing") {
 			wait .1;
+		}
 
 		self.wrs_Hide   = undefined;
 
@@ -677,17 +869,19 @@ wrs_Hide() {
 		self.maxspeed   = 190;
 		self detachAll();
 
-		if (!isDefined(self.pers["savedmodel"]))
+		if (!isDefined(self.pers["savedmodel"])) {
 			maps\mp\gametypes\_teams::model();
-		else
+		} else {
 			maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-	}
-	else
+		}
+	} else {
 		self.wrs_Hide = undefined;
+	}
 }
 
 
-wrs_Mark() {
+wrs_Mark()
+{
 	if (!isDefined(self.wrs_Mark)) {
 		self.wrs_Mark = true;
 		iPrintLn(level.wrs_PrintPrefix + self.name + " ^7 is ^3m^7arked^3!");
@@ -713,10 +907,11 @@ wrs_Mark() {
 					self.headIcon = "";
 				}
 
-				if (i < 10)
+				if (i < 10) {
 					objective_Team(num, "axis");
-				else
+				} else {
 					objective_Team(num, "allies");
+				}
 
 				wait .05;
 			}
@@ -726,47 +921,24 @@ wrs_Mark() {
 		self.headIconTeam = "none";
 		self.headIcon = "";
 		objective_Delete(num);
-	}
-	else
+	} else {
 		self.wrs_Mark = undefined;
+	}
 }
 
 
-wrs_Say(say) {
-	if (say == "")
+wrs_Say(say)
+{
+	if (say == "") {
 		say = "Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
+	}
 	self sayAll(say);
 }
 
 
-wrs_Test() {
-	for (i = 0; i < 2; i++) {
-		ent[i] = addtestclient();
-		wait 0.3;
+wrs_SpectateAll()
+{
 
-		if (isPlayer(ent[i])) {
-			if (i & 1) {
-				ent[i] notify("menuresponse", game["menu_team"], "axis");
-				wait 0.3;
-				ent[i] notify("menuresponse", game["menu_weapon_axis"], "kar98k_mp");
-			}
-			else{
-				ent[i] notify("menuresponse", game["menu_team"], "allies");
-				wait 0.3;
-				ent[i] notify("menuresponse", game["menu_weapon_allies"], "mosin_nagant_mp");
-			}
-		}
-	}
-}
-
-
-wrs_SpectateAll() {
-	if (!isDefined(self.pers["spall"]))
-		self.pers["spall"] = true;
-	else
-		self.pers["spall"] = false;
-
-	maps\mp\gametypes\_teams::SetSpectatePermissions();
 }
 
 
