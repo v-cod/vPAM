@@ -84,11 +84,7 @@ main()
 	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
 	level.callbackPlayerDamage = ::Callback_PlayerDamage;
 	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-<<<<<<< HEAD
 	// WRS {
-=======
-	//**WALEDIT**//
->>>>>>> origin/master
 	level.wrs = getCvarInt("scr_wrs");
 	if(level.wrs){
 		level.fnc_spawnPlayer       = ::spawnPlayer;
@@ -97,11 +93,7 @@ main()
 
 		level.gametype = "tdm";
 	}
-<<<<<<< HEAD
 	// } // END WRS
-=======
-	//****//
->>>>>>> origin/master
 
 	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
 
@@ -210,20 +202,12 @@ Callback_StartGameType()
 	precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
 	precacheItem("item_health");
 
-<<<<<<< HEAD
 	// WRS {
-=======
-	//**WALEDIT**//
->>>>>>> origin/master
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::wrs_start();
 		maps\mp\gametypes\_wrs::wrs_Stats();
 	}
-<<<<<<< HEAD
 	// } // END WRS
-=======
-	//****//
->>>>>>> origin/master
 
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::precache();
@@ -243,15 +227,9 @@ Callback_StartGameType()
 
 Callback_PlayerConnect()
 {
-<<<<<<< HEAD
 	// WRS {
 	maps\mp\gametypes\_wrs::wrs_PlayerConnect();
 	// } // END WRS
-=======
-	//**WALEDIT**//
-	maps\mp\gametypes\_wrs::wrs_PlayerConnect();
-	//****//
->>>>>>> origin/master
 
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
@@ -292,21 +270,13 @@ Callback_PlayerConnect()
 		else
 		{
 			spawnSpectator();
-<<<<<<< HEAD
 			// WRS {
-=======
-			//**WALEDIT**//
->>>>>>> origin/master
 			self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
 /*			if(self.pers["team"] == "allies")
 				self openMenu(game["menu_weapon_allies"]);
 			else
 				self openMenu(game["menu_weapon_axis"]);
-<<<<<<< HEAD
 */			// } // END WRS
-=======
-*/			//****//
->>>>>>> origin/master
 		}
 	}
 	else
@@ -326,7 +296,6 @@ Callback_PlayerConnect()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
-<<<<<<< HEAD
 
 		// WRS {
 		if (level.wrs) {
@@ -335,14 +304,6 @@ Callback_PlayerConnect()
 			}
 		}
 		// } // END WRS
-=======
-		//**WALEDIT**//
-		if(level.wrs){
-			maps\mp\gametypes\_wrs::wrs_PlayerMenu(menu, response);
-			continue;
-		}
-		//****//
->>>>>>> origin/master
 
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
@@ -399,13 +360,7 @@ Callback_PlayerConnect()
 
 				if(response == self.pers["team"] && (self.sessionstate == "playing" || self.sessionstate == "dead"))
 				{
-<<<<<<< HEAD
 					if(self.pers["team"] == "allies")
-=======
-					//**WALEDIT**//
-					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*					if(self.pers["team"] == "allies")
->>>>>>> origin/master
 					{
 						self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
 						self openMenu(game["menu_weapon_allies"]);
@@ -415,10 +370,6 @@ Callback_PlayerConnect()
 						self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
 						self openMenu(game["menu_weapon_axis"]);
 					}
-<<<<<<< HEAD
-=======
-*/					//****//
->>>>>>> origin/master
 					break;
 				}
 
@@ -492,13 +443,7 @@ Callback_PlayerConnect()
 
 				self setClientCvar("ui_weapontab", "1");
 
-<<<<<<< HEAD
 				if(self.pers["team"] == "allies")
-=======
-				//**WALEDIT**//
-				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*				if(self.pers["team"] == "allies")
->>>>>>> origin/master
 				{
 					self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
 					self openMenu(game["menu_weapon_allies"]);
@@ -508,10 +453,6 @@ Callback_PlayerConnect()
 					self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
 					self openMenu(game["menu_weapon_axis"]);
 				}
-<<<<<<< HEAD
-=======
-*/				//****//
->>>>>>> origin/master
 				break;
 
 			case "spectator":
@@ -530,20 +471,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-<<<<<<< HEAD
 				if(self.pers["team"] == "allies")
 					self openMenu(game["menu_weapon_allies"]);
 				else if(self.pers["team"] == "axis")
 					self openMenu(game["menu_weapon_axis"]);
-=======
-				//**WALEDIT**//
-				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
-*/				//****//
->>>>>>> origin/master
 				break;
 
 			case "viewmap":
@@ -555,33 +486,7 @@ Callback_PlayerConnect()
 				break;
 			}
 		}
-<<<<<<< HEAD
 		else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
-=======
-		//**WALEDIT**//
-		else if(menu == "menu_weapon1"){
-			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][0])) && self.pers["weapon"][0] == response)
-				continue;
-			self.pers["weapon"][0] = response;
-		}
-		else if(menu == "menu_weapon2"){
-			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][1])) && self.pers["weapon"][1] == response)
-				continue;
-			if(!isDefined(self.pers["weapon"][1])){
-				self.pers["weapon"][1] = response;
-				spawnPlayer();
-				self thread printJoinedTeam(self.pers["team"]);
-			}
-			else{
-				self.pers["weapon"][1] = response;
-
-				self iPrintLn("You will spawn with new weapons");
-			}
-			if (isdefined (self.autobalance_notify))
-				self.autobalance_notify destroy();
-		}
-/*		else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
->>>>>>> origin/master
 		{
 			if(response == "team")
 			{
@@ -633,10 +538,6 @@ Callback_PlayerConnect()
 			if (isdefined (self.autobalance_notify))
 				self.autobalance_notify destroy();
 		}
-<<<<<<< HEAD
-=======
-*/		//****//
->>>>>>> origin/master
 		else if(menu == game["menu_viewmap"])
 		{
 			switch(response)
@@ -646,20 +547,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-<<<<<<< HEAD
 				if(self.pers["team"] == "allies")
 					self openMenu(game["menu_weapon_allies"]);
 				else if(self.pers["team"] == "axis")
 					self openMenu(game["menu_weapon_axis"]);
-=======
-				//**WALEDIT**//
-				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
-*/				//****//
->>>>>>> origin/master
 				break;
 
 			case "callvote":
@@ -676,20 +567,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-<<<<<<< HEAD
 				if(self.pers["team"] == "allies")
 					self openMenu(game["menu_weapon_allies"]);
 				else if(self.pers["team"] == "axis")
 					self openMenu(game["menu_weapon_axis"]);
-=======
-				//**WALEDIT**//
-				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else if(self.pers["team"] == "axis")
-					self openMenu(game["menu_weapon_axis"]);
-*/				//****//
->>>>>>> origin/master
 				break;
 
 			case "viewmap":
@@ -708,15 +589,9 @@ Callback_PlayerConnect()
 
 Callback_PlayerDisconnect()
 {
-<<<<<<< HEAD
 	// WRS {
 	self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
 	// } // END WRS
-=======
-	//**WALEDIT**//
-	self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
-	//****//
->>>>>>> origin/master
 
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
@@ -730,15 +605,9 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-<<<<<<< HEAD
 	// WRS {
 	self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 	// } // END WRS
-=======
-	//**WALEDIT**//
-	self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-	//****//
->>>>>>> origin/master
 
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
@@ -749,11 +618,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	{
 		if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
 		{
-<<<<<<< HEAD
 			// WRS {
-=======
-			//**WALEDIT**//
->>>>>>> origin/master
 /*			if(level.friendlyfire == "0")
 			{
 */				return;
@@ -797,15 +662,9 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 				friendly = true;
 			}
-<<<<<<< HEAD
 */			// } // END WRS
 		}
 		// WRS {
-=======
-*/			//****//
-		}
-		//**WALEDIT**//
->>>>>>> origin/master
 		else if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
 			if(!isDefined(self.protected) && !isDefined(eAttacker.protected) && !isDefined(self.wrs_Jumper)){
 				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
@@ -814,11 +673,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 				self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 			}
 		}
-<<<<<<< HEAD
 		// } // END WRS
-=======
-		//****//
->>>>>>> origin/master
 		else
 		{
 			// Make sure at least one point of damage is done
@@ -829,11 +684,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 		}
 	}
 
-<<<<<<< HEAD
 	// WRS {
-=======
-	//**WALEDIT**//
->>>>>>> origin/master
 /*	// Do debug print if it's enabled
 	if(getCvarInt("g_debugDamage"))
 	{
@@ -872,11 +723,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 		logPrint("D;" + lpselfGuid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackGuid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 	}
-<<<<<<< HEAD
 */	// } // END WRS
-=======
-*/	//****//
->>>>>>> origin/master
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
@@ -972,11 +819,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		lpattackguid = "";
 		lpattackerteam = "world";
 	}
-<<<<<<< HEAD
 	// WRS {
-=======
-	//**WALEDIT**//
->>>>>>> origin/master
 	self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
 
 	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
@@ -992,11 +835,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	// Stop thread if map ended on this death
 	if(level.mapended)
 		return;
-<<<<<<< HEAD
 	// } // END WRS
-=======
-	//****//
->>>>>>> origin/master
 
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
@@ -1041,7 +880,6 @@ spawnPlayer()
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 
-<<<<<<< HEAD
 	// WRS {
 	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
@@ -1054,17 +892,6 @@ spawnPlayer()
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
 	// } // END WRS
-=======
-	//**WALEDIT**//
-/*	maps\mp\gametypes\_teams::givePistol();
-	maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
-
-	self giveWeapon(self.pers["weapon"]);
-	self giveMaxAmmo(self.pers["weapon"]);
-	self setSpawnWeapon(self.pers["weapon"]);
-*/	self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
-	//****//
->>>>>>> origin/master
 
 	if(self.pers["team"] == "allies")
 		self setClientCvar("cg_objectiveText", &"TDM_KILL_AXIS_PLAYERS");
@@ -1117,17 +944,10 @@ spawnSpectator(origin, angles)
 
 	self setClientCvar("cg_objectiveText", &"TDM_ALLIES_KILL_AXIS_PLAYERS");
 
-<<<<<<< HEAD
 	// WRS {
 	if(isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
 		self thread maps\mp\gametypes\_wrs::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
 	// } // END WRS
-=======
-	//**WALEDIT**//
-	if(isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
-		self thread maps\mp\gametypes\_wrs::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
-	//****//
->>>>>>> origin/master
 }
 
 spawnIntermission()
@@ -1424,7 +1244,6 @@ endMap()
 		winners = "";
 		losers = "";
 	}
-<<<<<<< HEAD
 	// WRS {
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::wrs_EndMap(text);
@@ -1448,29 +1267,6 @@ endMap()
 		}
 	}
 	// } // END WRS
-=======
-	//**WALEDIT**//
-	maps\mp\gametypes\_wrs::wrs_EndMap(text);
-
-/*	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-		if((winningteam == "allies") || (winningteam == "axis"))
-		{
-			lpGuid = player getGuid();
-			if((isDefined(player.pers["team"])) && (player.pers["team"] == winningteam))
-					winners = (winners + ";" + lpGuid + ";" + player.name);
-			else if((isDefined(player.pers["team"])) && (player.pers["team"] == losingteam))
-					losers = (losers + ";" + lpGuid + ";" + player.name);
-		}
-		player closeMenu();
-		player setClientCvar("g_scriptMainMenu", "main");
-		player setClientCvar("cg_objectiveText", text);
-		player spawnIntermission();
-	}
-*/	//****//
->>>>>>> origin/master
 	if((winningteam == "allies") || (winningteam == "axis"))
 	{
 		logPrint("W;" + winningteam + winners + "\n");
@@ -1499,11 +1295,7 @@ checkTimeLimit()
 		}
 		return;
 	}
-<<<<<<< HEAD
 	// } // END WRS
-=======
-	//****//
->>>>>>> origin/master
 
 	if(level.mapended)
 		return;
@@ -1661,11 +1453,7 @@ printJoinedTeam(team)
 	else if(team == "axis")
 		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
 }
-<<<<<<< HEAD
 // WRS {
-=======
-//**WALEDIT**//
->>>>>>> origin/master
 /*dropHealth()
 {
 	if(isDefined(level.healthqueue[level.healthqueuecurrent]))

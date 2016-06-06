@@ -1,24 +1,15 @@
 //These functions handle the mapvoting
-<<<<<<< HEAD
 wrs_MapVote(seconds)
 {
-=======
-wrs_MapVote(seconds){
->>>>>>> origin/master
 	level.wrs_Candidate = MapVotingCandidates(level.wrs_MapVoting_amount);
 
 	createMapVotingHud(level.wrs_Candidate.size);
 	level.wrs_MapVote_hud_timer setClock(seconds, 60, "hudStopwatch", 64, 64);
 
 	level.wrs_Players = getEntArray("player", "classname");
-<<<<<<< HEAD
 	for(i = 0; i < level.wrs_Players.size; i++) {
 		level.wrs_Players[i] thread MapVotingPlayer();
 	}
-=======
-	for(i = 0;i < level.wrs_Players.size;i++)
-		level.wrs_Players[i] thread MapVotingPlayer();
->>>>>>> origin/master
 
 	wait seconds;                   //Let people vote for seconds
 	level.wrs_MapVoting_end = true; //Put on true, so people can't vote.
@@ -33,13 +24,8 @@ wrs_MapVote(seconds){
 }
 MapVoteWinner()
 {
-<<<<<<< HEAD
 	winner = 0;
 	votes  = 0;
-=======
-	winner = -1;
-	votes = -1;
->>>>>>> origin/master
 	for(i = 0;i < level.wrs_Candidate.size;i++){
 		if(level.wrs_Candidate[i]["votes"] > votes){
 			votes = level.wrs_Candidate[i]["votes"];
@@ -50,28 +36,16 @@ MapVoteWinner()
 }
 MapVotingPlayer()
 {
-<<<<<<< HEAD
 	self.wrs_MapVote_hud_Indicator       = newClientHudElem(self);
 	self.wrs_MapVote_hud_Indicator.x     = level.wrs_MapVote_x + 4;
 	self.wrs_MapVote_hud_Indicator.y     = level.wrs_MapVote_y + 24;
 	self.wrs_MapVote_hud_Indicator.sort  = 9998;
-=======
-	self.wrs_MapVote_hud_Indicator = newClientHudElem(self);
-	self.wrs_MapVote_hud_Indicator.x = level.wrs_MapVote_x + 4;
-	self.wrs_MapVote_hud_Indicator.y = level.wrs_MapVote_y + 24;
-	self.wrs_MapVote_hud_Indicator.sort = 9998;
->>>>>>> origin/master
 	self.wrs_MapVote_hud_Indicator.alpha = 0;
 	self.wrs_MapVote_hud_Indicator.color = (0, 0, 1);
 	self.wrs_MapVote_hud_Indicator setShader("white", level.wrs_MapVote_width - 8, 24);
 
-<<<<<<< HEAD
 	cndts    = level.wrs_MapVoting_amount - 1;
 	mapVote  = -1;
-=======
-	cndts = level.wrs_MapVoting_amount - 1;
-	mapVote = -1;
->>>>>>> origin/master
 	lastVote = -1;
 
 	while(!isDefined(level.wrs_MapVoting_end)){
@@ -159,7 +133,6 @@ MapVotingCandidates(cndts)
 		index = 0;
 		cndt = [];
 		candidate = [];
-<<<<<<< HEAD
 		while (1) {
 			rnd = randomInt(maps.size);
 			if (!maps\mp\gametypes\_wrs::in_array(maps[rnd],cndt)) {
@@ -171,19 +144,6 @@ MapVotingCandidates(cndts)
 				index++;
 			}
 			if (index >= cndts) {
-=======
-		while(true){
-			rnd = randomInt(maps.size);
-			if(!maps\mp\gametypes\_wrs::in_array(maps[rnd],cndt)){
-				cndt[index] = maps[rnd];
-				candidate[index]["name"] = cndt[index];
-				candidate[index]["iString"] = getMapIString(cndt[index]);
-				candidate[index]["title"] = getMapTitle(cndt[index]);
-				candidate[index]["votes"] = 0;
-				index++;
-			}
-			if(index >= cndts){
->>>>>>> origin/master
 				break;
 			}
 		}
@@ -192,12 +152,8 @@ MapVotingCandidates(cndts)
 
 	return candidate;
 }
-<<<<<<< HEAD
 createMapVotingHud(cndts)
 {
-=======
-createMapVotingHud(cndts){
->>>>>>> origin/master
 	level.wrs_MapVote_width = 200;
 	level.wrs_MapVote_height =27 + cndts*24;
 
@@ -348,12 +304,8 @@ removeMapVotingHud()
 }
 
 
-<<<<<<< HEAD
 getMapIString(name)
 {
-=======
-getMapIString(name){
->>>>>>> origin/master
 	for(i = 0;i < level.wrs_MapVote_Maps.size;i++){
 		if(level.wrs_MapVote_Maps[i][0] == name){
 			return level.wrs_MapVote_Maps[i][1];
@@ -362,12 +314,8 @@ getMapIString(name){
 
 	return 0;
 }
-<<<<<<< HEAD
 getMapTitle(name)
 {
-=======
-getMapTitle(name){
->>>>>>> origin/master
 	title = 0;
 	for(i = 0;i < level.wrs_MapVote_Maps.size;i++)
 		if(level.wrs_MapVote_Maps[i][0] == name){
@@ -376,8 +324,4 @@ getMapTitle(name){
 		}
 
 	return title;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/master
