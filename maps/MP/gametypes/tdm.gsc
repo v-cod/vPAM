@@ -182,6 +182,12 @@ Callback_StartGameType()
 	game["menu_quickstatements"] = "quickstatements";
 	game["menu_quickresponses"] = "quickresponses";
 
+	// WRS {
+	if (level.wrs) {
+		game["menu_weapon_allies"] = "weapon_russian";
+	}
+	// } // END WRS
+
 	precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
 	precacheString(&"MPSCRIPT_KILLCAM");
 
@@ -228,7 +234,9 @@ Callback_StartGameType()
 Callback_PlayerConnect()
 {
 	// WRS {
-	maps\mp\gametypes\_wrs::wrs_PlayerConnect();
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
+	}
 	// } // END WRS
 
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
@@ -270,13 +278,11 @@ Callback_PlayerConnect()
 		else
 		{
 			spawnSpectator();
-			// WRS {
-			self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-/*			if(self.pers["team"] == "allies")
+
+			if(self.pers["team"] == "allies")
 				self openMenu(game["menu_weapon_allies"]);
 			else
 				self openMenu(game["menu_weapon_axis"]);
-*/			// } // END WRS
 		}
 	}
 	else
@@ -590,7 +596,9 @@ Callback_PlayerConnect()
 Callback_PlayerDisconnect()
 {
 	// WRS {
-	self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
+	if (level.wrs) {
+		self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
+	}
 	// } // END WRS
 
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
@@ -606,7 +614,9 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 		return;
 
 	// WRS {
-	self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	if (level.wrs) {
+		self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+	}
 	// } // END WRS
 
 	// Don't do knockback if the damage direction was not specified
@@ -618,11 +628,10 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	{
 		if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
 		{
-			// WRS {
-/*			if(level.friendlyfire == "0")
+			if(level.friendlyfire == "0")
 			{
-*/				return;
-/*			}
+				return;
+			}
 			else if(level.friendlyfire == "1")
 			{
 				// Make sure at least one point of damage is done
@@ -662,16 +671,13 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 				friendly = true;
 			}
-*/			// } // END WRS
 		}
 		// WRS {
-		else if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
-			if(!isDefined(self.protected) && !isDefined(eAttacker.protected) && !isDefined(self.wrs_Jumper)){
-				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
-					iDamage = 100;
+		else if(level.wrs && isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
+			if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
+				iDamage = 100;
 
-				self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-			}
+			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 		}
 		// } // END WRS
 		else
@@ -684,8 +690,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 		}
 	}
 
-	// WRS {
-/*	// Do debug print if it's enabled
+	// Do debug print if it's enabled
 	if(getCvarInt("g_debugDamage"))
 	{
 		println("client:" + self getEntityNumber() + " health:" + self.health +
@@ -723,7 +728,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 		logPrint("D;" + lpselfGuid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackGuid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 	}
-*/	// } // END WRS
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
@@ -820,7 +824,9 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		lpattackerteam = "world";
 	}
 	// WRS {
-	self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	if (level.wrs) {
+		self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	}
 
 	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 
@@ -945,8 +951,8 @@ spawnSpectator(origin, angles)
 	self setClientCvar("cg_objectiveText", &"TDM_ALLIES_KILL_AXIS_PLAYERS");
 
 	// WRS {
-	if(isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
-		self thread maps\mp\gametypes\_wrs::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
+	if(level.wrs && isDefined(level.wrs_mapvote_hud_bg)) //Voting going on!
+		self thread maps\mp\gametypes\_wrs_mapvote::_monitor_player_mapvote(level.wrs_mapvoting_amount - 1);
 	// } // END WRS
 }
 
@@ -1285,9 +1291,9 @@ checkTimeLimit()
 	timepassed = (getTime() - level.starttime) / 1000;
 	timepassed = timepassed / 60.0;
 
-	//**WALEDIT**/
+	// WRS {
 	if(timepassed < level.timelimit){
-		cd = level.wrs_Countdown;
+		cd = level.wrs_countdown;
 		if(cd && level.timelimit - timepassed < ((float)(cd+1)/60)){
 			secondsleft = (float)(level.timelimit - timepassed) * 60;
 			level.clock setTenthsTimer(secondsleft);

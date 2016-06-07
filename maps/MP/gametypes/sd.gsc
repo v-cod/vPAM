@@ -373,6 +373,7 @@ Callback_PlayerConnect()
 		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
 	}
 	// } // END WRS
+
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
 	self.statusicon = "";
@@ -1228,7 +1229,7 @@ spawnSpectator(origin, angles)
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
 
 	// WRS {
-	if(level.wrs && isDefined(level.wrs_MapVote_hud_bg)) //Voting going on!
+	if(level.wrs && isDefined(level.wrs_mapvote_hud_bg)) //Voting going on!
 		self thread maps\mp\gametypes\_wrs_mapvote::_monitor_player_mapvote(level.wrs_mapvoting_amount - 1);
 	// } // END WRS
 }
