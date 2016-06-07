@@ -1228,8 +1228,8 @@ spawnSpectator(origin, angles)
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
 
 	// WRS {
-	if(level.wrs && isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
-		self thread maps\mp\gametypes\_wrs_mapvote::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
+	if(level.wrs && isDefined(level.wrs_MapVote_hud_bg)) //Voting going on!
+		self thread maps\mp\gametypes\_wrs_mapvote::_monitor_player_mapvote(level.wrs_mapvoting_amount - 1);
 	// } // END WRS
 }
 

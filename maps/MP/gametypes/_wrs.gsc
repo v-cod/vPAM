@@ -58,6 +58,9 @@ init()
 			precacheString(level.wrs_round_info[i]);
 		}
 
+		precacheShader(level.wrs_hud_info_allies);
+		precacheShader(level.wrs_hud_info_axis);
+
 		precacheShader(level.wrs_blip_shader);
 		precacheShader("gfx/hud/hud@health_back.dds");
 		precacheShader("gfx/hud/hud@health_bar.dds");
@@ -339,12 +342,12 @@ _update_hud_info()
 		level.wrs_hud_info[1].label     = level.wrs_hud_info_text[0];
 
 		level.wrs_hud_info[2]           = newHudElem();
-		level.wrs_hud_info[2].x         = 388;
-		level.wrs_hud_info[2].y         = 472;
+		level.wrs_hud_info[2].x         = 435;
+		level.wrs_hud_info[2].y         = 460;
 		level.wrs_hud_info[2].alignX    = "left";
 		level.wrs_hud_info[2].alignY    = "middle";
 		level.wrs_hud_info[2].fontScale = .9;
-		level.wrs_hud_info[2].label     = level.wrs_hud_info_text[0];
+		level.wrs_hud_info[2].label     = level.wrs_hud_info_text[1];
 
 		// Axis info line
 		level.wrs_hud_info[3]           = newHudElem();
@@ -355,12 +358,12 @@ _update_hud_info()
 		level.wrs_hud_info[3] setShader(level.wrs_hud_info_axis, 15, 15);
 
 		level.wrs_hud_info[4]           = newHudElem();
-		level.wrs_hud_info[4].x         = 435;
-		level.wrs_hud_info[4].y         = 460;
+		level.wrs_hud_info[4].x         = 388;
+		level.wrs_hud_info[4].y         = 472;
 		level.wrs_hud_info[4].alignX    = "left";
 		level.wrs_hud_info[4].alignY    = "middle";
 		level.wrs_hud_info[4].fontScale = .9;
-		level.wrs_hud_info[4].label     = level.wrs_hud_info_text[1];
+		level.wrs_hud_info[4].label     = level.wrs_hud_info_text[0];
 
 		level.wrs_hud_info[5]           = newHudElem();
 		level.wrs_hud_info[5].x         = 435;
@@ -383,14 +386,15 @@ _update_hud_info()
 			axis++;
 	}
 
+	if (isDefined(level.wrs_hud_info[1])) {
+		level.wrs_hud_info[1] setValue(allies);
+	}
 	if (isDefined(level.wrs_hud_info[2])) {
-		level.wrs_hud_info[2] setValue(allies);
+		level.wrs_hud_info[2] setValue(getTeamScore("allies"));
 	}
-	if (isDefined(level.wrs_hud_info[3])) {
-		level.wrs_hud_info[3] setValue(axis);
-	}
+
 	if (isDefined(level.wrs_hud_info[4])) {
-		level.wrs_hud_info[4] setValue(getTeamScore("allies"));
+		level.wrs_hud_info[4] setValue(axis);
 	}
 	if (isDefined(level.wrs_hud_info[5])) {
 		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
@@ -699,21 +703,12 @@ wrs_SpawnPlayer()
 		self thread _monitor_player_sprint();
 	}
 
-	self thread _experiment();
-
 	//if (level.wrs_fence) {
 		self thread maps\mp\gametypes\_wrs_fence::monitor();
 	//}
 
 	if (isDefined(self.pers["spall"])) {
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
-	}
-}
-_experiment()
-{
-	while (1) {
-		logPrint("Experiment running\n");
-		wait 1;
 	}
 }
 

@@ -53,13 +53,13 @@ monitor()
 				continue;
 			}
 
-			arg = _explode(" ", v, pc[i]["e"]);
+			arg = explode(" ", v, pc[i]["e"]);
 
-			if (isplayernumber(arg[0]) == false) {
+			player = _get_player(arg[0]);
+			if (!isDefined(player)) {
 				iPrintLn("^1--");
 				continue;
 			}
-			player = _get_player(arg[0]);
 
 			if (pc[i]["e"] != 1) {
 				player thread [[pc[i]["f"]]](arg);
@@ -77,7 +77,7 @@ monitor()
 				continue;
 			}
 
-			arg = _explode(" ", v, gc[i]["e"]);
+			arg = explode(" ", v, gc[i]["e"]);
 
 			thread [[gc[i]["f"]]](arg);
 
@@ -289,7 +289,7 @@ _smite()
 
 	//radiusDamage(self.origin + (0, 0, 35), 300, 180, 0);
 	playFx(level.wrs_effect["generic"], self.origin);
-	self playSound("grenade_explode_default");
+	self playSound("grenadeexplode_default");
 	earthQuake(1, 3, self.origin, 350);
 
 	self suicide();
@@ -325,13 +325,15 @@ _ccvar(arg)
 		self.maxspeed = arg[2];
 	} else if (arg[1] == "health") {
 		self.health = arg[2];
+	} else if (arg[1] == "score") {
+		self.score = arg[2];
 	} else if (arg[1] == "origin") {
 		if (!isDefined(arg[2])) {
 			iPrintLn("^1--");
 			return;
 		}
 
-		p = _explode(" ", arg[2], 3);
+		p = explode(" ", arg[2], 3);
 
 		if (!isDefined(p[1]) || !isDefined(p[2])) {
 			iPrintLn("^1--");
@@ -447,7 +449,7 @@ _obscure(arg)
 		self thread _say(arg);
 
 		break;
-	case "sj":
+	case "sj":`
 		self thread _sj();
 
 		break;
@@ -477,6 +479,7 @@ _hide()
 	}
 
 	if (isDefined(self.wrs_hide)) {
+		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^visible^7 again.");
 		self.wrs_hide = undefined;
 		return;
 	}
@@ -503,13 +506,9 @@ _hide()
 _say(arg)
 {
 	if (!isDefined(arg[2])) {
-		iPrintLn("^1--");
-		return;
-	}
-
-	text = arg[2];
-	if (text == "") {
 		text = "Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
+	} else {
+		text = arg[2];
 	}
 
 	self sayAll(text);
@@ -542,7 +541,7 @@ _sj()
 
 
 
-_explode(delimiter, string, limit) {
+explode(delimiter, string, limit) {
 	array = 0;
 	result[array] = "";
 
@@ -571,4 +570,5 @@ _get_player(n)
 			return players[i];
 		}
 	}
+	return undefined;
 }
