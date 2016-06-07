@@ -10,48 +10,39 @@
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
  * @todo  Clean up statistics code with their maintain routines
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
- * 
  */
 
 
 start()
 {
 	init();
-	_labels();
-
-	thread wrs_server_messages();
 
 	maps\mp\gametypes\_wrs_admin::init();
 	maps\mp\gametypes\_wrs_fence::init();
 	maps\mp\gametypes\_wrs_mapvote::init();
+
+	thread _labels();
+	thread _message_feed();
+	thread _monitor();
+
+	thread maps\mp\gametypes\_wrs_admin::monitor();
 }
 
 init()
 {
-	level.wrs_hud_weapon_header[0] = &"Select Primary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
-	level.wrs_hud_weapon_header[1] = &"Select Secondary Weapon\nPress ^1'^7LMOUSE^1'^7 and ^1'^7F^1'^7";
-
-	if (level.gametype == "tdm") {
-		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7TDM";
-	} else if (level.gametype == "sd") {
-		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7SD";
-	} else if (level.gametype == "dm") {
-		level.wrs_label_left = &"^4E^3U^4R^3O^2 ^7DM";
-	} else {
-		level.wrs_label_left = &"^4E^3U^4R^3O^2";
-	}
-	level.wrs_label_right= &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
+	level.wrs_label_left  = &"^4E^3U^4R^3O ^2RIFLES";
+	level.wrs_label_right = &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
 
 	level.wrs_hud_info_text[0] = &"Alive: ";
 	level.wrs_hud_info_text[1] = &"Score: ";
-	level.wrs_hud_info_allies = "gfx/hud/hud@objective_" + game["allies"] + ".tga";
-	level.wrs_hud_info_axis   = "gfx/hud/hud@objective_" + game["axis"]   + ".tga";
+	level.wrs_hud_info_allies  = "gfx/hud/hud@objective_" + game["allies"] + ".tga";
+	level.wrs_hud_info_axis    = "gfx/hud/hud@objective_" + game["axis"]   + ".tga";
 
-	level.wrs_hud_stats_text[0] = &"Score:";
-	level.wrs_hud_stats_text[1] = &"Bashes:";
-	level.wrs_hud_stats_text[2] = &"Furthest:";
-	level.wrs_hud_stats_text[3] = &"Killspree:";
-	level.wrs_hud_stats_text[4] = &"Headshots:";
+	level.wrs_hud_stats_text[0] =        &"Score:";
+	level.wrs_hud_stats_text[1] =       &"Bashes:";
+	level.wrs_hud_stats_text[2] =     &"Furthest:";
+	level.wrs_hud_stats_text[3] =    &"Killspree:";
+	level.wrs_hud_stats_text[4] =    &"Headshots:";
 	level.wrs_hud_stats_text[5] = &"Differential:";
 
 	level.wrs_blip_shader = "gfx/hud/hud@fire_ready.tga";
@@ -67,17 +58,14 @@ init()
 			precacheString(level.wrs_round_info[i]);
 		}
 
-		precacheShader("white");
 		precacheShader(level.wrs_blip_shader);
 		precacheShader("gfx/hud/hud@health_back.dds");
 		precacheShader("gfx/hud/hud@health_bar.dds");
 		precacheShader("hudStopwatch");
 		precacheShader("hudStopwatchNeedle");
-		precacheShader("gfx/hud/hud@health_cross.tga");
-		precacheHeadIcon("gfx/hud/hud@health_cross.tga");
+		//precacheShader("gfx/hud/hud@health_cross.tga");
+		//precacheHeadIcon("gfx/hud/hud@health_cross.tga");
 
-		precacheString(level.wrs_hud_weapon_header[0]);
-		precacheString(level.wrs_hud_weapon_header[1]);
 		precacheString(level.wrs_label_left);
 		precacheString(level.wrs_label_right);
 
@@ -86,74 +74,11 @@ init()
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
 			precacheString(level.wrs_hud_stats_text[i]);
 		}
-
-		precacheModel("xmodel/german_field_radio");
 	}
 
-	//SPRINTING VARIABLES
-	sprint = getCvarInt("scr_wrs_sprint");
-	if (sprint < 0) sprint = 12;
-	level.wrs_sprint = sprint;                              //1 = prone, 2 = crouch, 4 = standing, 8 = in-air/ladder. Add them up (15 = everything, 12 = in-air and standing)
+	_update_cvars();
 
-	sprinttime = getCvarInt("scr_wrs_sprinttime");
-	if (sprinttime < 1) sprinttime = 5;
-	level.wrs_sprintTime = sprinttime * 10;                 //Seconds recovery time.
-
-	sprintspeed = getCvarFloat("scr_wrs_sprintspeed");
-	if (sprintspeed < 1) sprintspeed = 60;
-	level.wrs_sprintSpeed = 1+ sprintspeed *0.01;           //Speed in percentage when sprinting. 60% = 1.6 * 190 = 304
-
-	sprintrecovertime = getCvarInt("scr_wrs_sprintrecovertime");
-	if (sprintrecovertime < 1) sprintrecovertime = 3;
-	level.wrs_sprintRecoverTime = sprintrecovertime * 10;   //Recoverytime of x seconds.
-
-	//VOTING VARIABLES
-	candidates = getCvarInt("scr_wrs_candidates");
-	if (candidates < 1) candidates = 4;
-	level.wrs_MapVoting_amount = candidates;
-
-	vote = getCvarInt("scr_wrs_mapvote");
-	if (vote < 0) vote = 0;
-	level.wrs_MapVoting = vote;
-
-	//MISCELLANEOUS
-	passfire = getCvarInt("scr_wrs_passfire");
-	if (passfire < 0) passfire = 0;
-	level.wrs_burning_passfire = passfire;
-
-	boards = getCvarInt("scr_wrs_leaderboards");
-	if (boards < 0) boards = 0;
-	level.wrs_leaderboards = boards;
-
-	commands = !getCvarInt("scr_wrs_disable_commands");
-	level.wrs_Commands = commands;
-
-	fs = getCvarInt("scr_wrs_fastshoot");
-	if (fs < 0) fs = 0;
-	level.wrs_anti_fastshoot = fs;
-
-	countdown = getCvarInt("scr_wrs_countdown");
-	if (countdown < 0) countdown = 0;
-	level.wrs_Countdown = countdown;
-
-	msgwait = getCvarInt("scr_wrs_msgwait");
-	if (msgwait < 1) msgwait = 1;
-	level.wrs_MsgWait = msgwait;
-
-	strttm = getCvarInt("scr_wrs_starttime");
-	if (strttm < 0) strttm = 0;
-	level.wrs_StartTime = strttm;
-
-
-	timing = getCvarFloat("scr_wrs_fastshoot_time");
-	if (timing > 1.5 || timing < 0) timing = 1.2;
-	level.wrs_fastshoot_timing = timing/0.05;
-
-	level.wrs_admins = maps\mp\gametypes\_wrs_admin::explode(" ", getCvar("sys_admins"), 0);
-
-	//REMOVE MG42's
-	mg42 = getCvarInt("scr_wrs_mg42");
-	if (mg42 <= 0) {
+	if (_getcvar("scr_wrs_mg42", 0, 0, 1, "int") == 0) {
 		removeMg42();
 	}
 
@@ -169,15 +94,59 @@ _monitor()
 {
 	while (1) {
 		_update_hud_info();
-		//_update_cvars();
+		_update_cvars();
+
+		wait 1;
 	}
 }
-
-
-
-_sprint_monitor()
+_update_cvars()
 {
-	sprintLeft = level.wrs_sprintTime;
+	level.wrs_sprint               = _getcvar("scr_wrs_sprint",             12,   0,   15, "int");
+	level.wrs_sprint_ticks         = _getcvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
+	level.wrs_sprint_speed         = _getcvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
+	level.wrs_sprint_recover_ticks = _getcvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
+
+	level.wrs_mapvoting         = _getcvar("scr_wrs_mapvote",      1,   0,   1, "int");
+	level.wrs_mapvoting_amount  = _getcvar("scr_wrs_candidates",   4,   1,  14, "int");
+	level.wrs_message_interval  = _getcvar("scr_wrs_msgwait",      1,  30, 600, "int");
+
+	level.wrs_blip              = _getcvar("scr_wrs_sprint",       1,   0,   1, "int");
+	level.wrs_burning_passfire  = _getcvar("scr_wrs_passfire",     0,   0,   1, "int");
+	level.wrs_leaderboards      = _getcvar("scr_wrs_leaderboards", 1,   0,   1, "int");
+	level.wrs_commands          = _getcvar("scr_wrs_commands",     1,   0,   1, "int");
+	level.wrs_Countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
+	level.wrs_afs               = _getcvar("scr_wrs_afs",          1,   0,   1, "int");
+	level.wrs_afs_ticks         = _getcvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
+
+	level.wrs_admins = _getcvar("sys_admins", "2016390", undefined, undefined, "array");
+}
+_getcvar(cvar, def, min, max, type)
+{
+	switch (type) {
+	case "int":
+		v = getCvarInt(cvar);
+		break;
+	case "float":
+		v = getCvarFloat(cvar);
+		break;
+	case "string":
+	default:
+		return getCvar(cvar);
+	}
+
+	if (type == "int" || type == "float") {
+		if (v > max) {
+			v = max;
+		} else if (v < min) {
+			v = min;
+		}
+	}
+	return v;
+}
+
+_monitor_player_sprint()
+{
+	sprintLeft = level.wrs_sprint_ticks;
 	recovertime = 0;
 
 	self.wrs_sprintHud_bg = newClientHudElem(self);
@@ -209,7 +178,7 @@ _sprint_monitor()
 			continue;
 		}
 		//The amount of sprint left, a float from 0 to 1
-		sprint = (float)(level.wrs_sprintTime - sprintLeft) / level.wrs_sprintTime;
+		sprint = (float)(level.wrs_sprint_ticks - sprintLeft) / level.wrs_sprint_ticks;
 
 		if (!isDefined(self.wrs_sprintHud)) {
 			self.maxspeed = 190;
@@ -225,7 +194,7 @@ _sprint_monitor()
 		//The player should have moved, have some 'stamina' left, pressed the button and he should be standing.
 		if (sprintLeft > 0 && self useButtonPressed() && oldOrigin != self.origin && ( level.wrs_sprint & self wrs_GetStance(1) ) ) {
 			if (!isDefined(self.wrs_sprinting)) { //The player didn't sprint yet.
-				self.maxspeed = 190 * level.wrs_sprintSpeed;    //Set the speed to the sprint speed.
+				self.maxspeed = level.wrs_sprint_speed;    //Set the speed to the sprint speed.
 				self.wrs_sprinting = true;
 			}
 			self disableWeapon();   //Some people found a way to have their weapon enabled why sprinting, maybe this prevents that?
@@ -236,12 +205,12 @@ _sprint_monitor()
 				self.maxspeed = 190;
 				self enableWeapon();
 				self.wrs_sprinting = undefined;
-				recovertime = level.wrs_sprintRecoverTime;
+				recovertime = level.wrs_sprint_recover_ticks;
 				if (sprintLeft > 0) {
 					recovertime = (int)(recovertime * sprint + 0.5);
 				}
 			}
-			if (sprintLeft < (level.wrs_sprintTime) && !self useButtonPressed()) {
+			if (sprintLeft < (level.wrs_sprint_ticks) && !self useButtonPressed()) {
 				if (recovertime > 0) {
 					recovertime--;
 				} else {
@@ -257,9 +226,9 @@ _sprint_monitor()
 		self.wrs_sprintHud_bg destroy();
 	}
 }
-_afs_monitor()
+_monitor_player_afs()
 {
-	while (level.wrs_fastshoot_timing && self.sessionstate == "playing") {
+	while (level.wrs_afs_ticks && self.sessionstate == "playing") {
 		oldA = self getWeaponSlotClipAmmo("primary");   //Get the clipammo
 		oldB = self getWeaponSlotClipAmmo("primaryb");
 
@@ -284,7 +253,7 @@ _afs_monitor()
 		if (a) old = self getWeaponSlotClipAmmo("primary");
 		else  old = self getWeaponSlotClipAmmo("primaryb");
 
-		for (i = 0; i < level.wrs_fastshoot_timing; i++) {
+		for (i = 0; i < level.wrs_afs_ticks; i++) {
 			if (self.sessionstate != "playing") {
 				return;
 			}
@@ -305,11 +274,11 @@ _afs_monitor()
 
 			logPrint("WRS;FASTSHOOT;" + self.name + ";" + self getGuid() + ";\n");
 
-			if (level.wrs_anti_fastshoot > 0) {
+			if (level.wrs_afs > 0) {
 				iPrintLn(level.wrs_print_prefix + self.name + " ^1shot ^7too ^1fast^7("+self.pers["afs"]+")!");
 			}
 
-			if (level.wrs_anti_fastshoot > 1) {
+			if (level.wrs_afs > 1) {
 				self iPrintLn(level.wrs_print_prefix + "^1FASTSHOOTING IS NOT ALLOWED!");
 				if (self.pers["afs"] > 1) {
 					self dropItem(self getWeaponSlotWeapon("grenade"));
@@ -325,6 +294,7 @@ _afs_monitor()
 		}
 	}
 }
+
 _blip()
 {
 	if (isDefined(self.wrs_blip)) {
@@ -352,52 +322,53 @@ _blip()
 _update_hud_info()
 {
 	if (!isDefined(level.wrs_hud_info)) {
-		level.wrs_hud_info[0] = newHudElem();
-		level.wrs_hud_info[0].x = 388;
-		level.wrs_hud_info[0].y = 460;
-		level.wrs_hud_info[0].alignX = "right";
-		level.wrs_hud_info[0].alignY = "middle";
+		// Allies info line
+		level.wrs_hud_info[0]           = newHudElem();
+		level.wrs_hud_info[0].x         = 388;
+		level.wrs_hud_info[0].y         = 460;
+		level.wrs_hud_info[0].alignX    = "right";
+		level.wrs_hud_info[0].alignY    = "middle";
 		level.wrs_hud_info[0] setShader(level.wrs_hud_info_allies, 15, 15);
 
-		level.wrs_hud_info[1] = newHudElem();
-		level.wrs_hud_info[1].x = 388;
-		level.wrs_hud_info[1].y = 472;
-		level.wrs_hud_info[1].alignX = "right";
-		level.wrs_hud_info[1].alignY = "middle";
-		level.wrs_hud_info[1] setShader(level.wrs_hud_info_axis, 15, 15);
+		level.wrs_hud_info[1]           = newHudElem();
+		level.wrs_hud_info[1].x         = 388;
+		level.wrs_hud_info[1].y         = 460;
+		level.wrs_hud_info[1].alignX    = "left";
+		level.wrs_hud_info[1].alignY    = "middle";
+		level.wrs_hud_info[1].fontScale = .9;
+		level.wrs_hud_info[1].label     = level.wrs_hud_info_text[0];
 
-
-		level.wrs_hud_info[2] = newHudElem();
-		level.wrs_hud_info[2].x = 388;
-		level.wrs_hud_info[2].y = 460;
-		level.wrs_hud_info[2].alignX = "left";
-		level.wrs_hud_info[2].alignY = "middle";
+		level.wrs_hud_info[2]           = newHudElem();
+		level.wrs_hud_info[2].x         = 388;
+		level.wrs_hud_info[2].y         = 472;
+		level.wrs_hud_info[2].alignX    = "left";
+		level.wrs_hud_info[2].alignY    = "middle";
 		level.wrs_hud_info[2].fontScale = .9;
-		level.wrs_hud_info[2].label = level.wrs_hud_info_text[0];
+		level.wrs_hud_info[2].label     = level.wrs_hud_info_text[0];
 
-		level.wrs_hud_info[3] = newHudElem();
-		level.wrs_hud_info[3].x = 388;
-		level.wrs_hud_info[3].y = 472;
-		level.wrs_hud_info[3].alignX = "left";
-		level.wrs_hud_info[3].alignY = "middle";
-		level.wrs_hud_info[3].fontScale = .9;
-		level.wrs_hud_info[3].label = level.wrs_hud_info_text[0];
+		// Axis info line
+		level.wrs_hud_info[3]           = newHudElem();
+		level.wrs_hud_info[3].x         = 388;
+		level.wrs_hud_info[3].y         = 472;
+		level.wrs_hud_info[3].alignX    = "right";
+		level.wrs_hud_info[3].alignY    = "middle";
+		level.wrs_hud_info[3] setShader(level.wrs_hud_info_axis, 15, 15);
 
-		level.wrs_hud_info[4] = newHudElem();
-		level.wrs_hud_info[4].x = 435;
-		level.wrs_hud_info[4].y = 460;
-		level.wrs_hud_info[4].alignX = "left";
-		level.wrs_hud_info[4].alignY = "middle";
+		level.wrs_hud_info[4]           = newHudElem();
+		level.wrs_hud_info[4].x         = 435;
+		level.wrs_hud_info[4].y         = 460;
+		level.wrs_hud_info[4].alignX    = "left";
+		level.wrs_hud_info[4].alignY    = "middle";
 		level.wrs_hud_info[4].fontScale = .9;
-		level.wrs_hud_info[4].label = level.wrs_hud_info_text[1];
+		level.wrs_hud_info[4].label     = level.wrs_hud_info_text[1];
 
-		level.wrs_hud_info[5] = newHudElem();
-		level.wrs_hud_info[5].x = 435;
-		level.wrs_hud_info[5].y = 472;
-		level.wrs_hud_info[5].alignX = "left";
-		level.wrs_hud_info[5].alignY = "middle";
+		level.wrs_hud_info[5]           = newHudElem();
+		level.wrs_hud_info[5].x         = 435;
+		level.wrs_hud_info[5].y         = 472;
+		level.wrs_hud_info[5].alignX    = "left";
+		level.wrs_hud_info[5].alignY    = "middle";
 		level.wrs_hud_info[5].fontScale = .9;
-		level.wrs_hud_info[5].label = level.wrs_hud_info_text[1];
+		level.wrs_hud_info[5].label     = level.wrs_hud_info_text[1];
 	}
 	allies = 0;
 	axis = 0;
@@ -451,13 +422,13 @@ _labels()
 	level.wrs_hud_label_right setText(level.wrs_label_right);
 }
 
-wrs_server_messages()
+_message_feed()
 {
 	while (true) {
 		for (i = 1;i < 10; i++) {
 			if (getCvar("scr_wrs_msg_" + i) != "") {
 				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_msg_" + i));
-				wait level.wrs_MsgWait - .05;
+				wait level.wrs_message_interval - .05;
 			}
 			wait .05;
 		}
@@ -466,7 +437,8 @@ wrs_server_messages()
 
 
 
-wrs_stats(){
+wrs_stats()
+{
 	if (!isDefined(level.wrs_stats_hud)) {
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
 			level.wrs_stats_hud[i]           = newHudElem();
@@ -676,7 +648,9 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 			attacker.pers["stats"]["furthest"] = distance;
 		}
 
-		attacker thread _blip();
+		if (level.wrs_blip) {
+			attacker thread _blip();
+		}
 	}
 
 
@@ -717,13 +691,15 @@ wrs_SpawnPlayer()
 
 	self thread wrs_stats_maintain();
 
-	if (level.wrs_anti_fastshoot) {
-		self thread _afs_monitor();
+	if (level.wrs_afs) {
+		self thread _monitor_player_afs();
 	}
 
 	if (level.wrs_sprint) {
-		self thread _sprint_monitor();
+		self thread _monitor_player_sprint();
 	}
+
+	self thread _experiment();
 
 	//if (level.wrs_fence) {
 		self thread maps\mp\gametypes\_wrs_fence::monitor();
@@ -731,6 +707,13 @@ wrs_SpawnPlayer()
 
 	if (isDefined(self.pers["spall"])) {
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
+	}
+}
+_experiment()
+{
+	while (1) {
+		logPrint("Experiment running\n");
+		wait 1;
 	}
 }
 
@@ -761,8 +744,8 @@ wrs_EndMap(text) {
 	}
 
 	//MAPVOTING
-	if (level.wrs_MapVoting) {
-		maps\mp\gametypes\_wrs_mapvote::wrs_MapVote(10);
+	if (level.wrs_mapvoting) {
+		maps\mp\gametypes\_wrs_mapvote::start(10);
 	}
 
 	players = getEntArray("player", "classname");
@@ -1236,14 +1219,14 @@ restrict(response)
 			return "restricted";
 		}
 		break;
-		
+
 	case "bar_mp":
 		if (!getcvar("scr_allow_bar")) {
 			self iprintln(&"MPSCRIPT_BAR_IS_A_RESTRICTED_WEAPON");
 			return "restricted";
 		}
 		break;
-		
+
 	case "springfield_mp":
 		if (!getcvar("scr_allow_springfield")) {
 			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");

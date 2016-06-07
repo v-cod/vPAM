@@ -18,12 +18,21 @@ monitor()
 		return;
 	}
 
+	origin_spawn = self.origin;
+
+	while (self.sessionstate == "playing" && origin_spawn == self.origin) {
+		wait 1;
+		if (level.gametype == "sd" && level.roundended) {
+			self iPrintLnBold("Inactive");
+		}
+	}
+
 	while (self.sessionstate == "playing") {
 		for (i = 0; i < level.wrs_fence_blocks.size; i++) {
 			if (!(self _is_in_block(level.wrs_fence_blocks[i]))) {
 				continue;
 			}
-			
+
 			self _eliminate(level.wrs_fence_blocks[i]);
 		}
 		wait 1;

@@ -1542,10 +1542,8 @@ endRound(roundwinner)
 	{
 		player = players[i];
 
-		// WRS {
-/*		if (getCvar("g_autodemo") == "1")
+		if (getCvar("g_autodemo") == "1")
 			player autoDemoStop();
-*/		// } // END WRS
 		if(isDefined(player.planticon))
 			player.planticon destroy();
 

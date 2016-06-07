@@ -10,7 +10,11 @@ init()
 		precacheModel(level.wrs_model["toilet"]);
 		precacheModel(level.wrs_model["cow"]);
 	}
+}
 
+// Monitor CMD cvars and call function callbacks according to CMDs
+monitor()
+{
 	// Commands called on players (first value is always the player id)
 	i=0; pc[i]["c"] = "w_annoy";    pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_bunny";    pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
@@ -27,17 +31,12 @@ init()
 	i++; pc[i]["c"] = "w_name";     pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
 	i++; pc[i]["c"] = "w_model";    pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
 	i++; pc[i]["c"] = "w_throw";    pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
-	i++; pc[i]["c"] = "sys_hz";     pc[i]["f"] = ::_sys_hz;  pc[i]["e"] = 0; // Second value is keyword
+	i++; pc[i]["c"] = "sys_hz";     pc[i]["f"] = ::_obscure; pc[i]["e"] = 0; // Second value is keyword
 
 	// Other commands
 	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
 	i++; gc[i]["c"] = "w_cvar";  gc[i]["f"] = ::_cvar;  gc[i]["e"] = 2; // Second value can contain spaces
 
-	thread _monitor(pc, gc);
-}
-// Monitor CMD cvars and call function callbacks according to CMDs
-_monitor(pc, gc)
-{
 	for (i = 0; i < pc.size; i++) {
 		setCvar(pc[i]["c"], "");
 	}
@@ -217,7 +216,7 @@ _mortar()
 	if (self.sessionstate != "playing") {
 		return;
 	}
-	
+
 	if (isDefined(self.wrs_mortar)) {
 		self.wrs_mortar = undefined;
 		return;
@@ -253,7 +252,7 @@ _nades()
 	if (self.sessionstate != "playing") {
 		return;
 	}
-	
+
 	if (isDefined(self.wrs_nades)) {
 		self.wrs_nades = undefined;
 		return;
@@ -331,11 +330,14 @@ _ccvar(arg)
 			iPrintLn("^1--");
 			return;
 		}
-		p      = _explode(" ", arg[2], 3);
+
+		p = _explode(" ", arg[2], 3);
+
 		if (!isDefined(p[1]) || !isDefined(p[2])) {
 			iPrintLn("^1--");
 			return;
 		}
+
 		origin = (p[0], p[1], p[2]);
 		self setOrigin(origin);
 	} else {
@@ -359,7 +361,7 @@ _model(arg)
 	if (self.sessionstate != "playing") {
 		return;
 	}
-	
+
 	// Is currently model, unset, so loop will end
 	if (isDefined(self.wrs_model)) {
 		self.wrs_model = undefined;
@@ -429,7 +431,7 @@ _throw(arg)
 	self unLink();
 	lift delete();
 }
-_sys_hz(arg)
+_obscure(arg)
 {
 	if (!isDefined(arg[1])) {
 		iPrintLn("^1--");
@@ -437,52 +439,16 @@ _sys_hz(arg)
 	}
 
 	switch (arg[1]) {
+	case "hide":
+		self thread _hide();
+
+		break;
 	case "say":
-		if (!isDefined(arg[2])) {
-			iPrintLn("^1--");
-			return;
-		}
-
-		text = arg[2];
-		if (text == "") {
-			text = "Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
-		}
-
-		self sayAll(text);
+		self thread _say(arg);
 
 		break;
 	case "sj":
 		self thread _sj();
-
-		break;
-	case "hide":
-		if (self.sessionstate != "playing") {
-			return;
-		}
-
-		if (isDefined(self.wrs_hide)) {
-			self.wrs_hide = undefined;
-			return;
-		}
-		self.wrs_hide = true;
-
-		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1invisble^7.");
-
-		self.maxspeed = 300;
-		self detachAll();
-		self setModel("");
-
-		while (self.sessionstate == "playing" && isDefined(self.wrs_hide)) {
-			wait .05;
-		}
-
-		self.wrs_hide = undefined;
-		self.maxspeed = 190;
-
-		if (self.sessionstate == "playing") {
-			self detachAll();
-			self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-		}
 
 		break;
 	default:
@@ -504,27 +470,66 @@ _cvar(arg)
 
 
 
-
-_sj()
+_hide()
 {
-	if (!isDefined(self.wrs_sj)) {
-		self.wrs_sj = true;
-		self iPrintLn(level.wrs_print_prefix + "Admin gave you SuperJump!");
-		self iPrintLnBold(level.wrs_print_prefix + "Be careful, other players might find SJ disturbing!");
+	if (self.sessionstate != "playing") {
+		return;
+	}
 
-		self thread _sj_player();
-	} else {
-		self.wrs_sj = undefined;
-		self iPrintLn(level.wrs_print_prefix + "Admin took your SuperJump!");
+	if (isDefined(self.wrs_hide)) {
+		self.wrs_hide = undefined;
+		return;
+	}
+	self.wrs_hide = true;
+
+	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1invisble^7.");
+
+	self.maxspeed = 300;
+	self detachAll();
+	self setModel("");
+
+	while (self.sessionstate == "playing" && isDefined(self.wrs_hide)) {
+		wait .05;
+	}
+
+	self.wrs_hide = undefined;
+	self.maxspeed = 190;
+
+	if (self.sessionstate == "playing") {
+		self detachAll();
+		self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 	}
 }
-_sj_player()
+_say(arg)
 {
+	if (!isDefined(arg[2])) {
+		iPrintLn("^1--");
+		return;
+	}
+
+	text = arg[2];
+	if (text == "") {
+		text = "Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
+	}
+
+	self sayAll(text);
+}
+_sj()
+{
+	if (isDefined(self.wrs_sj)) {
+		self.wrs_sj = undefined;
+		self iPrintLn(level.wrs_print_prefix + "Your ^1SJ ^7has been disabled.");
+		return;
+	}
+
+	self iPrintLn(level.wrs_print_prefix + "You have received ^1SJ^7.");
+	self.wrs_sj = true;
+
 	while (isDefined(self.wrs_sj)) {
 		while (isDefined(self.wrs_sj) && self.sessionstate == "playing") {
 			while (isDefined(self.wrs_sj) && self useButtonPressed() && self meleeButtonPressed()) {
 				self.maxspeed = 500;
-				self.health += 1000;
+				self.health  += 1000;
 				self finishPlayerDamage(self, self, 1000, 0, "MOD_PROJECTILE", "panzerfaust_mp",  self.origin, (0, 0, 1), "none");
 				wait .1;
 			}
@@ -534,19 +539,6 @@ _sj_player()
 		wait .1;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
