@@ -18,14 +18,15 @@ monitor()
 		return;
 	}
 
+	// If someone did not move until end of round
 	origin_spawn = self.origin;
-
-	while (self.sessionstate == "playing" && origin_spawn == self.origin) {
-		wait 1;
-		if (level.gametype == "sd" && level.roundended) {
-			self iPrintLnBold("Inactive");
+	if (level.gametype == "sd") {
+		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
+			if (level.roundended) {
+				self iPrintLnBold("Inactive");
+			}
+			wait 1;
 		}
-	}
 
 	while (self.sessionstate == "playing") {
 		for (i = 0; i < level.wrs_fence_blocks.size; i++) {

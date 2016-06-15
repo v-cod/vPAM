@@ -1,14 +1,50 @@
+/**
+ * @todo  w_mark
+ */
+
 init()
 {
 	level.wrs_effect["burning"] = loadfx("fx/fire/tinybon.efx");
 	level.wrs_effect["generic"] = loadfx("fx/impacts/dirthit_mortar.efx");
 
-	level.wrs_model["toilet"] = "xmodel/Toilet";
-	level.wrs_model["cow"]    = "xmodel/cow_standing";
+	i = 0;
+	i++; level.wrs_model[i][0] = "barrel";       level.wrs_model[i][1] = "xmodel/barrel_black1";
+	i++; level.wrs_model[i][0] = "bunk";         level.wrs_model[i][1] = "xmodel/bed_bunk";
+	i++; level.wrs_model[i][0] = "bush";         level.wrs_model[i][1] = "xmodel/FullSpikeyShrub";
+	i++; level.wrs_model[i][0] = "cabinet";      level.wrs_model[i][1] = "xmodel/chinacabinet";
+	i++; level.wrs_model[i][0] = "candle";       level.wrs_model[i][1] = "xmodel/LargeCandleabre";
+	i++; level.wrs_model[i][0] = "canopy";       level.wrs_model[i][1] = "xmodel/CanopyBed";
+	i++; level.wrs_model[i][0] = "capstan";      level.wrs_model[i][1] = "xmodel/ship_capstan";
+	i++; level.wrs_model[i][0] = "car";          level.wrs_model[i][1] = "xmodel/staffcar";
+	i++; level.wrs_model[i][0] = "chair";        level.wrs_model[i][1] = "xmodel/chair_office";
+	i++; level.wrs_model[i][0] = "closet";       level.wrs_model[i][1] = "xmodel/armoir";
+	i++; level.wrs_model[i][0] = "couch";        level.wrs_model[i][1] = "xmodel/Couch";
+	i++; level.wrs_model[i][0] = "cow";          level.wrs_model[i][1] = "xmodel/cow_standing";
+	i++; level.wrs_model[i][0] = "crate";        level.wrs_model[i][1] = "xmodel/crate_misc1a";
+	i++; level.wrs_model[i][0] = "crypt";        level.wrs_model[i][1] = "xmodel/crypt1";
+	i++; level.wrs_model[i][0] = "desk";         level.wrs_model[i][1] = "xmodel/desk_rolltop";
+	i++; level.wrs_model[i][0] = "flakvierling"; level.wrs_model[i][1] = "xmodel/artillery_flakvierling";
+	i++; level.wrs_model[i][0] = "flowers";      level.wrs_model[i][1] = "xmodel/VaseFlowers";
+	i++; level.wrs_model[i][0] = "haystack";     level.wrs_model[i][1] = "xmodel/haystack";
+	i++; level.wrs_model[i][0] = "knight";       level.wrs_model[i][1] = "xmodel/armorsuit";
+	i++; level.wrs_model[i][0] = "krieg_officer";level.wrs_model[i][1] = "xmodel/kriegsmarine_nco";
+	i++; level.wrs_model[i][0] = "krieg_soldier";level.wrs_model[i][1] = "xmodel/kriegsmarine_soldier";
+	i++; level.wrs_model[i][0] = "refrigerator"; level.wrs_model[i][1] = "xmodel/plainrefrigerator";
+	i++; level.wrs_model[i][0] = "stalin";       level.wrs_model[i][1] = "xmodel/stalin_statue";
+	i++; level.wrs_model[i][0] = "streetlight";  level.wrs_model[i][1] = "xmodel/light_streetlight2on";
+	i++; level.wrs_model[i][0] = "table";        level.wrs_model[i][1] = "xmodel/LongDiningTable";
+	i++; level.wrs_model[i][0] = "toilet";       level.wrs_model[i][1] = "xmodel/Toilet";
+	i++; level.wrs_model[i][0] = "tombstone";    level.wrs_model[i][1] = "xmodel/tombstone3";
+	i++; level.wrs_model[i][0] = "tree";         level.wrs_model[i][1] = "xmodel/LargeHeavyTreeA";
+	i++; level.wrs_model[i][0] = "tub";          level.wrs_model[i][1] = "xmodel/Tub";
+	i++; level.wrs_model[i][0] = "weird_guy1";   level.wrs_model[i][1] = "xmodel/Airborne";
+	i++; level.wrs_model[i][0] = "weird_guy2";   level.wrs_model[i][1] = "xmodel/fallschirmjager_officer";
+	i++; level.wrs_model[i][0] = "weird_guy3";   level.wrs_model[i][1] = "xmodel/playerbody_default";
 
 	if (!isDefined(game["gamestarted"])) {
-		precacheModel(level.wrs_model["toilet"]);
-		precacheModel(level.wrs_model["cow"]);
+		for (i = 0; i < level.wrs_model.size; i++) {
+			precacheModel(level.wrs_model[i][1]);
+		}
 	}
 }
 
@@ -90,24 +126,26 @@ monitor()
 
 _annoy()
 {
-	if (!isDefined(self.wrs_Annoy)) {
-		self.wrs_Annoy = true;
-		self iPrintLn(level.wrs_print_prefix + "Admin annoys you!");
-		for (i = 0;isDefined(self.wrs_Annoy) && (isDefined(self.sessionstate) || self.sessionstate == "playing");i++) {
-			if (i == 8) {
-				i = 0;
-			}
+	if (isDefined(self.wrs_annoy)) {
+		self.wrs_annoy = undefined;
+		return;
+	}
 
-			self setPlayerAngles((self.angles[0], self.angles[1], i * 45));
+	self.wrs_annoy = true;
 
-			wait .25;
+	self iPrintLn(level.wrs_print_prefix + "You are being ^1annoyed^7.");
+
+	for (i = 0; isDefined(self.wrs_annoy) && self.sessionstate == "playing"; i++) {
+		if (i == 8) {
+			i = 0;
 		}
 
-		self setPlayerAngles((self.angles[0], self.angles[1], 0));
-	} else {
-		self.wrs_Annoy = undefined;
-		self iPrintLn(level.wrs_print_prefix + "Admin stopped annoying you!");
+		self setPlayerAngles((self.angles[0], self.angles[1], i * 45));
+
+		wait .25;
 	}
+
+	self setPlayerAngles((self.angles[0], self.angles[1], 0));
 }
 _bunny()
 {
@@ -294,7 +332,7 @@ _smite()
 
 	self suicide();
 
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7has been ^1smitten^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1smitten^7.");
 }
 _spall()
 {
@@ -370,13 +408,22 @@ _model(arg)
 		return;
 	}
 
-	model = arg[1];
-	if (!isDefined(model)) {
-		iPrintLn("^1--");
+
+	if (!isDefined(arg[1])) {
+		for (i = 0; i < level.wrs_model.size; i++) {
+			self iPrintLn(level.wrs_model[i][0]);
+		}
 		return;
 	}
-	// Unknown model
-	if (!isDefined(level.wrs_model[model])) {
+
+	model   = arg[1];
+	for (i = 0; i < level.wrs_model.size; i++) {
+		if (level.wrs_model[i][0] == model) {
+			model_i = i;
+			break;
+		}
+	}
+	if (!isDefined(model_i)) {
 		iPrintLn("^1--");
 		return;
 	}
@@ -391,10 +438,10 @@ _model(arg)
 		self setModel("");
 		cowModel = spawn("script_model", self getOrigin());
 		cowModel.angles = self.angles + (0, 270, 0);
-		cowModel setModel(level.wrs_model[model]);
+		cowModel setModel(level.wrs_model[model_i][1]);
 		cowModel linkTo(self);
 	} else {
-		self setModel(level.wrs_model[model]);
+		self setModel(level.wrs_model[model_i][1]);
 	}
 
 	while (isDefined(self.wrs_model) && self.sessionstate == "playing") {

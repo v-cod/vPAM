@@ -126,7 +126,7 @@ _update_cvars()
 	level.wrs_burning_passfire  = _getcvar("scr_wrs_passfire",     0,   0,   1, "int");
 	level.wrs_leaderboards      = _getcvar("scr_wrs_leaderboards", 1,   0,   1, "int");
 	level.wrs_commands          = _getcvar("scr_wrs_commands",     1,   0,   1, "int");
-	level.wrs_Countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
+	level.wrs_countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
 	level.wrs_afs               = _getcvar("scr_wrs_afs",          1,   0,   1, "int");
 	level.wrs_afs_ticks         = _getcvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
 
@@ -510,11 +510,8 @@ wrs_stats_maintain()
 	self.wrs_stats_hud["headshots"] setValue(self.pers["stats"]["headshots"]);
 	self.wrs_stats_hud["differ"]    setValue(self.pers["stats"]["differ"]);
 
-
-
 	//IF STATEMENTS TO DETERMINE WETHER THIS PLAYER HAS THE RECORD
 	//IF IT'S THE CASE, THE RECORD IS HIS, GIVE HIM THE BLUE COLOR, AND MAKE OTHERS WHITE.
-
 	wrs_stats_maintain_CheckStat("score");
 	wrs_stats_maintain_CheckStat("bashes");
 	wrs_stats_maintain_CheckStat("furthest");
@@ -637,11 +634,12 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
 	if (isPlayer(attacker) && attacker != self) { //He got killed by a player
-		// Raise the spree
-		if (attacker.pers["spree"] < 0) {
-			attacker.pers["spree"] = 0;
-		}
+		attacker.pers["stats"]["score"]  = attacker.score;
+		attacker.pers["stats"]["differ"] = attacker.score - attacker.deaths;
 
+		attacker thread wrs_stats_maintain();
+
+		// Raise the spree
 		attacker.pers["spree"]++;
 		if (attacker.pers["spree"] > attacker.pers["stats"]["spree"]) {
 			attacker.pers["stats"]["spree"] = attacker.pers["spree"];
@@ -665,21 +663,9 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 		}
 	}
 
-
-
-	if (self.pers["spree"] <= 0) {
-		self.pers["spree"]--;
-	} else {
-		self.pers["spree"] = 0;
-	}
+	self.pers["spree"] = 0;
 	self.pers["stats"]["differ"] = self.score - self.deaths;
 
-	if (isPlayer(attacker)) {
-		attacker.pers["stats"]["score"]  = attacker.score;
-		attacker.pers["stats"]["differ"] = attacker.score - attacker.deaths;
-
-		attacker thread wrs_stats_maintain();
-	}
 	self thread wrs_stats_maintain();
 }
 wrs_SpawnPlayer()
@@ -743,7 +729,7 @@ wrs_EndMap(text) {
 
 	//Show Leaderboards
 	if (level.wrs_leaderboards) {
-		wrs_leaderboards();
+		_leaderboards();
 	}
 
 	//MAPVOTING
@@ -760,14 +746,14 @@ wrs_EndMap(text) {
 }
 
 //Printing out the leaderboards
-wrs_leaderboards()
+_leaderboards()
 {
-	winner["score"][0]      = 0; winner["score"][1]     = "^3Best Score^7: ^40";
-	winner["bashes"][0]     = 0; winner["bashes"][1]    = "^3Most Bashes^7: ^40";
-	winner["furthest"][0]   = 0; winner["furthest"][1]  = "^3Furthest Shot^7: ^40";
-	winner["spree"][0]      = 0; winner["spree"][1]     = "^3Longest Spree^7: ^40";
-	winner["headshots"][0]  = 0; winner["headshots"][1] = "^3Most Headshots^7: ^40";
-	winner["differ"][0]     = 0; winner["differ"][1]    = "^3Best Differential^7: ^40";
+	winner["score"    ][0] = 0; winner["score"    ][1] =        "^3Best Score^7: ^40";
+	winner["bashes"   ][0] = 0; winner["bashes"   ][1] =       "^3Most Bashes^7: ^40";
+	winner["furthest" ][0] = 0; winner["furthest" ][1] =     "^3Furthest Shot^7: ^40";
+	winner["spree"    ][0] = 0; winner["spree"    ][1] =     "^3Longest Spree^7: ^40";
+	winner["headshots"][0] = 0; winner["headshots"][1] =    "^3Most Headshots^7: ^40";
+	winner["differ"   ][0] = 0; winner["differ"   ][1] = "^3Best Differential^7: ^40";
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
@@ -801,23 +787,23 @@ wrs_leaderboards()
 	//IF IT'S THE CASE, PUT (NEW) BEHIND IT
 	//ELSE JUST PUT THE CURRENT ROUND RECORD WITH THE SERVER RECORD
 
-	winner["score"][1]     = winner["score"][1];
-	winner["bashes"][1]    = winner["bashes"][1];
-	winner["furthest"][1]  = winner["furthest"][1];
-	winner["spree"][1]     = winner["spree"][1];
+	winner["score"    ][1] = winner["score"][1];
+	winner["bashes"   ][1] = winner["bashes"][1];
+	winner["furthest" ][1] = winner["furthest"][1];
+	winner["spree"    ][1] = winner["spree"][1];
 	winner["headshots"][1] = winner["headshots"][1];
-	winner["differ"][1]    = winner["differ"][1];
+	winner["differ"   ][1] = winner["differ"][1];
 
 	for (i = 0; i < 5; i++) iPrintLnBold(" ");
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
-	iPrintLnBold(winner["score"][1]);
-	iPrintLnBold(winner["bashes"][1]);
-	iPrintLnBold(winner["furthest"][1]);
-	iPrintLnBold(winner["spree"][1]);
+	iPrintLnBold(winner["score"    ][1]);
+	iPrintLnBold(winner["bashes"   ][1]);
+	iPrintLnBold(winner["headshots"][1]);
 	wait 8;
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
-	iPrintLnBold(winner["headshots"][1]);
-	iPrintLnBold(winner["differ"][1]);
+	iPrintLnBold(winner["furthest"][1]);
+	iPrintLnBold(winner["differ"  ][1]);
+	iPrintLnBold(winner["spree"   ][1]);
 	wait 8;
 }
 
@@ -832,8 +818,8 @@ cleanUp(everything) {
 			}
 		}
 	}
-	if (isDefined(level.clock))
-		level.clock destroy();
+	//if (isDefined(level.clock))
+	//	level.clock destroy();
 
 	if (everything) {
 
@@ -853,13 +839,13 @@ cleanUp(everything) {
 
 		if (everything) {
 			if (isDefined(players[i].wrs_stats_hud)) {
-				players[i].wrs_stats_hud["score"] destroy();
-				players[i].wrs_stats_hud["bashes"] destroy();
-				players[i].wrs_stats_hud["furthest"] destroy();
-				players[i].wrs_stats_hud["spree"] destroy();
-				players[i].wrs_stats_hud["spreemax"] destroy();
+				players[i].wrs_stats_hud["score"    ] destroy();
+				players[i].wrs_stats_hud["bashes"   ] destroy();
+				players[i].wrs_stats_hud["furthest" ] destroy();
+				players[i].wrs_stats_hud["spree"    ] destroy();
+				players[i].wrs_stats_hud["spreemax" ] destroy();
 				players[i].wrs_stats_hud["headshots"] destroy();
-				players[i].wrs_stats_hud["differ"] destroy();
+				players[i].wrs_stats_hud["differ"   ] destroy();
 			}
 		}
 	}
