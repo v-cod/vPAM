@@ -16,22 +16,22 @@ init()
 monitor()
 {
 	// Commands called on players (first value is always the player id)
-	i=0; pc[i]["c"] = "w_annoy";    pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_bunny";    pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_burn";     pc[i]["f"] = ::_burn;    pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_disarm";   pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_kill";     pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_mortar";   pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_nades";    pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_smite";    pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_spall";    pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_spec";     pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
+	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_burn";   pc[i]["f"] = ::_burn;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_kill";   pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_mortar"; pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_nades";  pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_spall";  pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_spec";   pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
 
-	i++; pc[i]["c"] = "w_ccvar";    pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
-	i++; pc[i]["c"] = "w_name";     pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
-	i++; pc[i]["c"] = "w_model";    pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
-	i++; pc[i]["c"] = "w_throw";    pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
-	i++; pc[i]["c"] = "sys_hz";     pc[i]["f"] = ::_obscure; pc[i]["e"] = 0; // Second value is keyword
+	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
+	i++; pc[i]["c"] = "w_name";   pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
+	i++; pc[i]["c"] = "w_model";  pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
+	i++; pc[i]["c"] = "w_throw";  pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
+	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 0; // Second value is keyword
 
 	// Other commands
 	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
@@ -371,6 +371,10 @@ _model(arg)
 	}
 
 	model = arg[1];
+	if (!isDefined(model)) {
+		iPrintLn("^1--");
+		return;
+	}
 	// Unknown model
 	if (!isDefined(level.wrs_model[model])) {
 		iPrintLn("^1--");
@@ -449,7 +453,7 @@ _obscure(arg)
 		self thread _say(arg);
 
 		break;
-	case "sj":`
+	case "sj":
 		self thread _sj();
 
 		break;
@@ -479,7 +483,7 @@ _hide()
 	}
 
 	if (isDefined(self.wrs_hide)) {
-		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^visible^7 again.");
+		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1visible^7 again.");
 		self.wrs_hide = undefined;
 		return;
 	}

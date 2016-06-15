@@ -74,6 +74,15 @@ init()
 
 		precacheString(&"^3/^7");
 
+		// Precache russian weapons even if not a team
+		if (game["allies"] != "russian") {
+			precacheItem("rgd-33russianfrag_mp");
+			precacheItem("luger_mp");
+			precacheItem("mosin_nagant_mp");
+			precacheItem("ppsh_mp");
+			precacheItem("mosin_nagant_sniper_mp");
+		}
+
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
 			precacheString(level.wrs_hud_stats_text[i]);
 		}
@@ -167,6 +176,7 @@ _monitor_player_sprint()
 	self.wrs_sprintHud.x = 488 + 14;
 	self.wrs_sprintHud.y = 455;
 
+	// Prevent sprint glitch on SD
 	while (self.sessionstate == "playing" && self attackButtonPressed() == true) {
 		wait .05;
 	}
@@ -177,9 +187,7 @@ _monitor_player_sprint()
 		if (self.sessionstate != "playing") {
 			break;
 		}
-		if (isDefined(self.wrs_Model) || isDefined(self.wrs_Burning) || isDefined(self.wrs_Hide) || isDefined(self.wrs_Sj) || isDefined(self.wrs_Bunny)) {
-			continue;
-		}
+
 		//The amount of sprint left, a float from 0 to 1
 		sprint = (float)(level.wrs_sprint_ticks - sprintLeft) / level.wrs_sprint_ticks;
 

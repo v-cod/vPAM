@@ -1135,7 +1135,7 @@ spawnPlayer()
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 
 	// WRS {
-	if(level.wrs){
+	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
 	} else {
 		if(isDefined(self.pers["weapon1"]) && isDefined(self.pers["weapon2"]))
