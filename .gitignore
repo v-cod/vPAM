@@ -1,5 +1,5 @@
 *.lnk
-*.cfg
+config_mp.cfg
 *.log
 *.pk3
 *.sublime-workspace

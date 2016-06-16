@@ -154,7 +154,7 @@ _mapvote_candidates(cndts)
 		maps = [];
 		current = getCvar("mapname");
 		for(i = 0;i < rotation.size;i++){
-			if(maps\mp\gametypes\_wrs::substr(rotation[i],0,3) == "mp_" && rotation[i] != current){
+			if(maps\mp\gametypes\_wrs::_substr(rotation[i],0,3) == "mp_" && rotation[i] != current){
 				maps[maps.size] = rotation[i];
 			}
 		}
@@ -166,7 +166,7 @@ _mapvote_candidates(cndts)
 		candidate = [];
 		while (1) {
 			rnd = randomInt(maps.size);
-			if (!maps\mp\gametypes\_wrs::in_array(maps[rnd],cndt)) {
+			if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
 				cndt[index] = maps[rnd];
 				candidate[index]["name"]    = cndt[index];
 				candidate[index]["iString"] = getMapIString(cndt[index]);

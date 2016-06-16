@@ -345,7 +345,6 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::start();
-		maps\mp\gametypes\_wrs::wrs_stats();
 	}
 	// } // END WRS
 
@@ -845,7 +844,9 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 	// WRS {
 	if (level.wrs) {
-		self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+		if (self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)) {
+			return;
+		}
 	}
 	// } // END WRS
 

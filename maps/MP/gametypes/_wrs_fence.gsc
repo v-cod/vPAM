@@ -1,12 +1,14 @@
 init()
 {
-	map = getCvar("mapname");
-
 	block = [];
 
-	if (map == "mp_stalingrad") {
+	switch (getCvar("mapname")) {
+	case "mp_stalingrad":
 		block[0]["min"] = (2048, -216, 168);
 		block[0]["max"] = (2464,   -8, 292);
+		break;
+	default:
+		break;
 	}
 
 	level.wrs_fence_blocks = block;
@@ -27,6 +29,7 @@ monitor()
 			}
 			wait 1;
 		}
+	}
 
 	while (self.sessionstate == "playing") {
 		for (i = 0; i < level.wrs_fence_blocks.size; i++) {

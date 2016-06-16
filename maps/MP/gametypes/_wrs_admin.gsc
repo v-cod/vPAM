@@ -7,8 +7,7 @@ init()
 	level.wrs_effect["burning"] = loadfx("fx/fire/tinybon.efx");
 	level.wrs_effect["generic"] = loadfx("fx/impacts/dirthit_mortar.efx");
 
-	i = 0;
-	i++; level.wrs_model[i][0] = "barrel";       level.wrs_model[i][1] = "xmodel/barrel_black1";
+	i=0; level.wrs_model[i][0] = "barrel";       level.wrs_model[i][1] = "xmodel/barrel_black1";
 	i++; level.wrs_model[i][0] = "bunk";         level.wrs_model[i][1] = "xmodel/bed_bunk";
 	i++; level.wrs_model[i][0] = "bush";         level.wrs_model[i][1] = "xmodel/FullSpikeyShrub";
 	i++; level.wrs_model[i][0] = "cabinet";      level.wrs_model[i][1] = "xmodel/chinacabinet";

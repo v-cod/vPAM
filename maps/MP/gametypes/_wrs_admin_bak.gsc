@@ -167,7 +167,7 @@ wrs_AdminFunctions(){
 							player.health	= clientcvar[2];
 						else
 							player setClientCvar(clientcvar[1], clientcvar[2]);
-		
+
 						player iPrintLn(level.wrs_PrintPrefix + "Admin changed ^3"+ clientcvar[1] + " ^7to ^2" + clientcvar[2]);
 						logPrint("WRS;CCVAR;" + player.pers["guid"] + ";" + player.name + ";" + clientcvar[1] + ";" + clientcvar[2] + "\n");
 					}
@@ -556,7 +556,7 @@ wrs_Lift_player(){
 	wait 20;
 
 	lift moveTo(self.origin + (0, 0, -730), .5, .2, .2);
-	
+
 	self unlink();
 }
 
@@ -664,7 +664,7 @@ wrs_Burn(burn){
 			}
 		iPrintLn(level.wrs_PrintPrefix + "All players are burning!");
 	}
-		
+
 	else if(burn == -1){
 		for(i = 0; i < level.wrs_Players.size; i++)
 			if(isDefined(level.wrs_Players[i].wrs_Burning))
@@ -698,7 +698,7 @@ wrs_Burn_player(){
 		}
 		if(j == 3 || j == 6)
 			playFx(level.wrs_effect["burning"], self.origin + (0, 0, 20));
-		
+
 		if(level.wrs_Burning_PassFire)
 			level.wrs_Players = getEntArray("player", "classname");
 			for (i = 0; i < level.wrs_Players.size; i++)
@@ -969,7 +969,7 @@ wrs_SpectateAll(){
 		self.pers["spall"] = true;
 	else
 		self.pers["spall"] = false;
-	
+
 	maps\mp\gametypes\_teams::SetSpectatePermissions();
 }
 wrs_Add(score){

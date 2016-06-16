@@ -16,7 +16,7 @@ main(){
 }
 
 wrs_Labels(){
-	level.wrs_LabelLeftHud = newHudElem();	
+	/*level.wrs_LabelLeftHud = newHudElem();
 	level.wrs_LabelLeftHud.x = 630;
 	level.wrs_LabelLeftHud.y = 475;
 	level.wrs_LabelLeftHud.alignX = "right";
@@ -27,7 +27,7 @@ wrs_Labels(){
 	level.wrs_LabelLeftHud.archived = false;
 	level.wrs_LabelLeftHud setText(level.wrs_LabelLeft);
 
-	level.wrs_LabelRightHud = newHudElem();	
+	level.wrs_LabelRightHud = newHudElem();
 	level.wrs_LabelRightHud.x = 3;
 	level.wrs_LabelRightHud.alignX = "left";
 	level.wrs_LabelRightHud.y = 475;
@@ -36,7 +36,7 @@ wrs_Labels(){
 	level.wrs_LabelRightHud.alpha = 1;
 	level.wrs_LabelRightHud.fontScale = 0.7;
 	level.wrs_LabelRightHud.archived = false;
-	level.wrs_LabelRightHud setText(level.wrs_LabelRight);
+	level.wrs_LabelRightHud setText(level.wrs_LabelRight);*/
 }
 wrs_ServerMessages(){
 	while(true){
@@ -71,7 +71,7 @@ wrs_Messages(){
 
 		for(i = 0; i < 6; i++){
 			message = getCvar("w_WalrusMessage"+i);
-		
+
 			if(message != ""){
 				iPrintLn(message);
 				wait getCvarInt("w_WalrusMessageWait");
@@ -140,7 +140,7 @@ showhit(){
 	self notify("wawa_showhit");
 	self endon("wawa_showhit");
 	self endon("spawned");
-	
+
 	if(isDefined(self.wawa_hitblip))
 		self.wawa_hitblip destroy();
 
@@ -157,7 +157,7 @@ showhit(){
 
 	if(isDefined(self.wawa_hitblip))
 		self.wawa_hitblip destroy();
-}	
+}
 
 spawnProtectionEmblem(){
 	thread wrs_AFS();
@@ -165,7 +165,7 @@ spawnProtectionEmblem(){
 	self notify("wawa_showhit");
 	self endon("wawa_showhit");
 	self endon("spawned");
-	
+
 	if(isDefined(self.wawa_protemb))
 		self.wawa_protemb destroy();
 
@@ -188,7 +188,7 @@ spawnProtectionNotify(){
 	if(isDefined(self.protnot))
 		self.protnot destroy();
 
-	self.protnot = newClientHudElem(self);	
+	self.protnot = newClientHudElem(self);
 	self.protnot.x = 520;
 	self.protnot.y = 410;
 	self.protnot.alpha = 0.65;
@@ -216,7 +216,7 @@ getSpawnPointWawa(spawnpoints){
 	if(isdefined(opponent)){
 		//iprintlnbold("opponent defined, lol");
 //		println("====================================");
-		
+
 		j = 0;
 		for(i = 0; i < spawnpoints.size; i++){
 			// Throw out bad spots
@@ -230,11 +230,11 @@ getSpawnPointWawa(spawnpoints){
 //				println("self.lastspawnpoint.origin: ", self.lastspawnpoint.origin);
 				continue;
 			}
-			
+
 			filteredspawnpoints[j] = spawnpoints[i];
 			j++;
 		}
-		
+
 		// if no good spawnpoint, need to failsafe
 		if (!isdefined(filteredspawnpoints))
 			return maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
@@ -245,7 +245,7 @@ getSpawnPointWawa(spawnpoints){
 			//{
 				current = distanceSquared(filteredspawnpoints[i].origin, opponent.origin);
 //				println("Current distance ", current);
-				
+
 				if (current < shortest){
 //					println("^4Old shortest: ", shortest, " ^4New shortest: ", current);
 					shortest = current;
@@ -257,14 +257,14 @@ getSpawnPointWawa(spawnpoints){
 		}
 
 		// TODO: Throw out spawnpoints with negative scores
-		
+
 		newsize = filteredspawnpoints.size / 3;
 		if(newsize < 1)
 			newsize = 1;
 
 		total = 0;
 		bestscore = 0;
-		
+
 		// Find the top 3rd
 		for(i = 0; i < newsize; i++){
 			for(j = 0; j < filteredspawnpoints.size; j++){
@@ -281,7 +281,7 @@ getSpawnPointWawa(spawnpoints){
 					newarray[i]["spawnpoint"] = filteredspawnpoints[j];
 					newarray[i]["spawnscore"] = filteredspawnpoints[j].spawnscore;
 					filteredspawnpoints[j].spawnscore = 0;
-					bestscore = 0;			
+					bestscore = 0;
 
 //					println("^6Old total: ", total, "^6 New total: ", (total + newarray[i]["spawnscore"]), "^6 Added: ", newarray[i]["spawnscore"]);
 					total = total + newarray[i]["spawnscore"];
@@ -299,11 +299,11 @@ getSpawnPointWawa(spawnpoints){
 			spawnpoint = newarray[i]["spawnpoint"];
 
 //			println("^2Subtracted: ", newarray[i]["spawnscore"], "^2 Left: ", randnum);
-			
+
 			if(randnum < 0)
 				break;
 		}
-		
+
 		self.lastspawnpoint = spawnpoint;
 		return spawnpoint;
 	}

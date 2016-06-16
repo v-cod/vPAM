@@ -211,7 +211,6 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::start();
-		maps\mp\gametypes\_wrs::wrs_stats();
 	}
 	// } // END WRS
 

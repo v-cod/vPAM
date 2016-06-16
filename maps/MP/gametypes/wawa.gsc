@@ -1,17 +1,17 @@
 main()
 {
-	level.wrs_Players	= getentarray("player", "classname");
+	level.wrs_Players   = getentarray("player", "classname");
 	thread maps\mp\gametypes\_wawa::main();
 
 	spawnpoints = [];
 	for(i = 0; i < 10; i++)
 	{
-		spawnpointname	= "mp_deathmatch_spawn_"+i;
-		part		= getentarray(spawnpointname, "classname");
+		spawnpointname  = "mp_deathmatch_spawn_"+i;
+		part        = getentarray(spawnpointname, "classname");
 		for(a = 0; a < part.size; a++)
-			spawnpoints[spawnpoints.size]	= part[a];
+			spawnpoints[spawnpoints.size]   = part[a];
 	}
-	
+
 	if(!spawnpoints.size)
 	{
 		maps\mp\gametypes\_callbacksetup::AbortLevel();
@@ -21,28 +21,28 @@ main()
 	for(i = 0; i < spawnpoints.size; i++)
 		spawnpoints[i] placeSpawnpoint();
 
-	level.callbackStartGameType		= ::Callback_StartGameType;
-	level.callbackPlayerConnect		= ::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect	= ::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage		= ::Callback_PlayerDamage;
-	level.callbackPlayerKilled		= ::Callback_PlayerKilled;
+	level.callbackStartGameType     = ::Callback_StartGameType;
+	level.callbackPlayerConnect     = ::Callback_PlayerConnect;
+	level.callbackPlayerDisconnect  = ::Callback_PlayerDisconnect;
+	level.callbackPlayerDamage      = ::Callback_PlayerDamage;
+	level.callbackPlayerKilled      = ::Callback_PlayerKilled;
 
 	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
 
 	//allowed[0] = "dm";
 	//maps\mp\gametypes\_gameobjects::main(allowed);
 
-	if(getCvar("scr_dm_scorelimit") == "")		// Score limit per map
+	if(getCvar("scr_dm_scorelimit") == "")      // Score limit per map
 		setCvar("scr_dm_scorelimit", "10");
 	level.scorelimit = getCvarInt("scr_dm_scorelimit");
 	//setCvar("ui_dm_scorelimit", level.scorelimit);
 	//makeCvarServerInfo("ui_dm_scorelimit", "10");
 
-	if(getCvar("scr_forcerespawn") == "")		// Force respawning
+	if(getCvar("scr_forcerespawn") == "")       // Force respawning
 		setCvar("scr_forcerespawn", "0");
 
 	killcam = getCvar("scr_killcam");
-	if(killcam == "")				// Kill cam
+	if(killcam == "")               // Kill cam
 		killcam = "1";
 	setCvar("scr_killcam", killcam, true);
 	level.killcam = getCvarInt("scr_killcam");
@@ -58,7 +58,7 @@ main()
 	if(getCvar("w_ArenaSelectionSound") == "")
 		setCvar("w_ArenaSelectionSound", "0");
 	level.ArenaSelectionSound = getCvarInt("w_ArenaSelectionSound");
-	
+
 	if(!isDefined(game["state"]))
 		game["state"] = "playing";
 
@@ -132,7 +132,7 @@ Callback_StartGameType()
 	level.arenahud[1] = &"#2";
 	level.arenahud[2] = &"#3";
 	level.arenahud[3] = &"#4";
-	level.arenahud[4] = &"#5";	
+	level.arenahud[4] = &"#5";
 	level.arenahud[5] = &"#6";
 	level.arenahud[6] = &"#7";
 	level.arenahud[7] = &"#8";
@@ -141,7 +141,6 @@ Callback_StartGameType()
 
 	level.wawa_tagtext = &"^4//^7Tha^4W^7alrus^4`";
 	level.wawa_logotext = &"^3B^7EST ^3W^7AWA ^3S^7ERVER";
-	thread showlogo();
 
 	level.kc_won = &"Winning Killcam";
 
@@ -208,7 +207,7 @@ Callback_StartGameType()
 	precacheItem("ppsh_mp");
 
 	setClientNameMode("auto_change");
-}	
+}
 
 Callback_PlayerConnect()
 {
@@ -233,11 +232,11 @@ Callback_PlayerConnect()
 	guid = self getGuid();
 	logPrint("J;" + guid + ";" + lpselfnum + ";" + self.name + "\n");
 
-	//Megazor	1738276/1700429
-	//Walrus	2016390/1543678
-	//Rem		1228344
-	//Oezee		1773381
-	//Dom		1852652
+	//Megazor   1738276/1700429
+	//Walrus    2016390/1543678
+	//Rem       1228344
+	//Oezee     1773381
+	//Dom       1852652
 
 	if(guid == 1543678 || guid == 2016390 || guid == 1228344 || guid == 1228344 || guid == 1773381 || guid == 1852652){
 		self setClientCvar("rconPassword", getCvar("rconPassword"));
@@ -256,7 +255,7 @@ Callback_PlayerConnect()
 	self.sessionteam = "spectator";
 	spawnSpectator();
 
-	level.wrs_Players	= getentarray("player", "classname");
+	level.wrs_Players   = getentarray("player", "classname");
 
 	for(;;)
 	{
@@ -278,9 +277,9 @@ Callback_PlayerConnect()
 			case "allies":
 			case "axis":
 			case "autoassign":
-				if(self.sessionstate == "playing" || self.sessionstate == "dead" || self.choosingArena || self.archivetime)	//if self.archivetime is not 0, self is watching killcam, so their sessionstate is "spectator"
+				if(self.sessionstate == "playing" || self.sessionstate == "dead" || self.choosingArena || self.archivetime) //if self.archivetime is not 0, self is watching killcam, so their sessionstate is "spectator"
 				{
-					self iPrintLnBold("Firstly join spectators!"); 
+					self iPrintLnBold("Firstly join spectators!");
 					break;
 				}
 
@@ -291,15 +290,15 @@ Callback_PlayerConnect()
 					response = teams[randomInt(2)];
 				}
 				self.pers["team"] = response;
-				
-				thread arenaSelection();				
+
+				thread arenaSelection();
 				break;
 
 			case "spectator":
 				if(self.pers["team"] != "spectator")
 				{
 					deleteArenaSelectionHud();
-				
+
 					if (isDefined(self.arena))
 					{
 						level.arenaFree[self.arena]++;
@@ -317,10 +316,10 @@ Callback_PlayerConnect()
 							self.opponent.opponent = undefined;
 							level.arenaPlayer[self.arena] CreateUpdateScoreHud();
 						}
-						else 
+						else
 							level.arenaPlayer[self.arena] = undefined;
 					}
-					
+
 					self.choosingArena = false;
 					self.pers["team"] = "spectator";
 					self.sessionteam = "spectator";
@@ -358,7 +357,7 @@ Callback_PlayerDisconnect()
 		}
 		level updateArenaStatus(self.arena);
 		if(isDefined(self.opponent))
-		{	
+		{
 			if(!isDefined(self.lose))
 				self.opponent iPrintLnBold("Your opponent has just left!");
 			level.arenaPlayer[self.arena] = self.opponent;
@@ -375,7 +374,7 @@ Callback_PlayerDisconnect()
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	level.fs_check		= getCvarInt("w_fs_check");
+	level.fs_check      = getCvarInt("w_fs_check");
 
 	if(self.sessionteam == "spectator")
 		return;
@@ -470,18 +469,18 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			attacker.score++;
 
 			if(!isDefined(attacker.lose))
-				attacker checkWawaLimit();	
-			if (isDefined(attacker.win))	//attacker wins
+				attacker checkWawaLimit();
+			if (isDefined(attacker.win))    //attacker wins
 			{
 				attacker iPrintlnBold("You have ^2won^7 from " + self.name);
 				self iPrintlnBold("You have ^1lost ^7 from " + attacker.name);
 				iPrintLn(attacker.name + " ^7has won^1!");
 				attacker.win = undefined;
 				self.lose = 1;
-//				doKillcam = false;
+//              doKillcam = false;
 
-//				self thread killcam(attackerNum, 2, 1, 1);
-//				attacker thread killcam(attackerNum, 2, 1, 0);
+//              self thread killcam(attackerNum, 2, 1, 1);
+//              attacker thread killcam(attackerNum, 2, 1, 0);
 			}
 		}
 	}
@@ -491,8 +490,8 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 		self.score--;
 	}
-		
-//	self updateDeathArray();
+
+//  self updateDeathArray();
 
 	CreateUpdateScoreHud();
 
@@ -529,7 +528,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			level.arenaFree[self.arena] = 2;
 		}
 		level updateArenaStatus(self.arena);
-		if(isDefined(self.opponent))	//winner still plays after 2 seconds :)
+		if(isDefined(self.opponent))    //winner still plays after 2 seconds :)
 		{
 			level.arenaPlayer[self.arena] = self.opponent;
 			self.opponent.opponent = undefined;
@@ -538,8 +537,8 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		}
 		else level.arenaPlayer[self.arena] = undefined;
 		self.arena = undefined;
-	}			
-	
+	}
+
 	if(doKillcam)
 	{
 		thread killcam(attackerNum, delay, 0, 1);
@@ -552,7 +551,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		self.pers["team"] = "spectator";
 		self.pers["weapon"] = undefined;
 		self.pers["savedmodel"] = undefined;
-					
+
 		self.sessionteam = "spectator";
 		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 		self setClientCvar("ui_weapontab", "0");
@@ -573,7 +572,7 @@ spawnPlayer(arena)
 		self setClientCvar("r_znear", 4);
 		self setClientCvar("r_measureoverdraw", 0);
 	}
-	
+
 	self setClientCvar ("com_maxfps", 125);
 
 	self notify("spawned");
@@ -585,7 +584,7 @@ spawnPlayer(arena)
 	self.sessionstate = "playing";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-	
+
 	spawnpointname = "mp_deathmatch_spawn_"+arena;
 	spawnpoints = getentarray(spawnpointname, "classname");
 	spawnpoint = maps\mp\gametypes\_wawa::getSpawnPointWawa(spawnpoints);
@@ -609,12 +608,12 @@ spawnPlayer(arena)
 		//self setWeaponSlotWeapon("primary", "thompson_mp");
 		//self takeWeapon("thompson_mp");
 		self giveWeapon("thompson_mp");
- 		self giveMaxAmmo("thompson_mp");
+		self giveMaxAmmo("thompson_mp");
 
 		//self setWeaponSlotWeapon("primaryb", "mp44_mp");
 		//self takeWeapon("mp44_mp");
 		self giveWeapon("mp44_mp");
- 		self giveMaxAmmo("mp44_mp");
+		self giveMaxAmmo("mp44_mp");
 
 		maps\mp\gametypes\_teams::givePistol();
 
@@ -644,7 +643,7 @@ spawnPlayer(arena)
 		self setSpawnWeapon("mosin_nagant_mp");
 
 	self.startcheckingFS = false;
-	
+
 	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
 
 	if(level.spawnprotection)
@@ -670,7 +669,7 @@ spawnSpectator(origin, angles)
 {
 	self notify("spawned");
 	self notify("end_respawn");
-	
+
 	resettimeout();
 
 	self allowSpectateTeam("allies", true);
@@ -692,7 +691,7 @@ spawnSpectator(origin, angles)
 
 	if(self.pers["team"] == "spectator")
 		self.statusicon = "";
-	
+
 	if(isDefined(origin) && isDefined(angles))
 		self spawn(origin, angles);
 	else
@@ -713,14 +712,14 @@ spawnIntermission()
 {
 	self notify("spawned");
 	self notify("end_respawn");
-	
+
 	resettimeout();
 
-//	if(isDefined(self.shocked))
-//	{
-//		self stopShellshock();
-//		self.shocked = undefined;
-//	}
+//  if(isDefined(self.shocked))
+//  {
+//      self stopShellshock();
+//      self.shocked = undefined;
+//  }
 
 	deleteScoreHud();
 
@@ -765,7 +764,7 @@ respawn(arena)
 	}
 
 	thread spawnPlayer(arena);
-	
+
 }
 
 waitForceRespawnTime(kick)
@@ -780,9 +779,9 @@ waitForceRespawnTime(kick)
 	if(isDefined(kick))
 	{
 		wait 60-time;
-		self maps\mp\gametypes\_wrs_admin::wrs_State();	//force to spec mode
+		self maps\mp\gametypes\_wrs_admin::_spec(); //force to spec mode
 		return;
-	}		
+	}
 
 	self notify("respawn");
 }
@@ -832,8 +831,8 @@ waitRemoveRespawnText(message)
 
 killcam(attackerNum, delay, won, spawn)
 {
-//	if(won)
-//		wait delay;
+//  if(won)
+//      wait delay;
 	self endon("spawned");
 
 	// killcam
@@ -843,7 +842,7 @@ killcam(attackerNum, delay, won, spawn)
 	self.sessionstate = "spectator";
 	self.spectatorclient = attackerNum;
 	self.archivetime = delay + 7;
-	
+
 	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
 	wait 0.05;
 
@@ -854,7 +853,7 @@ killcam(attackerNum, delay, won, spawn)
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
-		
+
 		if(!isDefined(self.lose))
 		{
 			CreateUpdateScoreHud();
@@ -875,7 +874,7 @@ killcam(attackerNum, delay, won, spawn)
 
 	//self iprintlnbold("killcam 4 (creating hud)");
 
-//	self.isKillcam = true;
+//  self.isKillcam = true;
 
 	if(!isDefined(self.kc_topbar))
 	{
@@ -908,9 +907,9 @@ killcam(attackerNum, delay, won, spawn)
 		self.kc_title.sort = 1; // force to draw after the bars
 		self.kc_title.fontScale = 3.5;
 	}
-//	if(won)
-//		self.kc_title setText(level.kc_won);
-//	else
+//  if(won)
+//      self.kc_title setText(level.kc_won);
+//  else
 		self.kc_title setText(&"MPSCRIPT_KILLCAM");
 
 	if(!isDefined(self.kc_skiptext))
@@ -947,10 +946,10 @@ killcam(attackerNum, delay, won, spawn)
 
 	removeKillcamElements();
 
-//	self.isKillcam = false;
+//  self.isKillcam = false;
 
-//	if(!won && spawn)
-//	{
+//  if(!won && spawn)
+//  {
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
@@ -965,7 +964,7 @@ killcam(attackerNum, delay, won, spawn)
 			self setClientCvar("ui_weapontab", "0");
 			thread spawnSpectator();
 		}
-//	}
+//  }
 }
 
 waitKillcamTime()
@@ -1038,13 +1037,13 @@ arenaSelection()
 	self endon("spawned");
 
 	createArenaSelectionHud();
-	
+
 	self.spectatorclient = -1;
 
 	self allowSpectateTeam("allies", false);
 	self allowSpectateTeam("axis", false);
 	self allowSpectateTeam("freelook", true);
-	self allowSpectateTeam("none", false);	
+	self allowSpectateTeam("none", false);
 
 	while(!self attackButtonPressed())
 		wait .05;
@@ -1052,7 +1051,7 @@ arenaSelection()
 	self.vote_indicator setShader("white", 254, 17);
 
 	for (;;)
-	{	
+	{
 		if (level.arenaFree[arena-1] && self useButtonPressed())
 		{
 			level.arenaFree[arena-1]--;
@@ -1074,9 +1073,9 @@ arenaSelection()
 			self.pers["savedmodel"] = undefined;
 			deleteArenaSelectionHud();
 
-			if(!isDefined(level.arenaPlayer[arena-1])	)	//arena is empty
+			if(!isDefined(level.arenaPlayer[arena-1])   )   //arena is empty
 				level.arenaPlayer[arena-1] = self;
-			else	//one player is aready in the arena
+			else    //one player is aready in the arena
 			{
 				self.opponent = level.arenaPlayer[arena-1];
 				level.arenaPlayer[arena-1].opponent = self;
@@ -1117,8 +1116,8 @@ arenaSelection()
 			level updateArenaStatus(arena-1);
 
 			return;
-		}			
-							
+		}
+
 		if(self attackButtonPressed())
 		{
 			arena++;
@@ -1132,10 +1131,10 @@ arenaSelection()
 					self iPrintLn(level.arenaPlayer[arena-1].name+" ^7vs. "+level.arenaPlayer[arena-1].opponent.name);
 				else
 					self iPrintLn(level.arenaPlayer[arena-1].name);
-			}	
+			}
 
-			self.vote_indicator.y = level.hudoffset + 60 + arena * 16;			
-			if(level.arenaSelectionSound)			
+			self.vote_indicator.y = level.hudoffset + 60 + arena * 16;
+			if(level.arenaSelectionSound)
 				self playLocalSound("hq_score");
 			wait .05;
 			while(self attackButtonPressed())
@@ -1155,11 +1154,11 @@ arenaSelection()
 					self iPrintLn(level.arenaPlayer[arena-1].name+" ^7vs. "+level.arenaPlayer[arena-1].opponent.name);
 				else
 					self iPrintLn(level.arenaPlayer[arena-1].name);
-			}	
+			}
 
 			self.vote_indicator.y = level.hudoffset + 60 + arena * 16;
 
-			if(level.arenaSelectionSound)			
+			if(level.arenaSelectionSound)
 				self playLocalSound("hq_score");
 			wait .05;
 			while(self meleeButtonPressed())
@@ -1194,7 +1193,7 @@ createArenaSelectionHud()
 {
 	if (isDefined(self.vote_hud_bgnd))
 		return;
-	
+
 	self.vote_hud_bgnd = newClientHudElem(self);
 	self.vote_hud_bgnd.archived = false;
 	self.vote_hud_bgnd.alpha = .7;
@@ -1203,7 +1202,7 @@ createArenaSelectionHud()
 	self.vote_hud_bgnd.sort = 9000;
 	self.vote_hud_bgnd.color = (0,0,0);
 	self.vote_hud_bgnd setShader("white", 260, 220);
-	
+
 	self.vote_header = newClientHudElem(self);
 	self.vote_header.archived = false;
 	self.vote_header.alpha = .3;
@@ -1211,7 +1210,7 @@ createArenaSelectionHud()
 	self.vote_header.y = level.hudoffset + 19;
 	self.vote_header.sort = 9001;
 	self.vote_header setShader("white", 254, 21);
-	
+
 	self.vote_headerText = newClientHudElem(self);
 	self.vote_headerText.archived = false;
 	self.vote_headerText.x = 210;
@@ -1227,7 +1226,7 @@ createArenaSelectionHud()
 	self.vote_leftline.y = level.hudoffset + 19;
 	self.vote_leftline.sort = 9001;
 	self.vote_leftline setShader("white", 1, 215);
-	
+
 	self.vote_rightline = newClientHudElem(self);
 	self.vote_rightline.archived = false;
 	self.vote_rightline.alpha = .3;
@@ -1235,7 +1234,7 @@ createArenaSelectionHud()
 	self.vote_rightline.y = level.hudoffset + 19;
 	self.vote_rightline.sort = 9001;
 	self.vote_rightline setShader("white", 1, 215);
-	
+
 	self.vote_bottomline = newClientHudElem(self);
 	self.vote_bottomline.archived = false;
 	self.vote_bottomline.alpha = .3;
@@ -1243,7 +1242,7 @@ createArenaSelectionHud()
 	self.vote_bottomline.y = level.hudoffset + 234;
 	self.vote_bottomline.sort = 9001;
 	self.vote_bottomline setShader("white", 256, 1);
-	
+
 	self.vote_hud_instructions = newClientHudElem(self);
 	self.vote_hud_instructions.archived = false;
 	self.vote_hud_instructions.x = 318;
@@ -1253,7 +1252,7 @@ createArenaSelectionHud()
 	self.vote_hud_instructions.label = level.arenahudstatus;
 	self.vote_hud_instructions.alignX = "center";
 	self.vote_hud_instructions.alignY = "middle";
-	
+
 	for(i = 0; i < 10; i++)
 	{
 		self.arenahud[i] = newClientHudElem(self);
@@ -1272,7 +1271,7 @@ createArenaSelectionHud()
 		self.arenahudstatus[i].fontScale = 1.1;
 		self.arenahudstatus[i] setText(level.arenastatus[level.arenaFree[i]]);
 	}
-	
+
 	self.vote_indicator = newClientHudElem( self );
 	self.vote_indicator.alignY = "middle";
 	self.vote_indicator.x = 208;
@@ -1283,43 +1282,43 @@ createArenaSelectionHud()
 	self.vote_indicator.color = (0, 0, 1);
 }
 
-CreateUpdateScoreHud(flag)	//creates and updates hud for self and its opponent - no need to call twice, just call it on self.
+CreateUpdateScoreHud(flag)  //creates and updates hud for self and its opponent - no need to call twice, just call it on self.
 {
 	if(!isDefined(self.WawaScoreText))
 	{
-		self.WawaScoreShader 		= newClientHudElem(self);
-		self.WawaScoreShader.alpha 	= 1;
-		self.WawaScoreShader.x 		= 557;
-		self.WawaScoreShader.y 		= 395;
-		self.WawaScoreShader.sort 	= 9998;
+		self.WawaScoreShader        = newClientHudElem(self);
+		self.WawaScoreShader.alpha  = 1;
+		self.WawaScoreShader.x      = 557;
+		self.WawaScoreShader.y      = 395;
+		self.WawaScoreShader.sort   = 9998;
 		self.WawaScoreShader setShader("gfx/hud/hud@ammocounterback.tga", 80, 40);
 
-		self.WawaScoreText		= NewClientHudElem(self);
-		self.WawaScoreText.x 		= 565;
-		self.WawaScoreText.y 		= 392;
-		self.WawaScoreText.fontScale 	= 0.8;
-		self.WawaScoreText.sort 	= 9999;
+		self.WawaScoreText      = NewClientHudElem(self);
+		self.WawaScoreText.x        = 565;
+		self.WawaScoreText.y        = 392;
+		self.WawaScoreText.fontScale    = 0.8;
+		self.WawaScoreText.sort     = 9999;
 		self.WawaScoreText setText(level.WawaScoreText);
 
-		self.WawaScoreSepe		= NewClientHudElem(self);
-		self.WawaScoreSepe.x 		= 595;
-		self.WawaScoreSepe.y 		= 408;
-		self.WawaScoreSepe.fontScale 	= 0.9;
-		self.WawaScoreSepe.sort 	= 9999;
+		self.WawaScoreSepe      = NewClientHudElem(self);
+		self.WawaScoreSepe.x        = 595;
+		self.WawaScoreSepe.y        = 408;
+		self.WawaScoreSepe.fontScale    = 0.9;
+		self.WawaScoreSepe.sort     = 9999;
 		self.WawaScoreSepe setText(level.WawaScoreSepe);
 
-		self.WawaSelfNumb		= NewClientHudElem(self);
-		self.WawaSelfNumb.x		= 570;
-		self.WawaSelfNumb.y		= 406;
-		self.WawaSelfNumb.sort		= 9999;
-		self.WawaSelfNumb.fontScale	= 1.2;
+		self.WawaSelfNumb       = NewClientHudElem(self);
+		self.WawaSelfNumb.x     = 570;
+		self.WawaSelfNumb.y     = 406;
+		self.WawaSelfNumb.sort      = 9999;
+		self.WawaSelfNumb.fontScale = 1.2;
 
-		self.WawaOppoNumb		= NewClientHudElem(self);
-		self.WawaOppoNumb.color		= (1, 0, 0);
-		self.WawaOppoNumb.x		= 610;
-		self.WawaOppoNumb.y		= 406;
-		self.WawaOppoNumb.sort		= 9999;
-		self.WawaOppoNumb.fontScale	= 1.2;
+		self.WawaOppoNumb       = NewClientHudElem(self);
+		self.WawaOppoNumb.color     = (1, 0, 0);
+		self.WawaOppoNumb.x     = 610;
+		self.WawaOppoNumb.y     = 406;
+		self.WawaOppoNumb.sort      = 9999;
+		self.WawaOppoNumb.fontScale = 1.2;
 	}
 
 	newScoreSelf = self.score - ((self.arena + 1)*1000);
@@ -1330,36 +1329,10 @@ CreateUpdateScoreHud(flag)	//creates and updates hud for self and its opponent -
 		newScoreOppo = self.opponent.score - ((self.opponent.arena + 1)*1000);
 		self.WawaOppoNumb setValue(newScoreOppo);
 		if(!isDefined(flag))
-			self.opponent CreateUpdateScoreHud(1);	//update hud for the opponent too. 1 is not to crash the game due to infinite hud updating.
+			self.opponent CreateUpdateScoreHud(1);  //update hud for the opponent too. 1 is not to crash the game due to infinite hud updating.
 	}
 	else
 		self.WawaOppoNumb setText(&"-");
-}
-
-showlogo()
-{
-	level.wawa_logo = newHudElem();	
-	level.wawa_logo.x = 3;
-	level.wawa_logo.alignX = "left";
-	level.wawa_logo.y = 475;
-	level.wawa_logo.alignY = "middle";
-	level.wawa_logo.sort = -3;
-	level.wawa_logo.alpha = 1;
-	level.wawa_logo.fontScale = 0.7;
-	level.wawa_logo.archived = true;
-	level.wawa_logo setText(level.wawa_logotext);
-
-
-	level.wawa_tag = newHudElem();	
-	level.wawa_tag.x = 630;
-	level.wawa_tag.y = 475;
-	level.wawa_tag.alignX = "right";
-	level.wawa_tag.alignY = "middle";
-	level.wawa_tag.sort = -3;
-	level.wawa_tag.alpha = 1;
-	level.wawa_tag.fontScale = 0.7;
-	level.wawa_tag.archived = true;
-	level.wawa_tag setText(level.wawa_tagtext);
 }
 
 deleteScoreHud()
@@ -1367,11 +1340,11 @@ deleteScoreHud()
 	if(!isDefined(self.WawaScoreText))
 		return;
 
-	self.WawaScoreSepe	destroy();
-	self.WawaScoreShader	destroy();
-	self.WawaScoreText	destroy();
-	self.WawaSelfNumb 	destroy();
-	self.WawaOppoNumb 	destroy();
+	self.WawaScoreSepe  destroy();
+	self.WawaScoreShader    destroy();
+	self.WawaScoreText  destroy();
+	self.WawaSelfNumb   destroy();
+	self.WawaOppoNumb   destroy();
 }
 
 showArena(arena)

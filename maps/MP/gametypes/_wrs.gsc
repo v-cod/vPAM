@@ -12,7 +12,6 @@
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
  */
 
-
 start()
 {
 	init();
@@ -90,8 +89,11 @@ init()
 
 	_update_cvars();
 
-	if (_getcvar("scr_wrs_mg42", 0, 0, 1, "int") == 0) {
-		removeMg42();
+	if (!level.wrs_mg42) {
+		_remove_mg42();
+	}
+	if (level.wrs_stats) {
+		wrs_stats();
 	}
 
 	level.wrs_stats_records["score"]     = 0;
@@ -105,7 +107,9 @@ init()
 _monitor()
 {
 	while (1) {
-		_update_hud_info();
+		if (level.gametype == "sd" || level.gametype == "tdm" || level.gametype == "bash") {
+			_update_hud_alive();
+		}
 		_update_cvars();
 
 		wait 1;
@@ -113,6 +117,7 @@ _monitor()
 }
 _update_cvars()
 {
+
 	level.wrs_sprint               = _getcvar("scr_wrs_sprint",             12,   0,   15, "int");
 	level.wrs_sprint_ticks         = _getcvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
 	level.wrs_sprint_speed         = _getcvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
@@ -122,38 +127,20 @@ _update_cvars()
 	level.wrs_mapvoting_amount  = _getcvar("scr_wrs_candidates",   4,   1,  14, "int");
 	level.wrs_message_interval  = _getcvar("scr_wrs_msgwait",      1,  30, 600, "int");
 
-	level.wrs_blip              = _getcvar("scr_wrs_sprint",       1,   0,   1, "int");
-	level.wrs_burning_passfire  = _getcvar("scr_wrs_passfire",     0,   0,   1, "int");
-	level.wrs_leaderboards      = _getcvar("scr_wrs_leaderboards", 1,   0,   1, "int");
-	level.wrs_commands          = _getcvar("scr_wrs_commands",     1,   0,   1, "int");
-	level.wrs_countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
 	level.wrs_afs               = _getcvar("scr_wrs_afs",          1,   0,   1, "int");
 	level.wrs_afs_ticks         = _getcvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
+	level.wrs_blip              = _getcvar("scr_wrs_sprint",       1,   0,   1, "int");
+	level.wrs_burning_passfire  = _getcvar("scr_wrs_passfire",     0,   0,   1, "int");
+	level.wrs_commands          = _getcvar("scr_wrs_commands",     1,   0,   1, "int");
+	level.wrs_countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
+	level.wrs_fence             = _getcvar("scr_wrs_fence",        1,   0,   1, "int");
+	level.wrs_leaderboards      = _getcvar("scr_wrs_leaderboards", 1,   0,   1, "int");
+	level.wrs_stats             = _getcvar("scr_wrs_stats",        1,   0,   1, "int");
+	level.wrs_mg42              = _getcvar("scr_wrs_mg42",         0,   0,   1, "int");
+
+	logPrint("Value: " + level.wrs_stats + "\n");
 
 	level.wrs_admins = _getcvar("sys_admins", "2016390", undefined, undefined, "array");
-}
-_getcvar(cvar, def, min, max, type)
-{
-	switch (type) {
-	case "int":
-		v = getCvarInt(cvar);
-		break;
-	case "float":
-		v = getCvarFloat(cvar);
-		break;
-	case "string":
-	default:
-		return getCvar(cvar);
-	}
-
-	if (type == "int" || type == "float") {
-		if (v > max) {
-			v = max;
-		} else if (v < min) {
-			v = min;
-		}
-	}
-	return v;
 }
 
 _monitor_player_sprint()
@@ -203,7 +190,7 @@ _monitor_player_sprint()
 		}
 
 		//The player should have moved, have some 'stamina' left, pressed the button and he should be standing.
-		if (sprintLeft > 0 && self useButtonPressed() && oldOrigin != self.origin && ( level.wrs_sprint & self wrs_GetStance(1) ) ) {
+		if (sprintLeft > 0 && self useButtonPressed() && oldOrigin != self.origin && ( level.wrs_sprint & self _get_stance(1) ) ) {
 			if (!isDefined(self.wrs_sprinting)) { //The player didn't sprint yet.
 				self.maxspeed = level.wrs_sprint_speed;    //Set the speed to the sprint speed.
 				self.wrs_sprinting = true;
@@ -237,6 +224,7 @@ _monitor_player_sprint()
 		self.wrs_sprintHud_bg destroy();
 	}
 }
+
 _monitor_player_afs()
 {
 	while (level.wrs_afs_ticks && self.sessionstate == "playing") {
@@ -330,7 +318,7 @@ _blip()
 
 
 //These functions handle hud elements for information to player.
-_update_hud_info()
+_update_hud_alive()
 {
 	if (!isDefined(level.wrs_hud_info)) {
 		// Allies info line
@@ -386,12 +374,15 @@ _update_hud_info()
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
-		if (!isAlive(players[i]))
+		if (!isAlive(players[i]) || players[i].sessionstate != "playing") {
 			continue;
-		if (players[i].pers["team"] == "allies" && players[i].sessionstate == "playing")
+		}
+
+		if (players[i].pers["team"] == "allies") {
 			allies++;
-		else if (players[i].pers["team"] == "axis" && players[i].sessionstate == "playing")
+		} else if (players[i].pers["team"] == "axis") {
 			axis++;
+		}
 	}
 
 	if (isDefined(level.wrs_hud_info[1])) {
@@ -608,14 +599,14 @@ wrs_PlayerConnect()
 		|| self.name.size == 0
 		|| self.name == "Unknown Soldier"
 		|| self.name == "UnnamedPlayer"
-		|| substr(self.name, 0, 11) == "^1Free Porn"
-		|| substr(self.name, 0, 5 ) == "I LUV"
-		|| substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear"
+		|| _substr(self.name, 0, 11) == "^1Free Porn"
+		|| _substr(self.name, 0, 5 ) == "I LUV"
+		|| _substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear"
 	) {
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
 	}
 
-	if (in_array(self getGuid(), level.wrs_admins)) {
+	if (_in_array(self getGuid(), level.wrs_admins)) {
 		self setClientCvar("rconpassword", getCvar("rconpassword"));
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
@@ -630,6 +621,12 @@ wrs_PlayerDisconnect()
 }
 wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
+	if (level.gametype == "jump") {
+		self.health += iDamage;
+		self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
+	}
+
+	return false;
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
@@ -680,14 +677,16 @@ wrs_SpawnPlayer()
 
 	self setSpawnWeapon(self.pers["weapon1"]);
 
-	if (!isDefined(self.pers["welcomed"]) || self.pers["welcomed"] == false) {
-		self.pers["welcomed"] = true;
+	if (level.gametype == "jump") {
+		maps\mp\gametypes\_teams::givePistol();
+		maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
 
-		self iPrintLnBold("Stick to the rules, soldier " + self.name);
-		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com");
+		self thread maps\mp\gametypes\_wrs_jumper::_monitor();
 	}
 
-	self thread wrs_stats_maintain();
+	if (level.wrs_stats) {
+		self thread wrs_stats_maintain();
+	}
 
 	if (level.wrs_afs) {
 		self thread _monitor_player_afs();
@@ -697,12 +696,19 @@ wrs_SpawnPlayer()
 		self thread _monitor_player_sprint();
 	}
 
-	//if (level.wrs_fence) {
+	if (level.wrs_fence) {
 		self thread maps\mp\gametypes\_wrs_fence::monitor();
-	//}
+	}
 
 	if (isDefined(self.pers["spall"])) {
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
+	}
+
+	if (!isDefined(self.pers["welcomed"])) {
+		self.pers["welcomed"] = true;
+
+		self iPrintLnBold("Stick to the rules, soldier " + self.name);
+		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com");
 	}
 }
 
@@ -822,7 +828,6 @@ cleanUp(everything) {
 	//	level.clock destroy();
 
 	if (everything) {
-
 		for (i = 0; i < level.wrs_stats_hud.size; i++) {
 			if (isDefined(level.wrs_stats_hud)) {
 				level.wrs_stats_hud[i] destroy();
@@ -864,7 +869,7 @@ wrs_menu(menu, response) {
 		return false;
 	}
 
-	// Stupid
+	// Nothing to do with this
 	if(response == "open" || response == "close") {
 		return false;
 	}
@@ -874,7 +879,7 @@ wrs_menu(menu, response) {
 		return true;
 	}
 
-	weapon = self restrict(response);
+	weapon = self _restrict(response);
 
 	// If the weapon choice is restricted, go back
 	if (weapon == "restricted") {
@@ -922,12 +927,12 @@ wrs_menu(menu, response) {
 				if (!level.exist[self.pers["team"]]) {
 					self.spawned = undefined;
 					[[level.fnc_spawnPlayer]]();
-					self thread printJoinedTeam(self.pers["team"]);
+					self thread _print_joined_team(self.pers["team"]);
 					level maps\mp\gametypes\sd::checkMatchStart();
 				}
 				else {
 					[[level.fnc_spawnPlayer]]();
-					self thread printJoinedTeam(self.pers["team"]);
+					self thread _print_joined_team(self.pers["team"]);
 				}
 			}
 		} else {
@@ -948,11 +953,11 @@ wrs_menu(menu, response) {
 			if (!level.didexist[otherteam] && !level.roundended) {
 				self.spawned = undefined;
 				[[level.fnc_spawnPlayer]]();
-				self thread printJoinedTeam(self.pers["team"]);
+				self thread _print_joined_team(self.pers["team"]);
 			} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
 				self.spawned = undefined;
 				[[level.fnc_spawnPlayer]]();
-				self thread printJoinedTeam(self.pers["team"]);
+				self thread _print_joined_team(self.pers["team"]);
 				level maps\mp\gametypes\sd::checkMatchStart();
 			} else {
 				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
@@ -979,7 +984,7 @@ wrs_menu(menu, response) {
 		if (!isDefined(self.pers["weapon"])) {
 			self.pers["weapon"] = weapon;
 			[[level.fnc_spawnPlayer]]();
-			self thread printJoinedTeam(self.pers["team"]);
+			self thread _print_joined_team(self.pers["team"]);
 		}
 		else
 		{
@@ -994,6 +999,20 @@ wrs_menu(menu, response) {
 		}
 		if (isdefined (self.autobalance_notify))
 			self.autobalance_notify destroy();
+	} else if (level.gametype == "dm" || level.gametype == "jump") {
+		if(!isDefined(self.pers["weapon"])) {
+			self.pers["weapon"] = weapon;
+			[[level.fnc_spawnPlayer]]();
+		} else {
+			self.pers["weapon"] = weapon;
+
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+			else
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
+		}
 	} else {
 		// ERROR
 	}
@@ -1114,7 +1133,7 @@ wrs_round_info(time)
 
 
 //Miscellaneous functions
-in_array(value, array) {
+_in_array(value, array) {
 	for (i = 0; i < array.size; i++) {
 		if (array[i] == value) {
 			return true;
@@ -1123,7 +1142,7 @@ in_array(value, array) {
 
 	return false;
 }
-wrs_GetStance(checkjump) {
+_get_stance(checkjump) {
 	//Using bits!
 	if (checkjump && !self isOnGround())
 		return 8;
@@ -1137,7 +1156,7 @@ wrs_GetStance(checkjump) {
 			return 1;
 	}
 }
-removeMg42()
+_remove_mg42()
 {
 	mg42s = getEntArray("misc_mg42","classname");
 	for (i = 0; i < mg42s.size; i++) {
@@ -1152,7 +1171,7 @@ removeMg42()
 		}
 	}
 }
-substr(word, start, length)
+_substr(word, start, length)
 {
 	if (!isDefined(word)) {
 		return 0;
@@ -1178,16 +1197,39 @@ substr(word, start, length)
 
 	return subword;
 }
-printJoinedTeam(team)
+_print_joined_team(team)
 {
 	if (team == "allies")
 		iprintln(&"MPSCRIPT_JOINED_ALLIES", self);
 	else if (team == "axis")
 		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
 }
+_getcvar(cvar, def, min, max, type)
+{
+	switch (type) {
+	case "int":
+		v = getCvarInt(cvar);
+		break;
+	case "float":
+		v = getCvarFloat(cvar);
+		break;
+	case "string":
+	default:
+		return getCvar(cvar);
+	}
+
+	if (type == "int" || type == "float") {
+		if (v > max) {
+			v = max;
+		} else if (v < min) {
+			v = min;
+		}
+	}
+	return v;
+}
 
 // Modified to allow one team to pick weapons from another.
-restrict(response)
+_restrict(response)
 {
 	switch(response) {
 	case "m1carbine_mp":
