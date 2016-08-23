@@ -182,11 +182,6 @@ Callback_StartGameType()
 	game["menu_quickstatements"] = "quickstatements";
 	game["menu_quickresponses"] = "quickresponses";
 
-	// WRS {
-	if (level.wrs) {
-		game["menu_weapon_allies"] = "weapon_russian";
-	}
-	// } // END WRS
 
 	precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_RESPAWN");
 	precacheString(&"MPSCRIPT_KILLCAM");

@@ -5,7 +5,7 @@ main(){
 	level.wrs_PrintPrefix = "";
 
 	level.wrs_LabelLeft = &"^4E^3U^4R^3O^2 ^7WAWA";
-	level.wrs_LabelRight= &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7eu";
+	level.wrs_LabelRight= &"Visit ^4E^3U^4R^3O^2^7: eurorifles.clanwebsite.com";
 
 	thread wrs_Labels();
 	thread wrs_ServerMessages();

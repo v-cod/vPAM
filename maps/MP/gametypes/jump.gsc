@@ -169,7 +169,6 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		game["menu_serverinfo"]    = "serverinfo_dm";
-		game["menu_weapon_allies"] = "weapon_russian";
 	}
 	// } // END WRS
 

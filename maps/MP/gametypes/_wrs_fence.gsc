@@ -4,7 +4,7 @@ init()
 
 	switch (getCvar("mapname")) {
 	case "mp_stalingrad":
-		block[0]["min"] = (2048, -216, 168);
+		block[0]["min"] = (2048, -216, 168); // Glitch room
 		block[0]["max"] = (2464,   -8, 292);
 		break;
 	default:
@@ -25,7 +25,8 @@ monitor()
 	if (level.gametype == "sd") {
 		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
 			if (level.roundended) {
-				self iPrintLnBold("Inactive");
+				self notify("menuresponse", game["menu_team"], "spectator");
+				return;
 			}
 			wait 1;
 		}
