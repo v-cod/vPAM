@@ -602,7 +602,7 @@ explode(delimiter, string, limit) {
 	array = 0;
 	result[array] = "";
 
-	for (i = 0;i < string.size;i++) {
+	for (i = 0; i < string.size; i++) {
 		if ((array + 1 < limit || limit == 0) && string[i] == delimiter) {
 			if (result[array] != "") {
 				array++;

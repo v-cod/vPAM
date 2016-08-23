@@ -6,7 +6,6 @@
  * @todo  Make local functions more uniform and starting with underscores
  * @todo  More dynamic way of adding wrs cvars to initialize and update them (like in AWE mod)
  * @todo  Study roundstarted and gamestarted with their effect on precaches and level variable definitions (SD)
- * @todo  Integrate WAWA gametype
  * @todo  Clean up statistics code with their maintain routines
  * @todo  Clean up map voting code
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
@@ -130,7 +129,6 @@ _update_cvars()
 
 	level.wrs_mapvoting         = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
 	level.wrs_mapvoting_amount  = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
-	level.wrs_message_interval  = _get_cvar("scr_wrs_msgwait",      1,  30, 600, "int");
 
 	level.wrs_afs               = _get_cvar("scr_wrs_afs",          1,   0,   1, "int");
 	level.wrs_afs_ticks         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
@@ -140,10 +138,9 @@ _update_cvars()
 	level.wrs_countdown         = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
 	level.wrs_fence             = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
 	level.wrs_leaderboards      = _get_cvar("scr_wrs_leaderboards", 1,   0,   1, "int");
+	level.wrs_message_interval  = _get_cvar("scr_wrs_msgwait",      1,  30, 600, "int");
 	level.wrs_stats             = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
 	level.wrs_mg42              = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
-
-	logPrint("Value: " + level.wrs_stats + "\n");
 
 	level.wrs_admins = _get_cvar("sys_admins", [], undefined, undefined, "array");
 }
@@ -1140,6 +1137,31 @@ wrs_round_info(time)
 
 
 //Miscellaneous functions
+/*_strip_colors(name) {
+	name_dull = "";
+
+	for (i = 0; i < name.size; i++) {
+		if (name[i] == "^") {
+			if (i + 1 < name.size) {
+				switch (name[i + 1]) {
+					case "0":
+					case "1":
+					case "2":
+					case "3":
+					case "4":
+					case "5":
+					case "6":
+					case "7":
+					case "8":
+					case "9":
+
+					default:
+						break;
+				}
+			}
+		}
+	}
+}*/
 _in_array(value, array) {
 	for (i = 0; i < array.size; i++) {
 		if (array[i] == value) {
