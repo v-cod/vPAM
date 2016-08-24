@@ -1,14 +1,14 @@
 /**
+ * @todo  Fix TDM and DM calls to the mod
  * @todo  Detect spawn campers on attacking side, and AFK/inactive on the defending side (SD)
- * @todo  Deactivate sprint after round start time (15 secs usually)
  * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
+ * @todo  Deactivate sprint after round start time (15 secs usually)
  * @todo  Make local functions more uniform and starting with underscores
  * @todo  More dynamic way of adding wrs cvars to initialize and update them (like in AWE mod)
  * @todo  Study roundstarted and gamestarted with their effect on precaches and level variable definitions (SD)
- * @todo  Integrate WAWA gametype, and fix TDM and DM calls to the mod
+ * @todo  Clean up statistics code with their maintain routines
  * @todo  Clean up map voting code
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
- * @todo  Clean up statistics code with their maintain routines
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
  */
 
@@ -30,7 +30,7 @@ start()
 init()
 {
 	level.wrs_label_left  = &"^4E^3U^4R^3O ^2RIFLES";
-	level.wrs_label_right = &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
+	level.wrs_label_right = &"eurorifles^4.^7clanwebsite^4.^7com";
 
 	level.wrs_hud_info_text["alive"] = &"Alive: ";
 	level.wrs_hud_info_text["score"] = &"Score: ";
@@ -82,13 +82,17 @@ init()
 		precacheString(level.wrs_hud_stats_text["spreecur"]);
 		precacheString(level.wrs_hud_stats_text["headshots"]);
 
-		// Precache russian weapons even if not a team
-		if (game["allies"] != "russian") {
-			precacheItem("rgd-33russianfrag_mp");
+		if (game["menu_weapon_allies"] != "weapon_russian") {
+			game["menu_weapon_allies"] = "weapon_russian";
+
+			precacheMenu(game["menu_weapon_allies"]);
+
 			precacheItem("luger_mp");
+			precacheItem("rgd-33russianfrag_mp");
+
 			precacheItem("mosin_nagant_mp");
-			precacheItem("ppsh_mp");
 			precacheItem("mosin_nagant_sniper_mp");
+			precacheItem("ppsh_mp");
 		}
 	}
 
@@ -119,28 +123,27 @@ _monitor()
 }
 _update_cvars()
 {
+	level.wrs_sprint               = _get_cvar("scr_wrs_sprint",             12,   0,   15, "int");
+	level.wrs_sprint_ticks         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
+	level.wrs_sprint_speed         = _get_cvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
+	level.wrs_sprint_recover_ticks = _get_cvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
 
-	level.wrs_sprint               = _getcvar("scr_wrs_sprint",             12,   0,   15, "int");
-	level.wrs_sprint_ticks         = _getcvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
-	level.wrs_sprint_speed         = _getcvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
-	level.wrs_sprint_recover_ticks = _getcvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
+	level.wrs_mapvoting         = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
+	level.wrs_mapvoting_amount  = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
 
-	level.wrs_mapvoting            = _getcvar("scr_wrs_mapvote",             1,   0,    1, "int");
-	level.wrs_mapvoting_amount     = _getcvar("scr_wrs_candidates",          4,   1,   14, "int");
-	level.wrs_message_interval     = _getcvar("scr_wrs_msgwait",             1,  30,  600, "int");
+	level.wrs_afs               = _get_cvar("scr_wrs_afs",          1,   0,   1, "int");
+	level.wrs_afs_ticks         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
+	level.wrs_blip              = _get_cvar("scr_wrs_blip",         1,   0,   1, "int");
+	level.wrs_burning_passfire  = _get_cvar("scr_wrs_passfire",     0,   0,   1, "int");
+	level.wrs_commands          = _get_cvar("scr_wrs_commands",     1,   0,   1, "int");
+	level.wrs_countdown         = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
+	level.wrs_fence             = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
+	level.wrs_leaderboards      = _get_cvar("scr_wrs_leaderboards", 1,   0,   1, "int");
+	level.wrs_message_interval  = _get_cvar("scr_wrs_msgwait",      1,  30, 600, "int");
+	level.wrs_stats             = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
+	level.wrs_mg42              = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
 
-	level.wrs_afs                  = _getcvar("scr_wrs_afs",                 1,   0,    1, "int");
-	level.wrs_afs_ticks            = _getcvar("scr_wrs_afs_time",          1.2, 0.0,  2.0, "float") / 0.05;
-	level.wrs_blip                 = _getcvar("scr_wrs_sprint",              1,   0,    1, "int");
-	level.wrs_burning_passfire     = _getcvar("scr_wrs_passfire",            0,   0,    1, "int");
-	level.wrs_commands             = _getcvar("scr_wrs_commands",            1,   0,    1, "int");
-	level.wrs_countdown            = _getcvar("scr_wrs_countdown",           1,   0,    1, "int"); // TDM
-	level.wrs_fence                = _getcvar("scr_wrs_fence",               1,   0,    1, "int");
-	level.wrs_leaderboards         = _getcvar("scr_wrs_leaderboards",        1,   0,    1, "int");
-	level.wrs_stats                = _getcvar("scr_wrs_stats",               1,   0,    1, "int");
-	level.wrs_mg42                 = _getcvar("scr_wrs_mg42",                0,   0,    1, "int");
-
-	level.wrs_admins               = _getcvar("sys_admins", "2016390", undefined, undefined, "array");
+	level.wrs_admins = _get_cvar("sys_admins", [], undefined, undefined, "array");
 }
 
 _monitor_player_sprint()
@@ -195,7 +198,7 @@ _monitor_player_sprint()
 				self.maxspeed = level.wrs_sprint_speed;    //Set the speed to the sprint speed.
 				self.wrs_sprinting = true;
 			}
-			self disableWeapon();   //Some people found a way to have their weapon enabled why sprinting, maybe this prevents that?
+			self disableWeapon();
 			sprintLeft--;
 		}
 		else{   //He didn't do shit
@@ -370,11 +373,11 @@ _update_hud_alive()
 		level.wrs_hud_info[5].label     = level.wrs_hud_info_text["score"];
 	}
 	allies = 0;
-	axis = 0;
+	axis   = 0;
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
-		if (!isAlive(players[i]) || players[i].sessionstate != "playing") {
+		if (players[i].sessionstate != "playing") {
 			continue;
 		}
 
@@ -828,7 +831,12 @@ cleanUp(everything) {
 
 
 // Return true if request is handled
-wrs_menu(menu, response) {
+menu(menu, response) {
+	// Only handle weapon menu context
+	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
+		return false;
+	}
+
 	// Only handle weapon choices
 	if (response == "team" || response == "viewmap" || response == "callvote") {
 		return false;
@@ -867,6 +875,7 @@ wrs_menu(menu, response) {
 		return true;
 	}
 
+	// The menu that is opened for them differs per team
 	if (self.pers["team"] == "allies") {
 		menu_1 = game["menu_weapon_allies"];
 		menu_2 = game["menu_weapon_axis"];
@@ -878,8 +887,8 @@ wrs_menu(menu, response) {
 	// PHASE 1: PICKING FIRST WEAPON
 	// If this is the first weapon picked, or if it is and second weapon is picked too
 	if (menu == menu_1) {
-		self.pers["weapon1"]     = weapon;
-		self.pers["weapon2"]     = undefined;
+		self.pers["weapon1"] = weapon;
+		self.pers["weapon2"] = undefined;
 
 		self openMenu(menu_2);
 
@@ -1113,6 +1122,31 @@ wrs_round_info(time)
 
 
 //Miscellaneous functions
+/*_strip_colors(name) {
+	name_dull = "";
+
+	for (i = 0; i < name.size; i++) {
+		if (name[i] == "^") {
+			if (i + 1 < name.size) {
+				switch (name[i + 1]) {
+					case "0":
+					case "1":
+					case "2":
+					case "3":
+					case "4":
+					case "5":
+					case "6":
+					case "7":
+					case "8":
+					case "9":
+
+					default:
+						break;
+				}
+			}
+		}
+	}
+}*/
 _in_array(value, array) {
 	for (i = 0; i < array.size; i++) {
 		if (array[i] == value) {
@@ -1184,8 +1218,12 @@ _print_joined_team(team)
 	else if (team == "axis")
 		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
 }
-_getcvar(cvar, def, min, max, type)
+_get_cvar(cvar, def, min, max, type)
 {
+	if (getCvar(cvar) == "") {
+		return def;
+	}
+
 	switch (type) {
 	case "int":
 		v = getCvarInt(cvar);
@@ -1193,6 +1231,8 @@ _getcvar(cvar, def, min, max, type)
 	case "float":
 		v = getCvarFloat(cvar);
 		break;
+	case "array":
+		return maps\mp\gametypes\_wrs_admin::explode(" ", getCvar(cvar), 0);
 	case "string":
 	default:
 		return getCvar(cvar);
@@ -1212,47 +1252,9 @@ _getcvar(cvar, def, min, max, type)
 _restrict(response)
 {
 	switch(response) {
-	case "m1carbine_mp":
-		if (!getcvar("scr_allow_m1carbine")) {
-			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "m1garand_mp":
-		if (!getcvar("scr_allow_m1garand")) {
-			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "thompson_mp":
-		if (!getcvar("scr_allow_thompson")) {
-			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-
 	case "bar_mp":
 		if (!getcvar("scr_allow_bar")) {
 			self iprintln(&"MPSCRIPT_BAR_IS_A_RESTRICTED_WEAPON");
-			return "restricted";
-		}
-		break;
-
-	case "springfield_mp":
-		if (!getcvar("scr_allow_springfield")) {
-			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "enfield_mp":
-		if (!getcvar("scr_allow_enfield")) {
-			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "sten_mp":
-		if (!getcvar("scr_allow_sten")) {
-			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
@@ -1262,27 +1264,33 @@ _restrict(response)
 			return "restricted";
 		}
 		break;
-	case "mosin_nagant_mp":
-		if (!getcvar("scr_allow_nagant")) {
-			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "ppsh_mp":
-		if (!getcvar("scr_allow_ppsh")) {
-			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "mosin_nagant_sniper_mp":
-		if (!getcvar("scr_allow_nagantsniper")) {
-			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+	case "enfield_mp":
+		if (!getcvar("scr_allow_enfield")) {
+			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
 	case "kar98k_mp":
 		if (!getcvar("scr_allow_kar98k")) {
 			self iprintln(&"MPSCRIPT_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "kar98k_sniper_mp":
+		if (!getcvar("scr_allow_kar98ksniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1carbine_mp":
+		if (!getcvar("scr_allow_m1carbine")) {
+			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1garand_mp":
+		if (!getcvar("scr_allow_m1garand")) {
+			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
@@ -1298,9 +1306,39 @@ _restrict(response)
 			return "restricted";
 		}
 		break;
-	case "kar98k_sniper_mp":
-		if (!getcvar("scr_allow_kar98ksniper")) {
-			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+	case "mosin_nagant_mp":
+		if (!getcvar("scr_allow_nagant")) {
+			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_sniper_mp":
+		if (!getcvar("scr_allow_nagantsniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+			return "restricted";
+		}
+		break;
+	case "ppsh_mp":
+		if (!getcvar("scr_allow_ppsh")) {
+			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "springfield_mp":
+		if (!getcvar("scr_allow_springfield")) {
+			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "sten_mp":
+		if (!getcvar("scr_allow_sten")) {
+			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "thompson_mp":
+		if (!getcvar("scr_allow_thompson")) {
+			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;

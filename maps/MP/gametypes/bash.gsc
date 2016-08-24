@@ -344,7 +344,7 @@ Callback_PlayerConnect()
 
 		// WRS {
 		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::wrs_menu(menu, response) == true) {
+			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
 				continue;
 			}
 		}

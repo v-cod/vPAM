@@ -169,7 +169,6 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		game["menu_serverinfo"]    = "serverinfo_dm";
-		game["menu_weapon_allies"] = "weapon_russian";
 	}
 	// } // END WRS
 
@@ -277,7 +276,7 @@ Callback_PlayerConnect()
 
 		// WRS {
 		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::wrs_menu(menu, response) == true) {
+			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
 				continue;
 			}
 		}

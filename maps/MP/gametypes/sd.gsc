@@ -286,11 +286,6 @@ Callback_StartGameType()
 		game["menu_quickstatements"] = "quickstatements";
 		game["menu_quickresponses"] = "quickresponses";
 
-		// WRS {
-		if (level.wrs) {
-			game["menu_weapon_allies"] = "weapon_russian";
-		}
-		// } // END WRS
 
 		precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
 		precacheString(&"MPSCRIPT_KILLCAM");
@@ -441,7 +436,7 @@ Callback_PlayerConnect()
 
 		// WRS {
 		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::wrs_menu(menu, response) == true) {
+			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
 				continue;
 			}
 		}

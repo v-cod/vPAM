@@ -50,8 +50,8 @@ init()
 // Monitor CMD cvars and call function callbacks according to CMDs
 monitor()
 {
-	// Commands called on players (first value is always the player id)
-	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1;
+	// Player commands (first value is always the player id)
+	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1; // Only one value
 	i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_burn";   pc[i]["f"] = ::_burn;    pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
@@ -68,7 +68,7 @@ monitor()
 	i++; pc[i]["c"] = "w_throw";  pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
 	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 0; // Second value is keyword
 
-	// Other commands
+	// Global commands
 	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
 	i++; gc[i]["c"] = "w_cvar";  gc[i]["f"] = ::_cvar;  gc[i]["e"] = 2; // Second value can contain spaces
 
@@ -102,7 +102,7 @@ monitor()
 				player thread [[pc[i]["f"]]]();
 			}
 
-			logPrint("WRS;" + pc[i]["c"] + ";" + player getGuid() + ";" + v + "\n");
+			logPrint("wrs;" + ";" + player getGuid() + pc[i]["c"] + ";" + v + "\n");
 		}
 		for (i = 0; i < gc.size; i++) {
 			v = getCvar(gc[i]["c"]);
@@ -116,7 +116,7 @@ monitor()
 
 			thread [[gc[i]["f"]]](arg);
 
-			logPrint("WRS;" + gc[i]["c"] + ";" + v + "\n");
+			logPrint("wrs;" + gc[i]["c"] + ";" + v + "\n");
 		}
 
 		wait 1;
@@ -259,6 +259,8 @@ _mortar()
 		return;
 	}
 
+	self.wrs_mortar = true;
+
 	iPrintLn(level.wrs_print_prefix + self.name + " ^7is going to be ^1mortared^7.");
 
 	soundSource = spawn("script_model", self getOrigin());
@@ -295,7 +297,7 @@ _nades()
 		return;
 	}
 
-	self.wrs_Nades = true;
+	self.wrs_nades = true;
 
 	self iPrintLn(level.wrs_print_prefix + "You've received unlimited ^1nades^7.");
 
@@ -447,12 +449,13 @@ _model(arg)
 		wait .05;
 	}
 
+	self.wrs_model = undefined;
+
 	if (model == "cow") {
 		self unlink();
 		cowModel delete();
 	}
 
-	self.wrs_model = undefined;
 	self.maxspeed = 190;
 	self setClientCvar("cg_thirdperson", 0);
 	if (self.sessionstate == "playing") {
@@ -515,9 +518,13 @@ _print(arg)
 }
 _cvar(arg)
 {
+	if (!isDefined(arg[1])) {
+		iPrintLn("^1--");
+	}
+
 	setCvar(arg[0], arg[1]);
-	iPrintLnBold(arg[0]);
-	iPrintLnBold(arg[1]);
+
+	iPrintLn(level.wrs_print_prefix + "^3" + arg[0] + " ^2" + arg[1]);
 }
 
 
@@ -595,7 +602,7 @@ explode(delimiter, string, limit) {
 	array = 0;
 	result[array] = "";
 
-	for (i = 0;i < string.size;i++) {
+	for (i = 0; i < string.size; i++) {
 		if ((array + 1 < limit || limit == 0) && string[i] == delimiter) {
 			if (result[array] != "") {
 				array++;

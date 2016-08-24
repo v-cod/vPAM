@@ -7,6 +7,7 @@ _monitor()
 	self thread _monitor_load();
 	self thread _monitor_save();
 }
+
 _monitor_nades()
 {
 	grenade = self getWeaponSlotWeapon("grenade");
