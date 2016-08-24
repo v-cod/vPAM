@@ -819,7 +819,7 @@ _leaderboards()
 	winner["score"][0]     = 0; winner["score"][1]     =     "^3Best Score^7: ^40";
 	winner["bashes"][0]    = 0; winner["bashes"][1]    =    "^3Most Bashes^7: ^40";
 	winner["furthest"][0]  = 0; winner["furthest"][1]  =  "^3Furthest Shot^7: ^40";
-	winner["spree"][0]     = 0; winner["spree"][1]     =  "^3Longest Spree^7: ^40";
+	winner["spreemax"][0]  = 0; winner["spreemax"][1]  =  "^3Longest Spree^7: ^40";
 	winner["headshots"][0] = 0; winner["headshots"][1] = "^3Most Headshots^7: ^40";
 
 	players = getEntArray("player", "classname");
@@ -837,9 +837,9 @@ _leaderboards()
 			winner["furthest"][0] = player.pers["stats"]["furthest"];
 			winner["furthest"][1] = "^3Furthest Shot^7: ^4" + player.pers["stats"]["furthest"] + "^7m | by " + player.name;
 		}
-		if (player.pers["stats"]["spree"] > winner["spree"][0]) {
-			winner["spree"][0] = player.pers["stats"]["spree"];
-			winner["spree"][1] = "^3Longest Spree^7: ^4" + player.pers["stats"]["spree"] + "^7 | by " + player.name;
+		if (player.pers["stats"]["spreemax"] > winner["spreemax"][0]) {
+			winner["spreemax"][0] = player.pers["stats"]["spreemax"];
+			winner["spreemax"][1] = "^3Longest Spree^7: ^4" + player.pers["stats"]["spreemax"] + "^7 | by " + player.name;
 		}
 		if (player.pers["stats"]["headshots"] > winner["headshots"][0]) {
 			winner["headshots"][0] = player.pers["stats"]["headshots"];
@@ -855,7 +855,7 @@ _leaderboards()
 	wait 8;
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
 	iPrintLnBold(winner["furthest"][1]);
-	iPrintLnBold(winner["spree"][1]);
+	iPrintLnBold(winner["spreemax"][1]);
 	wait 8;
 }
 

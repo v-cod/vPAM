@@ -1034,6 +1034,7 @@ endMap()
 			guid = player getGuid();
 		}
 	}
+	
 	// WRS {
 	if (level.wrs) {
 		maps\mp\gametypes\_wrs::wrs_EndMap(text);
@@ -1055,6 +1056,7 @@ endMap()
 		}
 	}
 	// } // END WRS
+
 	if(isDefined(name))
 		logPrint("W;;" + guid + ";" + name + "\n");
 	wait 10;

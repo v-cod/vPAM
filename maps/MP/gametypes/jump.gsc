@@ -216,6 +216,12 @@ Callback_StartGameType()
 
 Callback_PlayerConnect()
 {
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
+	}
+	// } // END WRS
+
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
 	self.statusicon = "";
@@ -461,6 +467,12 @@ Callback_PlayerConnect()
 
 Callback_PlayerDisconnect()
 {
+	// WRS {
+	if (level.wrs) {
+		self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
+	}
+	// } // END WRS
+
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
 	lpselfnum = self getEntityNumber();
@@ -479,13 +491,9 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 	// WRS {
 	if (level.wrs) {
-		dmg = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-		if (isDefined(dmg)) {
-			if (dmg == 0) {
-				return;
-			} else {
-				iDamage = dmg;
-			}
+		iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+		if (iDamage == 0) {
+			return;
 		}
 	}
 	// } // END WRS
@@ -1027,21 +1035,28 @@ endMap()
 		}
 	}
 
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::wrs_EndMap(text);
+	} else {
+		players = getentarray("player", "classname");
+		for(i = 0; i < players.size; i++)
+		{
+			player = players[i];
 
-		player closeMenu();
-		player setClientCvar("g_scriptMainMenu", "main");
+			player closeMenu();
+			player setClientCvar("g_scriptMainMenu", "main");
 
-		if(isDefined(tied) && tied == true)
-			player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
-		else if(isDefined(playername))
-			player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
+			if(isDefined(tied) && tied == true)
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
+			else if(isDefined(playername))
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
 
-		player spawnIntermission();
+			player spawnIntermission();
+		}
 	}
+	// } // END WRS
+
 	if(isDefined(name))
 		logPrint("W;;" + guid + ";" + name + "\n");
 	wait 10;
