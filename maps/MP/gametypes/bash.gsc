@@ -206,7 +206,6 @@ Callback_StartGameType()
 	// WRS {
 	if (level.wrs) {
 		game["menu_serverinfo"]    = "serverinfo_bel";
-		game["menu_weapon_allies"] = "weapon_russian";
 	}
 	// } // END WRS
 
@@ -241,6 +240,12 @@ Callback_StartGameType()
 	precacheStatusIcon("gfx/hud/hud@status_dead.tga");
 	precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
 
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::start();
+	}
+	// } // END WRS
+
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::precache();
 	maps\mp\gametypes\_teams::scoreboard();
@@ -258,6 +263,12 @@ Callback_StartGameType()
 
 Callback_PlayerConnect()
 {
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
+	}
+	// } // END WRS
+
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
 	self.statusicon = "";
@@ -607,6 +618,12 @@ Callback_PlayerConnect()
 
 Callback_PlayerDisconnect()
 {
+	// WRS {
+	if (level.wrs) {
+		self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
+	}
+	// } // END WRS
+
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
 	lpselfnum = self getEntityNumber();
@@ -685,6 +702,13 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			if(iDamage < 1)
 				iDamage = 1;
 
+			if (level.wrs) {
+				iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+				if (iDamage == 0) {
+					return;
+				}
+			}
+
 			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 		}
 	}
@@ -752,7 +776,13 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.headicon = "";
 
 	body = self cloneplayer();
-	self dropItem(self getcurrentweapon());
+	// WRS {
+	if (level.wrs) {
+		self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
+	} else {
+		self dropItem(self getcurrentweapon());
+	}
+	// } // END WRS
 	self updateDeathArray();
 
 	lpselfnum = self getEntityNumber();
@@ -897,7 +927,11 @@ spawnPlayer()
 
 	maps\mp\gametypes\_teams::model();
 
-	maps\mp\gametypes\_teams::givePistol();
+	// WRS {
+	if (!level.wrs) {
+		maps\mp\gametypes\_teams::givePistol();
+	}
+	// } // END WRS
 
 	self setClientCvar("ui_weapontab", "1");
 	self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
@@ -928,12 +962,17 @@ spawnPlayer()
 			}
 		}
 	}
+	// WRS {
+	if (level.wrs) {
+		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
+	} else {
+		maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
 
-	maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
-
-	self giveWeapon(self.pers["weapon"]);
-	self giveMaxAmmo(self.pers["weapon"]);
-	self setSpawnWeapon(self.pers["weapon"]);
+		self giveWeapon(self.pers["weapon"]);
+		self giveMaxAmmo(self.pers["weapon"]);
+		self setSpawnWeapon(self.pers["weapon"]);
+	}
+	// } // END WRS
 
 	self.archivetime = 0;
 

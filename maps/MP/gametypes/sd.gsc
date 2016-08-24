@@ -842,14 +842,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	// WRS {
-	if (level.wrs) {
-		if (self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)) {
-			return;
-		}
-	}
-	// } // END WRS
-
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
@@ -903,19 +895,18 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 				friendly = true;
 			}
 		}
-		// WRS {
-		else if(level.wrs && isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
-			if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
-				iDamage = 100;
-
-			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-		}
-		// } // END WRS
 		else
 		{
 			// Make sure at least one point of damage is done
 			if(iDamage < 1)
 				iDamage = 1;
+
+			if (level.wrs) {
+				iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+				if (iDamage == 0) {
+					return;
+				}
+			}
 
 			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 		}
@@ -1047,7 +1038,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	// WRS {
 	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
-	}else{
+	} else {
 		// Make the player drop his weapon
 		if (!isdefined (self.autobalance))
 			self dropItem(self getcurrentweapon());
@@ -1085,8 +1076,9 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 spawnPlayer()
 {
 	// WRS {
-	if(level.wrs && self.pers["team"] == "spectator")
+	if (level.wrs && self.pers["team"] == "spectator") {
 		return;
+	}
 	// } // END WRS
 
 	self notify("spawned");

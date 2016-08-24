@@ -474,17 +474,22 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	// WRS {
-	if (level.wrs) {
-		if (self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)) {
-			return;
-		}
-	}
-	// } // END WRS
-
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
+
+	// WRS {
+	if (level.wrs) {
+		dmg = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+		if (isDefined(dmg)) {
+			if (dmg == 0) {
+				return;
+			} else {
+				iDamage = dmg;
+			}
+		}
+	}
+	// } // END WRS
 
 	// Make sure at least one point of damage is done
 	if(iDamage < 1)

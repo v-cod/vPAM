@@ -32,46 +32,55 @@ init()
 	level.wrs_label_left  = &"^4E^3U^4R^3O ^2RIFLES";
 	level.wrs_label_right = &"Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com";
 
-	level.wrs_hud_info_text[0] = &"Alive: ";
-	level.wrs_hud_info_text[1] = &"Score: ";
+	level.wrs_hud_info_text["alive"] = &"Alive: ";
+	level.wrs_hud_info_text["score"] = &"Score: ";
 	level.wrs_hud_info_allies  = "gfx/hud/hud@objective_" + game["allies"] + ".tga";
 	level.wrs_hud_info_axis    = "gfx/hud/hud@objective_" + game["axis"]   + ".tga";
 
-	level.wrs_hud_stats_text[0] =        &"Score:";
-	level.wrs_hud_stats_text[1] =       &"Bashes:";
-	level.wrs_hud_stats_text[2] =     &"Furthest:";
-	level.wrs_hud_stats_text[3] =    &"Killspree:";
-	level.wrs_hud_stats_text[4] =    &"Headshots:";
-	level.wrs_hud_stats_text[5] = &"Differential:";
+	level.wrs_hud_stats_text["score"]     =     &"Score: ";
+	level.wrs_hud_stats_text["bashes"]    =    &"Bashes: ";
+	level.wrs_hud_stats_text["furthest"]  =  &"Furthest: ";
+	level.wrs_hud_stats_text["spreemax"]  = &"Killspree: ";
+	level.wrs_hud_stats_text["spreecur"]  = &"^3/^7 ";
+	level.wrs_hud_stats_text["headshots"] = &"Headshots: ";
 
 	level.wrs_blip_shader = "gfx/hud/hud@fire_ready.tga";
-
-	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
 
 	level.wrs_round_info[0] = &"Scoreboard";
 	level.wrs_round_info[1] = &"ALLIES";
 	level.wrs_round_info[2] = &"AXIS";
 
+	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
+
 	if (!isDefined(game["gamestarted"])) {
-		for (i = 0; i < level.wrs_round_info.size; i++) {
-			precacheString(level.wrs_round_info[i]);
-		}
+		precacheString(level.wrs_round_info[0]);
+		precacheString(level.wrs_round_info[1]);
+		precacheString(level.wrs_round_info[2]);
 
 		precacheShader(level.wrs_hud_info_allies);
 		precacheShader(level.wrs_hud_info_axis);
 
 		precacheShader(level.wrs_blip_shader);
+
+		// Sprint
 		precacheShader("gfx/hud/hud@health_back.dds");
 		precacheShader("gfx/hud/hud@health_bar.dds");
+
+		// Clock during round switch
 		precacheShader("hudStopwatch");
 		precacheShader("hudStopwatchNeedle");
-		//precacheShader("gfx/hud/hud@health_cross.tga");
-		//precacheHeadIcon("gfx/hud/hud@health_cross.tga");
 
+		// Static labels
 		precacheString(level.wrs_label_left);
 		precacheString(level.wrs_label_right);
 
-		precacheString(&"^3/^7");
+		// Statistics
+		precacheString(level.wrs_hud_stats_text["score"]);
+		precacheString(level.wrs_hud_stats_text["bashes"]);
+		precacheString(level.wrs_hud_stats_text["furthest"]);
+		precacheString(level.wrs_hud_stats_text["spreemax"]);
+		precacheString(level.wrs_hud_stats_text["spreecur"]);
+		precacheString(level.wrs_hud_stats_text["headshots"]);
 
 		// Precache russian weapons even if not a team
 		if (game["allies"] != "russian") {
@@ -81,10 +90,6 @@ init()
 			precacheItem("ppsh_mp");
 			precacheItem("mosin_nagant_sniper_mp");
 		}
-
-		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
-			precacheString(level.wrs_hud_stats_text[i]);
-		}
 	}
 
 	_update_cvars();
@@ -92,16 +97,13 @@ init()
 	if (!level.wrs_mg42) {
 		_remove_mg42();
 	}
-	if (level.wrs_stats) {
-		wrs_stats();
-	}
 
-	level.wrs_stats_records["score"]     = 0;
-	level.wrs_stats_records["bashes"]    = 0;
-	level.wrs_stats_records["furthest"]  = 0;
-	level.wrs_stats_records["spree"]     = 0;
-	level.wrs_stats_records["headshots"] = 0;
-	level.wrs_stats_records["differ"]    = 0;
+	level.wrs_stats_records = [];
+	level.wrs_stats_records["score"]     = undefined;
+	level.wrs_stats_records["bashes"]    = undefined;
+	level.wrs_stats_records["furthest"]  = undefined;
+	level.wrs_stats_records["spreemax"]  = undefined;
+	level.wrs_stats_records["headshots"] = undefined;
 }
 
 _monitor()
@@ -123,24 +125,22 @@ _update_cvars()
 	level.wrs_sprint_speed         = _getcvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
 	level.wrs_sprint_recover_ticks = _getcvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
 
-	level.wrs_mapvoting         = _getcvar("scr_wrs_mapvote",      1,   0,   1, "int");
-	level.wrs_mapvoting_amount  = _getcvar("scr_wrs_candidates",   4,   1,  14, "int");
-	level.wrs_message_interval  = _getcvar("scr_wrs_msgwait",      1,  30, 600, "int");
+	level.wrs_mapvoting            = _getcvar("scr_wrs_mapvote",             1,   0,    1, "int");
+	level.wrs_mapvoting_amount     = _getcvar("scr_wrs_candidates",          4,   1,   14, "int");
+	level.wrs_message_interval     = _getcvar("scr_wrs_msgwait",             1,  30,  600, "int");
 
-	level.wrs_afs               = _getcvar("scr_wrs_afs",          1,   0,   1, "int");
-	level.wrs_afs_ticks         = _getcvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
-	level.wrs_blip              = _getcvar("scr_wrs_sprint",       1,   0,   1, "int");
-	level.wrs_burning_passfire  = _getcvar("scr_wrs_passfire",     0,   0,   1, "int");
-	level.wrs_commands          = _getcvar("scr_wrs_commands",     1,   0,   1, "int");
-	level.wrs_countdown         = _getcvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
-	level.wrs_fence             = _getcvar("scr_wrs_fence",        1,   0,   1, "int");
-	level.wrs_leaderboards      = _getcvar("scr_wrs_leaderboards", 1,   0,   1, "int");
-	level.wrs_stats             = _getcvar("scr_wrs_stats",        1,   0,   1, "int");
-	level.wrs_mg42              = _getcvar("scr_wrs_mg42",         0,   0,   1, "int");
+	level.wrs_afs                  = _getcvar("scr_wrs_afs",                 1,   0,    1, "int");
+	level.wrs_afs_ticks            = _getcvar("scr_wrs_afs_time",          1.2, 0.0,  2.0, "float") / 0.05;
+	level.wrs_blip                 = _getcvar("scr_wrs_sprint",              1,   0,    1, "int");
+	level.wrs_burning_passfire     = _getcvar("scr_wrs_passfire",            0,   0,    1, "int");
+	level.wrs_commands             = _getcvar("scr_wrs_commands",            1,   0,    1, "int");
+	level.wrs_countdown            = _getcvar("scr_wrs_countdown",           1,   0,    1, "int"); // TDM
+	level.wrs_fence                = _getcvar("scr_wrs_fence",               1,   0,    1, "int");
+	level.wrs_leaderboards         = _getcvar("scr_wrs_leaderboards",        1,   0,    1, "int");
+	level.wrs_stats                = _getcvar("scr_wrs_stats",               1,   0,    1, "int");
+	level.wrs_mg42                 = _getcvar("scr_wrs_mg42",                0,   0,    1, "int");
 
-	logPrint("Value: " + level.wrs_stats + "\n");
-
-	level.wrs_admins = _getcvar("sys_admins", "2016390", undefined, undefined, "array");
+	level.wrs_admins               = _getcvar("sys_admins", "2016390", undefined, undefined, "array");
 }
 
 _monitor_player_sprint()
@@ -148,20 +148,20 @@ _monitor_player_sprint()
 	sprintLeft = level.wrs_sprint_ticks;
 	recovertime = 0;
 
-	self.wrs_sprintHud_bg = newClientHudElem(self);
-	self.wrs_sprintHud_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
-	self.wrs_sprintHud_bg.alignX = "left";
-	self.wrs_sprintHud_bg.alignY = "top";
-	self.wrs_sprintHud_bg.x = 488 + 13;
-	self.wrs_sprintHud_bg.y = 454;
+	self.wrs_hud_sprint_bg = newClientHudElem(self);
+	self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
+	self.wrs_hud_sprint_bg.alignX = "left";
+	self.wrs_hud_sprint_bg.alignY = "top";
+	self.wrs_hud_sprint_bg.x = 488 + 13;
+	self.wrs_hud_sprint_bg.y = 454;
 
-	self.wrs_sprintHud = newClientHudElem(self);
-	self.wrs_sprintHud setShader("gfx/hud/hud@health_bar.dds", 128, 3);
-	self.wrs_sprintHud.color = (0, 0, 1);
-	self.wrs_sprintHud.alignX = "left";
-	self.wrs_sprintHud.alignY = "top";
-	self.wrs_sprintHud.x = 488 + 14;
-	self.wrs_sprintHud.y = 455;
+	self.wrs_hud_sprint = newClientHudElem(self);
+	self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", 128, 3);
+	self.wrs_hud_sprint.color = (0, 0, 1);
+	self.wrs_hud_sprint.alignX = "left";
+	self.wrs_hud_sprint.alignY = "top";
+	self.wrs_hud_sprint.x = 488 + 14;
+	self.wrs_hud_sprint.y = 455;
 
 	// Prevent sprint glitch on SD
 	while (self.sessionstate == "playing" && self attackButtonPressed() == true) {
@@ -178,15 +178,15 @@ _monitor_player_sprint()
 		//The amount of sprint left, a float from 0 to 1
 		sprint = (float)(level.wrs_sprint_ticks - sprintLeft) / level.wrs_sprint_ticks;
 
-		if (!isDefined(self.wrs_sprintHud)) {
+		if (!isDefined(self.wrs_hud_sprint)) {
 			self.maxspeed = 190;
 			break;
 		}
 		hud_width = (1.0 - sprint) * 128;   //The width should be as wide as there is left
 		if (hud_width > 0) {                 //Minimum of one, so you can see a red pixel.
-			self.wrs_sprintHud setShader("gfx/hud/hud@health_bar.dds", hud_width, 3); //Set the shader to the width we just determined.
+			self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", hud_width, 3); //Set the shader to the width we just determined.
 		} else {
-			self.wrs_sprintHud setShader("");
+			self.wrs_hud_sprint setShader("");
 		}
 
 		//The player should have moved, have some 'stamina' left, pressed the button and he should be standing.
@@ -217,11 +217,11 @@ _monitor_player_sprint()
 			}
 		}
 	}
-	if (isDefined(self.wrs_sprintHud)) {
-		self.wrs_sprintHud destroy();
+	if (isDefined(self.wrs_hud_sprint)) {
+		self.wrs_hud_sprint destroy();
 	}
-	if (isDefined(self.wrs_sprintHud_bg)) {
-		self.wrs_sprintHud_bg destroy();
+	if (isDefined(self.wrs_hud_sprint_bg)) {
+		self.wrs_hud_sprint_bg destroy();
 	}
 }
 
@@ -335,7 +335,7 @@ _update_hud_alive()
 		level.wrs_hud_info[1].alignX    = "left";
 		level.wrs_hud_info[1].alignY    = "middle";
 		level.wrs_hud_info[1].fontScale = .9;
-		level.wrs_hud_info[1].label     = level.wrs_hud_info_text[0];
+		level.wrs_hud_info[1].label     = level.wrs_hud_info_text["alive"];
 
 		level.wrs_hud_info[2]           = newHudElem();
 		level.wrs_hud_info[2].x         = 435;
@@ -343,7 +343,7 @@ _update_hud_alive()
 		level.wrs_hud_info[2].alignX    = "left";
 		level.wrs_hud_info[2].alignY    = "middle";
 		level.wrs_hud_info[2].fontScale = .9;
-		level.wrs_hud_info[2].label     = level.wrs_hud_info_text[1];
+		level.wrs_hud_info[2].label     = level.wrs_hud_info_text["score"];
 
 		// Axis info line
 		level.wrs_hud_info[3]           = newHudElem();
@@ -359,7 +359,7 @@ _update_hud_alive()
 		level.wrs_hud_info[4].alignX    = "left";
 		level.wrs_hud_info[4].alignY    = "middle";
 		level.wrs_hud_info[4].fontScale = .9;
-		level.wrs_hud_info[4].label     = level.wrs_hud_info_text[0];
+		level.wrs_hud_info[4].label     = level.wrs_hud_info_text["alive"];
 
 		level.wrs_hud_info[5]           = newHudElem();
 		level.wrs_hud_info[5].x         = 435;
@@ -367,7 +367,7 @@ _update_hud_alive()
 		level.wrs_hud_info[5].alignX    = "left";
 		level.wrs_hud_info[5].alignY    = "middle";
 		level.wrs_hud_info[5].fontScale = .9;
-		level.wrs_hud_info[5].label     = level.wrs_hud_info_text[1];
+		level.wrs_hud_info[5].label     = level.wrs_hud_info_text["score"];
 	}
 	allies = 0;
 	axis = 0;
@@ -438,170 +438,145 @@ _message_feed()
 	}
 }
 
-
-
-wrs_stats()
+_stats_hud_create()
 {
-	if (!isDefined(level.wrs_stats_hud)) {
-		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
-			level.wrs_stats_hud[i]           = newHudElem();
-			level.wrs_stats_hud[i].x         = 48;
-			level.wrs_stats_hud[i].y         = 128 + (i*10);
-			level.wrs_stats_hud[i].alignX    = "right";
-			level.wrs_stats_hud[i].alignY    = "top";
-			level.wrs_stats_hud[i].fontScale = .75;
-			level.wrs_stats_hud[i].label     = level.wrs_hud_stats_text[i];
+	if (!isDefined(self.wrs_stats_hud)) {
+		self.wrs_stats_hud["score"]               = newClientHudElem(self);
+		self.wrs_stats_hud["score"].x             = 52;
+		self.wrs_stats_hud["score"].y             = 128 + (0 * 10);
+		self.wrs_stats_hud["score"].alignX        = "right";
+		self.wrs_stats_hud["score"].alignY        = "top";
+		self.wrs_stats_hud["score"].fontScale     = .75;
+		self.wrs_stats_hud["score"].label         = level.wrs_hud_stats_text["score"];
+
+		self.wrs_stats_hud["bashes"]              = newClientHudElem(self);
+		self.wrs_stats_hud["bashes"].x            = 52;
+		self.wrs_stats_hud["bashes"].y            = 128 + (1 * 10);
+		self.wrs_stats_hud["bashes"].alignX       = "right";
+		self.wrs_stats_hud["bashes"].alignY       = "top";
+		self.wrs_stats_hud["bashes"].fontScale    = .75;
+		self.wrs_stats_hud["bashes"].label        = level.wrs_hud_stats_text["bashes"];
+
+		self.wrs_stats_hud["furthest"]            = newClientHudElem(self);
+		self.wrs_stats_hud["furthest"].x          = 52;
+		self.wrs_stats_hud["furthest"].y          = 128 + (2 * 10);
+		self.wrs_stats_hud["furthest"].alignX     = "right";
+		self.wrs_stats_hud["furthest"].alignY     = "top";
+		self.wrs_stats_hud["furthest"].fontScale  = .75;
+		self.wrs_stats_hud["furthest"].label      = level.wrs_hud_stats_text["furthest"];
+
+		self.wrs_stats_hud["spreemax"]            = newClientHudElem(self);
+		self.wrs_stats_hud["spreemax"].x          = 52;
+		self.wrs_stats_hud["spreemax"].y          = 128 + (3 * 10);
+		self.wrs_stats_hud["spreemax"].alignX     = "right";
+		self.wrs_stats_hud["spreemax"].alignY     = "top";
+		self.wrs_stats_hud["spreemax"].fontScale  = .75;
+		self.wrs_stats_hud["spreemax"].label      = level.wrs_hud_stats_text["spreemax"];
+
+		self.wrs_stats_hud["spreecur"]            = newClientHudElem(self);
+		self.wrs_stats_hud["spreecur"].x          = 72;
+		self.wrs_stats_hud["spreecur"].y          = 128 + (3 * 10);
+		self.wrs_stats_hud["spreecur"].alignX     = "right";
+		self.wrs_stats_hud["spreecur"].alignY     = "top";
+		self.wrs_stats_hud["spreecur"].fontScale  = .75;
+		self.wrs_stats_hud["spreecur"].label      = level.wrs_hud_stats_text["spreecur"];
+
+		self.wrs_stats_hud["headshots"]           = newClientHudElem(self);
+		self.wrs_stats_hud["headshots"].x         = 52;
+		self.wrs_stats_hud["headshots"].y         = 128 + (4 * 10);
+		self.wrs_stats_hud["headshots"].alignX    = "right";
+		self.wrs_stats_hud["headshots"].alignY    = "top";
+		self.wrs_stats_hud["headshots"].fontScale = .75;
+		self.wrs_stats_hud["headshots"].label     = level.wrs_hud_stats_text["headshots"];
+
+		if (level.gametype == "bash") {
+			self.wrs_stats_hud["headshots"].alpha = 0;
+
+			self.wrs_stats_hud["spreemax"].fontScale  = 1;
+			self.wrs_stats_hud["spreecur"].fontScale  = 1;
+			self.wrs_stats_hud["spreemax"].x          = 56;
+			self.wrs_stats_hud["spreecur"].x          = 80;
+
 		}
 	}
 }
-wrs_stats_maintain()
+_stats_hud_destroy()
+{
+	if (isDefined(self.wrs_stats_hud)) {
+		self.wrs_stats_hud["score"]     destroy();
+		self.wrs_stats_hud["bashes"]    destroy();
+		self.wrs_stats_hud["furthest"]  destroy();
+		self.wrs_stats_hud["spreemax"]  destroy();
+		self.wrs_stats_hud["spreecur"]  destroy();
+		self.wrs_stats_hud["headshots"] destroy();
+	}
+}
+
+
+_stats_update()
 {
 	if (level.mapended) {
 		return;
 	}
-	if (!isDefined(self.wrs_stats_hud)) {
-		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
-			if (i == 0) {
-				stat = "score";
-			} else if (i == 1) {
-				stat = "bashes";
-			} else if (i == 2) {
-				stat = "furthest";
-			} else if (i == 3) {
-				stat = "spree";
-			} else if (i == 4) {
-				stat = "headshots";
-			} else if (i == 5) {
-				stat = "differ";
-			}
-			self.wrs_stats_hud[stat] = newClientHudElem(self);
-			self.wrs_stats_hud[stat].x = 52;
-			self.wrs_stats_hud[stat].y = 128 + (i*10);
-			self.wrs_stats_hud[stat].alignX = "left";
-			self.wrs_stats_hud[stat].alignY = "top";
-			self.wrs_stats_hud[stat].fontScale = .75;
-			self.wrs_stats_hud[stat] setValue(0);
-			if (i == 3) {
-				self.wrs_stats_hud["spreemax"] = newClientHudElem(self);
-				self.wrs_stats_hud["spreemax"].x = 66;
-				self.wrs_stats_hud["spreemax"].y = 128 + (i*10);
-				self.wrs_stats_hud["spreemax"].alignX = "left";
-				self.wrs_stats_hud["spreemax"].alignY = "top";
-				self.wrs_stats_hud["spreemax"].label = &"^3/^7";
-				self.wrs_stats_hud["spreemax"].fontScale = .75;
-				self.wrs_stats_hud["spreemax"] setValue(0);
-			}
-		}
 
-	}
 	self.wrs_stats_hud["score"]     setValue(self.pers["stats"]["score"]);
 	self.wrs_stats_hud["bashes"]    setValue(self.pers["stats"]["bashes"]);
 	self.wrs_stats_hud["furthest"]  setValue(self.pers["stats"]["furthest"]);
-	self.wrs_stats_hud["spreemax"]  setValue(self.pers["stats"]["spree"]);  self.wrs_stats_hud["spree"] setValue(self.pers["spree"]);
+	self.wrs_stats_hud["spreemax"]  setValue(self.pers["stats"]["spreemax"]);
+	self.wrs_stats_hud["spreecur"]  setValue(self.pers["stats"]["spreecur"]);
 	self.wrs_stats_hud["headshots"] setValue(self.pers["stats"]["headshots"]);
-	self.wrs_stats_hud["differ"]    setValue(self.pers["stats"]["differ"]);
 
 	//IF STATEMENTS TO DETERMINE WETHER THIS PLAYER HAS THE RECORD
 	//IF IT'S THE CASE, THE RECORD IS HIS, GIVE HIM THE BLUE COLOR, AND MAKE OTHERS WHITE.
-	wrs_stats_maintain_CheckStat("score");
-	wrs_stats_maintain_CheckStat("bashes");
-	wrs_stats_maintain_CheckStat("furthest");
-	wrs_stats_maintain_CheckSprStat("spree", "spreemax");
-	wrs_stats_maintain_CheckStat("headshots");
-	wrs_stats_maintain_CheckStat("differ");
-}
-wrs_stats_maintain_CheckStat(stat) {
-	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
-		level.wrs_stats_records[stat] = self.pers["stats"][stat];
-
-		players = getEntArray("player", "classname");
-		for (j = 0;j < players.size;j++) {
-			if (isDefined(players[j].wrs_stats_hud)) {
-				players[j].wrs_stats_hud[stat].color = (1,1,1);
-			}
-		}
-
-		self.wrs_stats_hud[stat].color = (0,0,1);
-	}
-}
-wrs_stats_maintain_CheckLevStat(stat, element) {
-	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
-		level.wrs_stats_records[stat] = self.pers["stats"][stat];
-
-//      players = getEntArray("player", "classname");
-//      for (j = 0;j < players.size;j++)
-//          if (isDefined(players[j].wrs_stats_hud))
-//              players[j].wrs_stats_hud[stat][element].color = (1,1,1);
-
-		self.wrs_stats_hud[stat][element].color = (0,0,1);
-	}
-}
-wrs_stats_maintain_CheckSprStat(stat, element) {
-	if (self.pers["stats"][stat] > level.wrs_stats_records[stat]) {
-		level.wrs_stats_records[stat] = self.pers["stats"][stat];
-
-		players = getEntArray("player", "classname");
-		for (j = 0;j < players.size;j++)
-			if (isDefined(players[j].wrs_stats_hud))
-				players[j].wrs_stats_hud[element].color = (1,1,1);
-
-		self.wrs_stats_hud[element].color = (0,0,1);
-	}
-}
-wrs_stats_maintain_CheckAllStat(stat) {
-	record = self;
-
-	players = getEntArray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		player = players[i];
-
-		if (!isDefined(player.pers) || !isDefined(player.pers["stats"]))
-			continue;
-
-		if (player.pers["stats"][stat] > record.pers["stats"][stat]) {
-			record = player;
-		}
-	}
-	for (i = 0; i < players.size; i++) {
-		player = players[i];
-
-		if (!isDefined(player.pers) || !isDefined(player.pers["stats"]) || !isDefined(player.wrs_stats_hud))
-			continue;
-
-		if (record == player && (float)record.pers["stats"][stat] > 0) {
-			level.wrs_stats_records[stat] = record.pers["stats"][stat];
-			record.wrs_stats_hud[stat].color = (0,0,1);
-		}
-		else if (isDefined(player.wrs_stats_hud))
-			player.wrs_stats_hud[stat].color = (1,1,1);
-	}
+	self _stats_check("score");
+	self _stats_check("bashes");
+	self _stats_check("furthest");
+	self _stats_check("spreemax");
+	self _stats_check("headshots");
+	self _stats_check("differ");
 }
 
+_stats_check(stat)
+{
+	if (!isDefined(level.wrs_stats_records[stat])) {
+		return;
+	}
 
+	if (self.pers["stats"][stat] > level.wrs_stats_records[stat].pers["stats"][stat]) {
+		level.wrs_stats_records[stat].wrs_stats_hud[stat].color = (1,1,1);
+		self.pers["stats"][stat].wrs_stats_hud[stat].color      = (0,0,1);
+
+		level.wrs_stats_records[stat] = self;
+	}
+}
 
 
 /* EXTEND STOCK EVENTS */
 wrs_PlayerConnect()
 {
-	if (isDefined(self.pers["stats"])) {
+	if (isDefined(self.pers["team"])) {
 		return;
 	}
+
 	self.pers["stats"]["score"]     = 0;
 	self.pers["stats"]["bashes"]    = 0;
 	self.pers["stats"]["furthest"]  = 0;
-	self.pers["stats"]["spree"]     = 0; self.pers["spree"] = 0;
+	self.pers["stats"]["spreemax"]  = 0;
+	self.pers["stats"]["spreecur"]  = 0;
 	self.pers["stats"]["headshots"] = 0;
-	self.pers["stats"]["differ"]    = 0;
 
-	if (self.name == ""
-		|| self.name == "^7"
-		|| self.name == "^7 "
-		|| self.name.size == 0
-		|| self.name == "Unknown Soldier"
-		|| self.name == "UnnamedPlayer"
-		|| _substr(self.name, 0, 11) == "^1Free Porn"
-		|| _substr(self.name, 0, 5 ) == "I LUV"
-		|| _substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear"
+	_stats_hud_create();
+
+	if (   self.name == ""
+	    || self.name == " "
+	    || self.name == "^7"
+	    || self.name == "^7 "
+	    || self.name.size == 0
+	    || self.name == "Unknown Soldier"
+	    || self.name == "UnnamedPlayer"
+	    || _substr(self.name, 0, 11) == "^1Free Porn"
+	    || _substr(self.name, 0, 5 ) == "I LUV"
+	    || _substr(self.name, 0, 27) == "I wear ^6ladies ^7underwear"
 	) {
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
 	}
@@ -611,7 +586,6 @@ wrs_PlayerConnect()
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
 
-//  self setClientCvar("com_maxfps", 125);
 	self setClientCvar("rate", 25000);
 	self setClientCvar("cl_maxpackets", 100);
 	self setClientCvar("snaps", 40);
@@ -621,25 +595,42 @@ wrs_PlayerDisconnect()
 }
 wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	if (level.gametype == "jump") {
-		self.health += iDamage;
-		self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
+	switch (level.gametype) {
+		case "bash":
+			if(    sMeansOfDeath == "MOD_PISTOL_BULLET"
+			    || sMeansOfDeath == "MOD_RIFLE_BULLET"
+			    || sMeansOfDeath == "MOD_HEAD_SHOT"){
+				return 0;
+			} else if (sMeansOfDeath == "MOD_MELEE") {
+				return 100;
+			}
+			break;
+		case "jump":
+			self.health += iDamage;
+			self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
+			break;
+		case "sd":
+			if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
+				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE") {
+					return 100;
+				}
+			}
+			break;
+		default:
+			return iDamage;
 	}
 
-	return false;
+	return iDamage;
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
 	if (isPlayer(attacker) && attacker != self) { //He got killed by a player
-		attacker.pers["stats"]["score"]  = attacker.score;
-		attacker.pers["stats"]["differ"] = attacker.score - attacker.deaths;
-
-		attacker thread wrs_stats_maintain();
+		attacker.pers["stats"]["score"] = attacker.score;
 
 		// Raise the spree
-		attacker.pers["spree"]++;
-		if (attacker.pers["spree"] > attacker.pers["stats"]["spree"]) {
-			attacker.pers["stats"]["spree"] = attacker.pers["spree"];
+		attacker.pers["stats"]["spreecur"]++;
+		if (attacker.pers["stats"]["spreecur"] > attacker.pers["stats"]["spreemax"]) {
+			attacker.pers["stats"]["spreemax"] = attacker.pers["stats"]["spreecur"];
 		}
 
 		// Incrementing the amount of headshots or bashes
@@ -658,12 +649,14 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 		if (level.wrs_blip) {
 			attacker thread _blip();
 		}
+
+		attacker _stats_update();
 	}
 
-	self.pers["spree"] = 0;
-	self.pers["stats"]["differ"] = self.score - self.deaths;
+	self.pers["stats"]["score"]    = self.score;
+	self.pers["stats"]["spreecur"] = 0;
 
-	self thread wrs_stats_maintain();
+	self _stats_update();
 }
 wrs_SpawnPlayer()
 {
@@ -685,7 +678,7 @@ wrs_SpawnPlayer()
 	}
 
 	if (level.wrs_stats) {
-		self thread wrs_stats_maintain();
+		self thread _stats_update();
 	}
 
 	if (level.wrs_afs) {
@@ -817,40 +810,17 @@ _leaderboards()
 
 
 cleanUp(everything) {
-	if (isDefined(level.wrs_hud_info)) {
-		for (i = 0; i < level.wrs_hud_info.size; i++) {
-			if (isDefined(level.wrs_hud_info[i])) {
-				level.wrs_hud_info[i] destroy();
-			}
-		}
-	}
-	//if (isDefined(level.clock))
-	//	level.clock destroy();
-
-	if (everything) {
-		for (i = 0; i < level.wrs_stats_hud.size; i++) {
-			if (isDefined(level.wrs_stats_hud)) {
-				level.wrs_stats_hud[i] destroy();
-			}
-		}
-	}
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
 
-		if (isDefined(players[i].wrs_sprintHud))
-			players[i].wrs_sprintHud destroy();
-		if (isDefined(players[i].wrs_sprintHud_back))
-			players[i].wrs_sprintHud_bg destroy();
+		if (isDefined(players[i].wrs_hud_sprint))
+			players[i].wrs_hud_sprint destroy();
+		if (isDefined(players[i].wrs_hud_sprint_back))
+			players[i].wrs_hud_sprint_bg destroy();
 
 		if (everything) {
 			if (isDefined(players[i].wrs_stats_hud)) {
-				players[i].wrs_stats_hud["score"    ] destroy();
-				players[i].wrs_stats_hud["bashes"   ] destroy();
-				players[i].wrs_stats_hud["furthest" ] destroy();
-				players[i].wrs_stats_hud["spree"    ] destroy();
-				players[i].wrs_stats_hud["spreemax" ] destroy();
-				players[i].wrs_stats_hud["headshots"] destroy();
-				players[i].wrs_stats_hud["differ"   ] destroy();
+				players[i] _stats_hud_destroy();
 			}
 		}
 	}
@@ -859,11 +829,6 @@ cleanUp(everything) {
 
 // Return true if request is handled
 wrs_menu(menu, response) {
-	// Only handle weapon menu context
-	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
-		return false;
-	}
-
 	// Only handle weapon choices
 	if (response == "team" || response == "viewmap" || response == "callvote") {
 		return false;
@@ -876,7 +841,22 @@ wrs_menu(menu, response) {
 
 	// If not in a team, go back
 	if (!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
-		return true;
+		return false;
+	}
+
+	if(menu == game["menu_weapon_all"] || menu == game["menu_weapon_allies_only"] || menu == game["menu_weapon_axis_only"]) {
+		self.pers["weapon1"] = "mosin_nagant_mp";
+		self.pers["weapon2"] = "kar98k_mp";
+		self.pers["weapon"]  = self.pers["weapon1"];
+
+		return false;
+	} else if (level.gametype == "bash") {
+		return false;
+	}
+
+	// Only handle weapon menu context
+	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
+		return false;
 	}
 
 	weapon = self _restrict(response);
