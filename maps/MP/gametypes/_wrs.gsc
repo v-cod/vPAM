@@ -65,8 +65,6 @@ init()
 		precacheShader("gfx/hud/hud@health_bar.dds");
 		precacheShader("hudStopwatch");
 		precacheShader("hudStopwatchNeedle");
-		//precacheShader("gfx/hud/hud@health_cross.tga");
-		//precacheHeadIcon("gfx/hud/hud@health_cross.tga");
 
 		precacheString(level.wrs_label_left);
 		precacheString(level.wrs_label_right);
@@ -197,7 +195,7 @@ _monitor_player_sprint()
 				self.maxspeed = level.wrs_sprint_speed;    //Set the speed to the sprint speed.
 				self.wrs_sprinting = true;
 			}
-			self disableWeapon();   //Some people found a way to have their weapon enabled why sprinting, maybe this prevents that?
+			self disableWeapon();
 			sprintLeft--;
 		}
 		else{   //He didn't do shit
@@ -861,7 +859,7 @@ cleanUp(everything) {
 
 
 // Return true if request is handled
-wrs_menu(menu, response) {
+menu(menu, response) {
 	// Only handle weapon menu context
 	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
 		return false;
