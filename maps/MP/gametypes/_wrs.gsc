@@ -73,16 +73,15 @@ init()
 
 		if (game["menu_weapon_allies"] != "weapon_russian") {
 			game["menu_weapon_allies"] = "weapon_russian";
-			precacheMenu(game["menu_weapon_allies"]);
-		}
 
-		// Precache russian weapons even if not a team
-		if (game["allies"] != "russian") {
-			precacheItem("rgd-33russianfrag_mp");
+			precacheMenu(game["menu_weapon_allies"]);
+
 			precacheItem("luger_mp");
+			precacheItem("rgd-33russianfrag_mp");
+
 			precacheItem("mosin_nagant_mp");
-			precacheItem("ppsh_mp");
 			precacheItem("mosin_nagant_sniper_mp");
+			precacheItem("ppsh_mp");
 		}
 
 		for (i = 0; i < level.wrs_hud_stats_text.size; i++) {
@@ -1265,47 +1264,9 @@ _get_cvar(cvar, def, min, max, type)
 _restrict(response)
 {
 	switch(response) {
-	case "m1carbine_mp":
-		if (!getcvar("scr_allow_m1carbine")) {
-			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "m1garand_mp":
-		if (!getcvar("scr_allow_m1garand")) {
-			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "thompson_mp":
-		if (!getcvar("scr_allow_thompson")) {
-			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-
 	case "bar_mp":
 		if (!getcvar("scr_allow_bar")) {
 			self iprintln(&"MPSCRIPT_BAR_IS_A_RESTRICTED_WEAPON");
-			return "restricted";
-		}
-		break;
-
-	case "springfield_mp":
-		if (!getcvar("scr_allow_springfield")) {
-			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "enfield_mp":
-		if (!getcvar("scr_allow_enfield")) {
-			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "sten_mp":
-		if (!getcvar("scr_allow_sten")) {
-			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
@@ -1315,27 +1276,33 @@ _restrict(response)
 			return "restricted";
 		}
 		break;
-	case "mosin_nagant_mp":
-		if (!getcvar("scr_allow_nagant")) {
-			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "ppsh_mp":
-		if (!getcvar("scr_allow_ppsh")) {
-			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
-			return "restricted";
-		}
-		break;
-	case "mosin_nagant_sniper_mp":
-		if (!getcvar("scr_allow_nagantsniper")) {
-			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+	case "enfield_mp":
+		if (!getcvar("scr_allow_enfield")) {
+			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
 	case "kar98k_mp":
 		if (!getcvar("scr_allow_kar98k")) {
 			self iprintln(&"MPSCRIPT_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "kar98k_sniper_mp":
+		if (!getcvar("scr_allow_kar98ksniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1carbine_mp":
+		if (!getcvar("scr_allow_m1carbine")) {
+			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1garand_mp":
+		if (!getcvar("scr_allow_m1garand")) {
+			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
@@ -1351,9 +1318,39 @@ _restrict(response)
 			return "restricted";
 		}
 		break;
-	case "kar98k_sniper_mp":
-		if (!getcvar("scr_allow_kar98ksniper")) {
-			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+	case "mosin_nagant_mp":
+		if (!getcvar("scr_allow_nagant")) {
+			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_sniper_mp":
+		if (!getcvar("scr_allow_nagantsniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+			return "restricted";
+		}
+		break;
+	case "ppsh_mp":
+		if (!getcvar("scr_allow_ppsh")) {
+			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "springfield_mp":
+		if (!getcvar("scr_allow_springfield")) {
+			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "sten_mp":
+		if (!getcvar("scr_allow_sten")) {
+			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "thompson_mp":
+		if (!getcvar("scr_allow_thompson")) {
+			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
 			return "restricted";
 		}
 		break;
