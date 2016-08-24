@@ -4,7 +4,6 @@
 
 init()
 {
-	level.wrs_effect["burning"] = loadfx("fx/fire/tinybon.efx");
 	level.wrs_effect["generic"] = loadfx("fx/impacts/dirthit_mortar.efx");
 
 	i=0; level.wrs_model[i][0] = "barrel";       level.wrs_model[i][1] = "xmodel/barrel_black1";
@@ -53,7 +52,6 @@ monitor()
 	// Player commands (first value is always the player id)
 	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1; // Only one value
 	i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_burn";   pc[i]["f"] = ::_burn;    pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_kill";   pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_mortar"; pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
@@ -178,51 +176,6 @@ _bunny()
 		}
 		wait .1;
 	}
-}
-
-_burn()
-{
-	if (self.sessionstate != "playing") {
-		return;
-	}
-
-	if (isDefined(self.wrs_burning)) {
-		self.wrs_burning = undefined;
-		iPrintLn(level.wrs_print_prefix + self.name + " ^7stopped ^1burning^7.");
-		return;
-	}
-
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1burning^7.");
-	self thread _burn_player();
-}
-_burn_player()
-{
-	self.wrs_burning = true;
-	for (j = 0; self.sessionstate == "playing" && isDefined(self.wrs_burning); j++) {
-		self.health -= 2;
-
-		if (self.health < 1) {
-			self suicide();
-		}
-
-		if (j > 2) {
-			playFx(level.wrs_effect["burning"], self.origin + (0, 0, 20));
-			j = 0;
-		}
-
-		if (level.wrs_burning_passfire) {
-			players = getentarray("player", "classname");
-			for (i = 0; i < players.size; i++) {
-				if (isDefined(players[i]) && self != players[i] && players[i].sessionstate == "playing" && !isDefined(players[i].wrs_burning) && distanceSquared(self.origin, players[i].origin) < 4000) {
-					players[i] thread _burn_player();
-				}
-			}
-		}
-
-		wait .2;
-	}
-
-	self.wrs_burning = undefined;
 }
 
 _disarm()

@@ -20,17 +20,24 @@ start()
 	maps\mp\gametypes\_wrs_fence::init();
 	maps\mp\gametypes\_wrs_mapvote::init();
 
-	thread _labels();
-	thread _message_feed();
-	thread _monitor();
+	if (level.wrs_labels) {
+		thread _hud_labels_create();
+	}
+	if (level.wrs_alive) {
+		thread _hud_alive_create();
+	}
+	if (level.wrs_feed) {
+		thread _message_feed();
+	}
 
+	thread _monitor();
 	thread maps\mp\gametypes\_wrs_admin::monitor();
 }
 
 init()
 {
 	level.wrs_label_left  = &"^4E^3U^4R^3O ^2RIFLES";
-	level.wrs_label_right = &"eurorifles^4.^7clanwebsite^4.^7com";
+	level.wrs_label_right = &"eurorifles.clanwebsite.com";
 
 	level.wrs_hud_info_text["alive"] = &"Alive: ";
 	level.wrs_hud_info_text["score"] = &"Score: ";
@@ -40,8 +47,8 @@ init()
 	level.wrs_hud_stats_text["score"]     =     &"Score: ";
 	level.wrs_hud_stats_text["bashes"]    =    &"Bashes: ";
 	level.wrs_hud_stats_text["furthest"]  =  &"Furthest: ";
-	level.wrs_hud_stats_text["spreemax"]  = &"Killspree: ";
-	level.wrs_hud_stats_text["spreecur"]  = &"^3/^7 ";
+	level.wrs_hud_stats_text["spreecur"]  = &"Killspree: ";
+	level.wrs_hud_stats_text["spreemax"]  = &"^3/^7 ";
 	level.wrs_hud_stats_text["headshots"] = &"Headshots: ";
 
 	level.wrs_blip_shader = "gfx/hud/hud@fire_ready.tga";
@@ -51,6 +58,16 @@ init()
 	level.wrs_round_info[2] = &"AXIS";
 
 	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
+
+	// Other level variables that can be set with scr_wrs_ cvars
+	_update_variables();
+
+	level.wrs_stats_records = [];
+	level.wrs_stats_records["score"]     = undefined;
+	level.wrs_stats_records["bashes"]    = undefined;
+	level.wrs_stats_records["furthest"]  = undefined;
+	level.wrs_stats_records["spreemax"]  = undefined;
+	level.wrs_stats_records["headshots"] = undefined;
 
 	if (!isDefined(game["gamestarted"])) {
 		precacheString(level.wrs_round_info[0]);
@@ -78,72 +95,95 @@ init()
 		precacheString(level.wrs_hud_stats_text["score"]);
 		precacheString(level.wrs_hud_stats_text["bashes"]);
 		precacheString(level.wrs_hud_stats_text["furthest"]);
-		precacheString(level.wrs_hud_stats_text["spreemax"]);
 		precacheString(level.wrs_hud_stats_text["spreecur"]);
+		precacheString(level.wrs_hud_stats_text["spreemax"]);
 		precacheString(level.wrs_hud_stats_text["headshots"]);
 
-		if (game["menu_weapon_allies"] != "weapon_russian") {
-			game["menu_weapon_allies"] = "weapon_russian";
+		// Cache anyway
+		precacheItem("mosin_nagant_mp");
 
+		if (game["allies"] != level.wrs_weapon_menu) {
+			switch (level.wrs_weapon_menu) {
+			case "american":
+				precacheItem("fraggrenade_mp");
+				precacheItem("colt_mp");
+				precacheItem("m1carbine_mp");
+				precacheItem("m1garand_mp");
+				precacheItem("thompson_mp");
+				precacheItem("bar_mp");
+				precacheItem("springfield_mp");
+				break;
+			case "british":
+				precacheItem("mk1britishfrag_mp");
+				precacheItem("colt_mp");
+				precacheItem("enfield_mp");
+				precacheItem("sten_mp");
+				precacheItem("bren_mp");
+				precacheItem("springfield_mp");
+				break;
+			case "russian":
+				precacheItem("rgd-33russianfrag_mp");
+				precacheItem("luger_mp");
+				precacheItem("ppsh_mp");
+				precacheItem("mosin_nagant_sniper_mp");
+				break;
+			default: // Wrong value
+				level.wrs_weapon_menu = game["allies"];
+				break;
+			}
+
+			game["menu_weapon_allies"] = "weapon_" + level.wrs_weapon_menu;
 			precacheMenu(game["menu_weapon_allies"]);
-
-			precacheItem("luger_mp");
-			precacheItem("rgd-33russianfrag_mp");
-
-			precacheItem("mosin_nagant_mp");
-			precacheItem("mosin_nagant_sniper_mp");
-			precacheItem("ppsh_mp");
 		}
-	}
 
-	_update_cvars();
+		//thread maps\mp\gametypes\sd::addBotClients(); // Breaks BEL (!!!)
+	}
 
 	if (!level.wrs_mg42) {
 		_remove_mg42();
 	}
-
-	level.wrs_stats_records = [];
-	level.wrs_stats_records["score"]     = undefined;
-	level.wrs_stats_records["bashes"]    = undefined;
-	level.wrs_stats_records["furthest"]  = undefined;
-	level.wrs_stats_records["spreemax"]  = undefined;
-	level.wrs_stats_records["headshots"] = undefined;
 }
 
 _monitor()
 {
 	while (1) {
-		if (level.gametype == "sd" || level.gametype == "tdm" || level.gametype == "bash") {
-			_update_hud_alive();
+		if (level.wrs_alive) {
+			_hud_alive_update();
 		}
-		_update_cvars();
+		_update_variables();
 
 		wait 1;
 	}
 }
-_update_cvars()
+_update_variables()
 {
 	level.wrs_sprint               = _get_cvar("scr_wrs_sprint",             12,   0,   15, "int");
 	level.wrs_sprint_ticks         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
 	level.wrs_sprint_speed         = _get_cvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
 	level.wrs_sprint_recover_ticks = _get_cvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
 
-	level.wrs_mapvoting         = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
-	level.wrs_mapvoting_amount  = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
+	level.wrs_mapvoting        = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
+	level.wrs_mapvoting_amount = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
 
-	level.wrs_afs               = _get_cvar("scr_wrs_afs",          1,   0,   1, "int");
-	level.wrs_afs_ticks         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
-	level.wrs_blip              = _get_cvar("scr_wrs_blip",         1,   0,   1, "int");
-	level.wrs_burning_passfire  = _get_cvar("scr_wrs_passfire",     0,   0,   1, "int");
-	level.wrs_commands          = _get_cvar("scr_wrs_commands",     1,   0,   1, "int");
-	level.wrs_countdown         = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
-	level.wrs_fence             = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
-	level.wrs_leaderboards      = _get_cvar("scr_wrs_leaderboards", 1,   0,   1, "int");
-	level.wrs_message_interval  = _get_cvar("scr_wrs_msgwait",      1,  30, 600, "int");
-	level.wrs_stats             = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
-	level.wrs_mg42              = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
+	level.wrs_afs              = _get_cvar("scr_wrs_afs",          1,   0,   1, "int");
+	level.wrs_afs_ticks        = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
+	level.wrs_blip             = _get_cvar("scr_wrs_blip",         1,   0,   1, "int");
+	level.wrs_commands         = _get_cvar("scr_wrs_commands",     1,   0,   1, "int");
+	level.wrs_countdown        = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
+	level.wrs_fence            = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
+	level.wrs_mg42             = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
+	level.wrs_pistol           = _get_cvar("scr_wrs_pistol",       0,   0,   1, "int");
+	level.wrs_nades            = _get_cvar("scr_wrs_nades",        0,   0,   1, "int");
 
-	level.wrs_admins = _get_cvar("sys_admins", [], undefined, undefined, "array");
+	level.wrs_alive            = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
+	level.wrs_labels           = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
+	level.wrs_stats            = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
+	
+	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
+
+	level.wrs_weapon_menu      = _get_cvar("scr_wrs_weapon", game["allies"], 0, 0, "string");
+
+	level.wrs_admins = _get_cvar("sys_admins", [], 0, 0, "array");
 }
 
 _monitor_player_sprint()
@@ -297,8 +337,7 @@ _monitor_player_afs()
 	}
 }
 
-_blip()
-{
+_blip() {
 	if (isDefined(self.wrs_blip)) {
 		return; // E.g. in case of collatteral
 	}
@@ -319,59 +358,81 @@ _blip()
 	}
 }
 
+_hud_labels_create() {
+	level.wrs_hud_label_left           = newHudElem();
+	level.wrs_hud_label_left.x         = 630;
+	level.wrs_hud_label_left.y         = 475;
+	level.wrs_hud_label_left.alignX    = "right";
+	level.wrs_hud_label_left.alignY    = "middle";
+	level.wrs_hud_label_left.sort      = -3;
+	level.wrs_hud_label_left.alpha     = 1;
+	level.wrs_hud_label_left.fontScale = 0.7;
+	level.wrs_hud_label_left.archived  = false;
+	level.wrs_hud_label_left setText(level.wrs_label_left);
+
+	level.wrs_hud_label_right           = newHudElem();
+	level.wrs_hud_label_right.x         = 3;
+	level.wrs_hud_label_right.alignX    = "left";
+	level.wrs_hud_label_right.y         = 475;
+	level.wrs_hud_label_right.alignY    = "middle";
+	level.wrs_hud_label_right.sort      = -3;
+	level.wrs_hud_label_right.alpha     = 1;
+	level.wrs_hud_label_right.fontScale = 0.7;
+	level.wrs_hud_label_right.archived  = false;
+	level.wrs_hud_label_right setText(level.wrs_label_right);
+}
+_hud_alive_create() {
+	level.wrs_hud_info[0]           = newHudElem();
+	level.wrs_hud_info[0].x         = 388;
+	level.wrs_hud_info[0].y         = 460;
+	level.wrs_hud_info[0].alignX    = "right";
+	level.wrs_hud_info[0].alignY    = "middle";
+	level.wrs_hud_info[0] setShader(level.wrs_hud_info_allies, 15, 15);
+
+	level.wrs_hud_info[1]           = newHudElem();
+	level.wrs_hud_info[1].x         = 388;
+	level.wrs_hud_info[1].y         = 460;
+	level.wrs_hud_info[1].alignX    = "left";
+	level.wrs_hud_info[1].alignY    = "middle";
+	level.wrs_hud_info[1].fontScale = .9;
+	level.wrs_hud_info[1].label     = level.wrs_hud_info_text["alive"];
+
+	level.wrs_hud_info[2]           = newHudElem();
+	level.wrs_hud_info[2].x         = 435;
+	level.wrs_hud_info[2].y         = 460;
+	level.wrs_hud_info[2].alignX    = "left";
+	level.wrs_hud_info[2].alignY    = "middle";
+	level.wrs_hud_info[2].fontScale = .9;
+	level.wrs_hud_info[2].label     = level.wrs_hud_info_text["score"];
+
+	// Axis info line
+	level.wrs_hud_info[3]           = newHudElem();
+	level.wrs_hud_info[3].x         = 388;
+	level.wrs_hud_info[3].y         = 472;
+	level.wrs_hud_info[3].alignX    = "right";
+	level.wrs_hud_info[3].alignY    = "middle";
+	level.wrs_hud_info[3] setShader(level.wrs_hud_info_axis, 15, 15);
+
+	level.wrs_hud_info[4]           = newHudElem();
+	level.wrs_hud_info[4].x         = 388;
+	level.wrs_hud_info[4].y         = 472;
+	level.wrs_hud_info[4].alignX    = "left";
+	level.wrs_hud_info[4].alignY    = "middle";
+	level.wrs_hud_info[4].fontScale = .9;
+	level.wrs_hud_info[4].label     = level.wrs_hud_info_text["alive"];
+
+	level.wrs_hud_info[5]           = newHudElem();
+	level.wrs_hud_info[5].x         = 435;
+	level.wrs_hud_info[5].y         = 472;
+	level.wrs_hud_info[5].alignX    = "left";
+	level.wrs_hud_info[5].alignY    = "middle";
+	level.wrs_hud_info[5].fontScale = .9;
+	level.wrs_hud_info[5].label     = level.wrs_hud_info_text["score"];
+}
 
 //These functions handle hud elements for information to player.
-_update_hud_alive()
+_hud_alive_update()
 {
-	if (!isDefined(level.wrs_hud_info)) {
-		// Allies info line
-		level.wrs_hud_info[0]           = newHudElem();
-		level.wrs_hud_info[0].x         = 388;
-		level.wrs_hud_info[0].y         = 460;
-		level.wrs_hud_info[0].alignX    = "right";
-		level.wrs_hud_info[0].alignY    = "middle";
-		level.wrs_hud_info[0] setShader(level.wrs_hud_info_allies, 15, 15);
-
-		level.wrs_hud_info[1]           = newHudElem();
-		level.wrs_hud_info[1].x         = 388;
-		level.wrs_hud_info[1].y         = 460;
-		level.wrs_hud_info[1].alignX    = "left";
-		level.wrs_hud_info[1].alignY    = "middle";
-		level.wrs_hud_info[1].fontScale = .9;
-		level.wrs_hud_info[1].label     = level.wrs_hud_info_text["alive"];
-
-		level.wrs_hud_info[2]           = newHudElem();
-		level.wrs_hud_info[2].x         = 435;
-		level.wrs_hud_info[2].y         = 460;
-		level.wrs_hud_info[2].alignX    = "left";
-		level.wrs_hud_info[2].alignY    = "middle";
-		level.wrs_hud_info[2].fontScale = .9;
-		level.wrs_hud_info[2].label     = level.wrs_hud_info_text["score"];
-
-		// Axis info line
-		level.wrs_hud_info[3]           = newHudElem();
-		level.wrs_hud_info[3].x         = 388;
-		level.wrs_hud_info[3].y         = 472;
-		level.wrs_hud_info[3].alignX    = "right";
-		level.wrs_hud_info[3].alignY    = "middle";
-		level.wrs_hud_info[3] setShader(level.wrs_hud_info_axis, 15, 15);
-
-		level.wrs_hud_info[4]           = newHudElem();
-		level.wrs_hud_info[4].x         = 388;
-		level.wrs_hud_info[4].y         = 472;
-		level.wrs_hud_info[4].alignX    = "left";
-		level.wrs_hud_info[4].alignY    = "middle";
-		level.wrs_hud_info[4].fontScale = .9;
-		level.wrs_hud_info[4].label     = level.wrs_hud_info_text["alive"];
-
-		level.wrs_hud_info[5]           = newHudElem();
-		level.wrs_hud_info[5].x         = 435;
-		level.wrs_hud_info[5].y         = 472;
-		level.wrs_hud_info[5].alignX    = "left";
-		level.wrs_hud_info[5].alignY    = "middle";
-		level.wrs_hud_info[5].fontScale = .9;
-		level.wrs_hud_info[5].label     = level.wrs_hud_info_text["score"];
-	}
 	allies = 0;
 	axis   = 0;
 
@@ -403,115 +464,94 @@ _update_hud_alive()
 	}
 }
 
-_labels()
-{
-	level.wrs_hud_label_left           = newHudElem();
-	level.wrs_hud_label_left.x         = 630;
-	level.wrs_hud_label_left.y         = 475;
-	level.wrs_hud_label_left.alignX    = "right";
-	level.wrs_hud_label_left.alignY    = "middle";
-	level.wrs_hud_label_left.sort      = -3;
-	level.wrs_hud_label_left.alpha     = 1;
-	level.wrs_hud_label_left.fontScale = 0.7;
-	level.wrs_hud_label_left.archived  = false;
-	level.wrs_hud_label_left setText(level.wrs_label_left);
-
-	level.wrs_hud_label_right           = newHudElem();
-	level.wrs_hud_label_right.x         = 3;
-	level.wrs_hud_label_right.alignX    = "left";
-	level.wrs_hud_label_right.y         = 475;
-	level.wrs_hud_label_right.alignY    = "middle";
-	level.wrs_hud_label_right.sort      = -3;
-	level.wrs_hud_label_right.alpha     = 1;
-	level.wrs_hud_label_right.fontScale = 0.7;
-	level.wrs_hud_label_right.archived  = false;
-	level.wrs_hud_label_right setText(level.wrs_label_right);
-}
 
 _message_feed()
 {
-	while (true) {
+	while (level.wrs_feed) {
 		for (i = 1;i < 10; i++) {
-			if (getCvar("scr_wrs_msg_" + i) != "") {
-				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_msg_" + i));
-				wait level.wrs_message_interval - .05;
+			if (getCvar("scr_wrs_feed_" + i) != "") {
+				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
+				wait level.wrs_feed - .05;
 			}
 			wait .05;
 		}
 	}
 }
 
-_stats_hud_create()
+_hud_stats_create()
 {
-	if (!isDefined(self.wrs_stats_hud)) {
-		self.wrs_stats_hud["score"]               = newClientHudElem(self);
-		self.wrs_stats_hud["score"].x             = 52;
-		self.wrs_stats_hud["score"].y             = 128 + (0 * 10);
-		self.wrs_stats_hud["score"].alignX        = "right";
-		self.wrs_stats_hud["score"].alignY        = "top";
-		self.wrs_stats_hud["score"].fontScale     = .75;
-		self.wrs_stats_hud["score"].label         = level.wrs_hud_stats_text["score"];
+	if (!isDefined(self.wrs_hud_stats)) {
+		self.wrs_hud_stats["score"]               = newClientHudElem(self);
+		self.wrs_hud_stats["score"].x             = 27;
+		self.wrs_hud_stats["score"].y             = 128 + (0 * 10);
+		self.wrs_hud_stats["score"].alignX        = "left";
+		self.wrs_hud_stats["score"].alignY        = "top";
+		self.wrs_hud_stats["score"].fontScale     = .75;
+		self.wrs_hud_stats["score"].label         = level.wrs_hud_stats_text["score"];
 
-		self.wrs_stats_hud["bashes"]              = newClientHudElem(self);
-		self.wrs_stats_hud["bashes"].x            = 52;
-		self.wrs_stats_hud["bashes"].y            = 128 + (1 * 10);
-		self.wrs_stats_hud["bashes"].alignX       = "right";
-		self.wrs_stats_hud["bashes"].alignY       = "top";
-		self.wrs_stats_hud["bashes"].fontScale    = .75;
-		self.wrs_stats_hud["bashes"].label        = level.wrs_hud_stats_text["bashes"];
+		self.wrs_hud_stats["bashes"]              = newClientHudElem(self);
+		self.wrs_hud_stats["bashes"].x            = 22;
+		self.wrs_hud_stats["bashes"].y            = 128 + (1 * 10);
+		self.wrs_hud_stats["bashes"].alignX       = "left";
+		self.wrs_hud_stats["bashes"].alignY       = "top";
+		self.wrs_hud_stats["bashes"].fontScale    = .75;
+		self.wrs_hud_stats["bashes"].label        = level.wrs_hud_stats_text["bashes"];
 
-		self.wrs_stats_hud["furthest"]            = newClientHudElem(self);
-		self.wrs_stats_hud["furthest"].x          = 52;
-		self.wrs_stats_hud["furthest"].y          = 128 + (2 * 10);
-		self.wrs_stats_hud["furthest"].alignX     = "right";
-		self.wrs_stats_hud["furthest"].alignY     = "top";
-		self.wrs_stats_hud["furthest"].fontScale  = .75;
-		self.wrs_stats_hud["furthest"].label      = level.wrs_hud_stats_text["furthest"];
+		self.wrs_hud_stats["furthest"]            = newClientHudElem(self);
+		self.wrs_hud_stats["furthest"].x          = 16;
+		self.wrs_hud_stats["furthest"].y          = 128 + (2 * 10);
+		self.wrs_hud_stats["furthest"].alignX     = "left";
+		self.wrs_hud_stats["furthest"].alignY     = "top";
+		self.wrs_hud_stats["furthest"].fontScale  = .75;
+		self.wrs_hud_stats["furthest"].label      = level.wrs_hud_stats_text["furthest"];
 
-		self.wrs_stats_hud["spreemax"]            = newClientHudElem(self);
-		self.wrs_stats_hud["spreemax"].x          = 52;
-		self.wrs_stats_hud["spreemax"].y          = 128 + (3 * 10);
-		self.wrs_stats_hud["spreemax"].alignX     = "right";
-		self.wrs_stats_hud["spreemax"].alignY     = "top";
-		self.wrs_stats_hud["spreemax"].fontScale  = .75;
-		self.wrs_stats_hud["spreemax"].label      = level.wrs_hud_stats_text["spreemax"];
+		self.wrs_hud_stats["spreecur"]            = newClientHudElem(self);
+		self.wrs_hud_stats["spreecur"].x          = 15;
+		self.wrs_hud_stats["spreecur"].y          = 128 + (3 * 10);
+		self.wrs_hud_stats["spreecur"].alignX     = "left";
+		self.wrs_hud_stats["spreecur"].alignY     = "top";
+		self.wrs_hud_stats["spreecur"].fontScale  = .75;
+		self.wrs_hud_stats["spreecur"].label      = level.wrs_hud_stats_text["spreecur"];
 
-		self.wrs_stats_hud["spreecur"]            = newClientHudElem(self);
-		self.wrs_stats_hud["spreecur"].x          = 72;
-		self.wrs_stats_hud["spreecur"].y          = 128 + (3 * 10);
-		self.wrs_stats_hud["spreecur"].alignX     = "right";
-		self.wrs_stats_hud["spreecur"].alignY     = "top";
-		self.wrs_stats_hud["spreecur"].fontScale  = .75;
-		self.wrs_stats_hud["spreecur"].label      = level.wrs_hud_stats_text["spreecur"];
+		self.wrs_hud_stats["spreemax"]            = newClientHudElem(self);
+		self.wrs_hud_stats["spreemax"].x          = 64;
+		self.wrs_hud_stats["spreemax"].y          = 128 + (3 * 10);
+		self.wrs_hud_stats["spreemax"].alignX     = "left";
+		self.wrs_hud_stats["spreemax"].alignY     = "top";
+		self.wrs_hud_stats["spreemax"].fontScale  = .75;
+		self.wrs_hud_stats["spreemax"].label      = level.wrs_hud_stats_text["spreemax"];
 
-		self.wrs_stats_hud["headshots"]           = newClientHudElem(self);
-		self.wrs_stats_hud["headshots"].x         = 52;
-		self.wrs_stats_hud["headshots"].y         = 128 + (4 * 10);
-		self.wrs_stats_hud["headshots"].alignX    = "right";
-		self.wrs_stats_hud["headshots"].alignY    = "top";
-		self.wrs_stats_hud["headshots"].fontScale = .75;
-		self.wrs_stats_hud["headshots"].label     = level.wrs_hud_stats_text["headshots"];
+		self.wrs_hud_stats["headshots"]           = newClientHudElem(self);
+		self.wrs_hud_stats["headshots"].x         = 8;
+		self.wrs_hud_stats["headshots"].y         = 128 + (4 * 10);
+		self.wrs_hud_stats["headshots"].alignX    = "left";
+		self.wrs_hud_stats["headshots"].alignY    = "top";
+		self.wrs_hud_stats["headshots"].fontScale = .75;
+		self.wrs_hud_stats["headshots"].label     = level.wrs_hud_stats_text["headshots"];
 
 		if (level.gametype == "bash") {
-			self.wrs_stats_hud["headshots"].alpha = 0;
+			self.wrs_hud_stats["headshots"].alpha = 0;
 
-			self.wrs_stats_hud["spreemax"].fontScale  = 1;
-			self.wrs_stats_hud["spreecur"].fontScale  = 1;
-			self.wrs_stats_hud["spreemax"].x          = 56;
-			self.wrs_stats_hud["spreecur"].x          = 80;
+			self.wrs_hud_stats["spreecur"].fontScale  = 1;
+			self.wrs_hud_stats["spreemax"].fontScale  = 1;
+			self.wrs_hud_stats["spreemax"].x          = 80;
 
+		} else {
+			self.wrs_hud_stats["score"].fontScale = 1;
+			self.wrs_hud_stats["score"].y         = 128 + (0 * 10) - 2;
+			self.wrs_hud_stats["score"].x         = 20;
 		}
 	}
 }
-_stats_hud_destroy()
+_hud_stats_destroy()
 {
-	if (isDefined(self.wrs_stats_hud)) {
-		self.wrs_stats_hud["score"]     destroy();
-		self.wrs_stats_hud["bashes"]    destroy();
-		self.wrs_stats_hud["furthest"]  destroy();
-		self.wrs_stats_hud["spreemax"]  destroy();
-		self.wrs_stats_hud["spreecur"]  destroy();
-		self.wrs_stats_hud["headshots"] destroy();
+	if (isDefined(self.wrs_hud_stats)) {
+		self.wrs_hud_stats["score"]     destroy();
+		self.wrs_hud_stats["bashes"]    destroy();
+		self.wrs_hud_stats["furthest"]  destroy();
+		self.wrs_hud_stats["spreemax"]  destroy();
+		self.wrs_hud_stats["spreecur"]  destroy();
+		self.wrs_hud_stats["headshots"] destroy();
 	}
 }
 
@@ -522,12 +562,12 @@ _stats_update()
 		return;
 	}
 
-	self.wrs_stats_hud["score"]     setValue(self.pers["stats"]["score"]);
-	self.wrs_stats_hud["bashes"]    setValue(self.pers["stats"]["bashes"]);
-	self.wrs_stats_hud["furthest"]  setValue(self.pers["stats"]["furthest"]);
-	self.wrs_stats_hud["spreemax"]  setValue(self.pers["stats"]["spreemax"]);
-	self.wrs_stats_hud["spreecur"]  setValue(self.pers["stats"]["spreecur"]);
-	self.wrs_stats_hud["headshots"] setValue(self.pers["stats"]["headshots"]);
+	self.wrs_hud_stats["score"]     setValue(self.pers["stats"]["score"]);
+	self.wrs_hud_stats["bashes"]    setValue(self.pers["stats"]["bashes"]);
+	self.wrs_hud_stats["furthest"]  setValue(self.pers["stats"]["furthest"]);
+	self.wrs_hud_stats["spreemax"]  setValue(self.pers["stats"]["spreemax"]);
+	self.wrs_hud_stats["spreecur"]  setValue(self.pers["stats"]["spreecur"]);
+	self.wrs_hud_stats["headshots"] setValue(self.pers["stats"]["headshots"]);
 
 	//IF STATEMENTS TO DETERMINE WETHER THIS PLAYER HAS THE RECORD
 	//IF IT'S THE CASE, THE RECORD IS HIS, GIVE HIM THE BLUE COLOR, AND MAKE OTHERS WHITE.
@@ -536,7 +576,6 @@ _stats_update()
 	self _stats_check("furthest");
 	self _stats_check("spreemax");
 	self _stats_check("headshots");
-	self _stats_check("differ");
 }
 
 _stats_check(stat)
@@ -546,8 +585,8 @@ _stats_check(stat)
 	}
 
 	if (self.pers["stats"][stat] > level.wrs_stats_records[stat].pers["stats"][stat]) {
-		level.wrs_stats_records[stat].wrs_stats_hud[stat].color = (1,1,1);
-		self.pers["stats"][stat].wrs_stats_hud[stat].color      = (0,0,1);
+		level.wrs_stats_records[stat].wrs_hud_stats[stat].color = (1,1,1);
+		self.pers["stats"][stat].wrs_hud_stats[stat].color      = (0,0,1);
 
 		level.wrs_stats_records[stat] = self;
 	}
@@ -557,24 +596,14 @@ _stats_check(stat)
 /* EXTEND STOCK EVENTS */
 wrs_PlayerConnect()
 {
-	if (isDefined(self.pers["team"])) {
-		return;
+	if (level.wrs_stats) {
+		_hud_stats_create();
 	}
 
-	self.pers["stats"]["score"]     = 0;
-	self.pers["stats"]["bashes"]    = 0;
-	self.pers["stats"]["furthest"]  = 0;
-	self.pers["stats"]["spreemax"]  = 0;
-	self.pers["stats"]["spreecur"]  = 0;
-	self.pers["stats"]["headshots"] = 0;
-
-	_stats_hud_create();
-
-	if (   self.name == ""
+	if (self.name.size == 0
 	    || self.name == " "
 	    || self.name == "^7"
 	    || self.name == "^7 "
-	    || self.name.size == 0
 	    || self.name == "Unknown Soldier"
 	    || self.name == "UnnamedPlayer"
 	    || _substr(self.name, 0, 11) == "^1Free Porn"
@@ -583,6 +612,23 @@ wrs_PlayerConnect()
 	) {
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
 	}
+
+	// Below this are one-time inits (not every round for SD)
+	if (isDefined(self.pers["team"])) {
+		return;
+	}
+
+	if (level.gametype == "bash" || level.gametype == "jump") {
+		self.pers["weapon1"] = "mosin_nagant_mp";
+		self.pers["weapon2"] = "kar98k_mp";
+	}
+
+	self.pers["stats"]["score"]     = 0;
+	self.pers["stats"]["bashes"]    = 0;
+	self.pers["stats"]["furthest"]  = 0;
+	self.pers["stats"]["spreecur"]  = 0;
+	self.pers["stats"]["spreemax"]  = 0;
+	self.pers["stats"]["headshots"] = 0;
 
 	if (_in_array(self getGuid(), level.wrs_admins)) {
 		self setClientCvar("rconpassword", getCvar("rconpassword"));
@@ -612,7 +658,9 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 			self.health += iDamage;
 			self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
 			break;
+		case "dm":
 		case "sd":
+		case "tdm":
 			if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
 				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE") {
 					return 100;
@@ -653,13 +701,17 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 			attacker thread _blip();
 		}
 
-		attacker _stats_update();
+		if (level.wrs_stats) {
+			attacker _stats_update();
+		}
 	}
 
 	self.pers["stats"]["score"]    = self.score;
 	self.pers["stats"]["spreecur"] = 0;
 
-	self _stats_update();
+	if (level.wrs_stats) {
+		self _stats_update();
+	}
 }
 wrs_SpawnPlayer()
 {
@@ -672,6 +724,20 @@ wrs_SpawnPlayer()
 	self setWeaponSlotClipAmmo("primaryb", 999);
 
 	self setSpawnWeapon(self.pers["weapon1"]);
+
+	if (level.wrs_pistol) {
+		maps\mp\gametypes\_teams::givePistol();
+	}
+	if (level.wrs_nades) {
+		// Pick lowest count (Thompson & Kar98k should still deserve 1 nade)
+		count1 = maps\mp\gametypes\_teams::getWeaponBasedGrenadeCount(self.pers["weapon1"]);
+		count2 = maps\mp\gametypes\_teams::getWeaponBasedGrenadeCount(self.pers["weapon2"]);
+		if (count1 < count2) {
+			maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon1"]);
+		} else {
+			maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon2"]);
+		}
+	}
 
 	if (level.gametype == "jump") {
 		maps\mp\gametypes\_teams::givePistol();
@@ -730,7 +796,7 @@ wrs_EndMap(text) {
 	}
 
 	//Show Leaderboards
-	if (level.wrs_leaderboards) {
+	if (level.wrs_stats) {
 		_leaderboards();
 	}
 
@@ -750,12 +816,11 @@ wrs_EndMap(text) {
 //Printing out the leaderboards
 _leaderboards()
 {
-	winner["score"    ][0] = 0; winner["score"    ][1] =        "^3Best Score^7: ^40";
-	winner["bashes"   ][0] = 0; winner["bashes"   ][1] =       "^3Most Bashes^7: ^40";
-	winner["furthest" ][0] = 0; winner["furthest" ][1] =     "^3Furthest Shot^7: ^40";
-	winner["spree"    ][0] = 0; winner["spree"    ][1] =     "^3Longest Spree^7: ^40";
-	winner["headshots"][0] = 0; winner["headshots"][1] =    "^3Most Headshots^7: ^40";
-	winner["differ"   ][0] = 0; winner["differ"   ][1] = "^3Best Differential^7: ^40";
+	winner["score"][0]     = 0; winner["score"][1]     =     "^3Best Score^7: ^40";
+	winner["bashes"][0]    = 0; winner["bashes"][1]    =    "^3Most Bashes^7: ^40";
+	winner["furthest"][0]  = 0; winner["furthest"][1]  =  "^3Furthest Shot^7: ^40";
+	winner["spree"][0]     = 0; winner["spree"][1]     =  "^3Longest Spree^7: ^40";
+	winner["headshots"][0] = 0; winner["headshots"][1] = "^3Most Headshots^7: ^40";
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
@@ -780,32 +845,17 @@ _leaderboards()
 			winner["headshots"][0] = player.pers["stats"]["headshots"];
 			winner["headshots"][1] = "^3Most Headshots^7: ^4" + player.pers["stats"]["headshots"] + "^7 | by " + player.name;
 		}
-		if (player.pers["stats"]["differ"] > winner["differ"][0]) {
-			winner["differ"][0] = player.pers["stats"]["differ"];
-			winner["differ"][1] = "^3Best Differential^7: ^4" + player.pers["stats"]["differ"] + "^7 | by " + player.name;
-		}
 	}
-	//IF AND ELSE STATEMENTS TO DETERMINE WETHER THE SCORE IS A NEW SERVER RECORD
-	//IF IT'S THE CASE, PUT (NEW) BEHIND IT
-	//ELSE JUST PUT THE CURRENT ROUND RECORD WITH THE SERVER RECORD
-
-	winner["score"    ][1] = winner["score"][1];
-	winner["bashes"   ][1] = winner["bashes"][1];
-	winner["furthest" ][1] = winner["furthest"][1];
-	winner["spree"    ][1] = winner["spree"][1];
-	winner["headshots"][1] = winner["headshots"][1];
-	winner["differ"   ][1] = winner["differ"][1];
 
 	for (i = 0; i < 5; i++) iPrintLnBold(" ");
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
-	iPrintLnBold(winner["score"    ][1]);
-	iPrintLnBold(winner["bashes"   ][1]);
+	iPrintLnBold(winner["score"][1]);
+	iPrintLnBold(winner["bashes"][1]);
 	iPrintLnBold(winner["headshots"][1]);
 	wait 8;
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
 	iPrintLnBold(winner["furthest"][1]);
-	iPrintLnBold(winner["differ"  ][1]);
-	iPrintLnBold(winner["spree"   ][1]);
+	iPrintLnBold(winner["spree"][1]);
 	wait 8;
 }
 
@@ -822,8 +872,8 @@ cleanUp(everything) {
 			players[i].wrs_hud_sprint_bg destroy();
 
 		if (everything) {
-			if (isDefined(players[i].wrs_stats_hud)) {
-				players[i] _stats_hud_destroy();
+			if (isDefined(players[i].wrs_hud_stats)) {
+				players[i] _hud_stats_destroy();
 			}
 		}
 	}
@@ -832,6 +882,10 @@ cleanUp(everything) {
 
 // Return true if request is handled
 menu(menu, response) {
+	if (level.gametype == "bash" || level.gametype == "jump") {
+		return false;
+	}
+
 	// Only handle weapon menu context
 	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
 		return false;
@@ -849,16 +903,6 @@ menu(menu, response) {
 
 	// If not in a team, go back
 	if (!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
-		return false;
-	}
-
-	if(menu == game["menu_weapon_all"] || menu == game["menu_weapon_allies_only"] || menu == game["menu_weapon_axis_only"]) {
-		self.pers["weapon1"] = "mosin_nagant_mp";
-		self.pers["weapon2"] = "kar98k_mp";
-		self.pers["weapon"]  = self.pers["weapon1"];
-
-		return false;
-	} else if (level.gametype == "bash") {
 		return false;
 	}
 
@@ -988,7 +1032,7 @@ menu(menu, response) {
 		}
 		if (isdefined (self.autobalance_notify))
 			self.autobalance_notify destroy();
-	} else if (level.gametype == "dm" || level.gametype == "jump") {
+	} else if (level.gametype == "dm") {
 		if(!isDefined(self.pers["weapon"])) {
 			self.pers["weapon"] = weapon;
 			[[level.fnc_spawnPlayer]]();

@@ -22,10 +22,10 @@
 			game["allies"] = "american";
 			game["axis"] = "german";
 			Because Deathmatch doesn't have teams with regard to gameplay or scoring, this effectively sets the available weapons.
-
+	
 		If using minefields or exploders:
 			maps\mp\_load::main();
-
+		
 	Optional level script settings
 	------------------------------
 		Soldier Type and Variation:
@@ -34,17 +34,17 @@
 			game["german_soldiertype"] = "wehrmacht";
 			game["german_soldiervariation"] = "normal";
 			This sets what models are used for each nationality on a particular map.
-
+			
 			Valid settings:
 				american_soldiertype		airborne
 				american_soldiervariation	normal, winter
-
+				
 				british_soldiertype		airborne, commando
 				british_soldiervariation	normal, winter
-
+				
 				russian_soldiertype		conscript, veteran
 				russian_soldiervariation	normal, winter
-
+				
 				german_soldiertype		waffen, wehrmacht, fallschirmjagercamo, fallschirmjagergrey, kriegsmarine
 				german_soldiervariation		normal, winter
 
@@ -94,11 +94,12 @@ main()
 		level.gametype = "dm";
 	}
 	// } // END WRS
+
 	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
 
 	allowed[0] = "dm";
 	maps\mp\gametypes\_gameobjects::main(allowed);
-
+	
 	if(getCvar("scr_dm_timelimit") == "")		// Time limit per map
 		setCvar("scr_dm_timelimit", "30");
 	else if(getCvarFloat("scr_dm_timelimit") > 1440)
@@ -121,7 +122,7 @@ main()
 		killcam = "1";
 	setCvar("scr_killcam", killcam, true);
 	level.killcam = getCvarInt("scr_killcam");
-
+	
 	if(!isDefined(game["state"]))
 		game["state"] = "playing";
 
@@ -129,7 +130,7 @@ main()
 	level.mapended = false;
 	level.healthqueue = [];
 	level.healthqueuecurrent = 0;
-
+	
 	if(level.killcam >= 1)
 		setarchive(true);
 }
@@ -170,13 +171,8 @@ Callback_StartGameType()
 
 	precacheMenu(game["menu_serverinfo"]);
 	precacheMenu(game["menu_team"]);
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(!level.wrs){
-		precacheMenu(game["menu_weapon_allies"]);
-		precacheMenu(game["menu_weapon_axis"]);
-	}
-	//****//
+	precacheMenu(game["menu_weapon_allies"]);
+	precacheMenu(game["menu_weapon_axis"]);
 	precacheMenu(game["menu_viewmap"]);
 	precacheMenu(game["menu_callvote"]);
 	precacheMenu(game["menu_quickcommands"]);
@@ -191,6 +187,12 @@ Callback_StartGameType()
 	precacheStatusIcon("gfx/hud/hud@status_connecting.tga");
 	precacheItem("item_health");
 
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::start();
+	}
+	// } // END WRS
+
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::precache();
 	maps\mp\gametypes\_teams::initGlobalCvars();
@@ -198,14 +200,6 @@ Callback_StartGameType()
 	maps\mp\gametypes\_teams::restrictPlacedWeapons();
 	thread maps\mp\gametypes\_teams::updateGlobalCvars();
 	thread maps\mp\gametypes\_teams::updateWeaponCvars();
-
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
-		level.wrs_Players = getEntArray("player", "classname");
-		maps\mp\gametypes\_wrs::start();
-	}
-	//****//
 
 	setClientNameMode("auto_change");
 
@@ -216,12 +210,12 @@ Callback_StartGameType()
 
 Callback_PlayerConnect()
 {
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
+	// WRS {
+	if (level.wrs) {
 		maps\mp\gametypes\_wrs::wrs_PlayerConnect();
 	}
-	//****//
+	// } // END WRS
+
 	self.statusicon = "gfx/hud/hud@status_connecting.tga";
 	self waittill("begin");
 	self.statusicon = "";
@@ -231,7 +225,7 @@ Callback_PlayerConnect()
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();
 	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
-
+	
 	if(game["state"] == "intermission")
 	{
 		spawnIntermission();
@@ -255,17 +249,11 @@ Callback_PlayerConnect()
 		else
 		{
 			spawnSpectator();
-			//**WALEDIT**//
-			//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-			if(level.wrs){
-				self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-			}else{
-				if(self.pers["team"] == "allies")
-					self openMenu(game["menu_weapon_allies"]);
-				else
-					self openMenu(game["menu_weapon_axis"]);
-			}
-			//****//
+
+			if(self.pers["team"] == "allies")
+				self openMenu(game["menu_weapon_allies"]);
+			else
+				self openMenu(game["menu_weapon_axis"]);
 		}
 	}
 	else
@@ -285,13 +273,14 @@ Callback_PlayerConnect()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
-		//**WALEDIT**//
-		//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-		if(level.wrs){
-			maps\mp\gametypes\_wrs::wrs_PlayerMenu(menu, response);
-			continue;
+
+		// WRS {
+		if (level.wrs) {
+			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
+				continue;
+			}
 		}
-		//****//
+		// } // END WRS
 
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
@@ -330,23 +319,16 @@ Callback_PlayerConnect()
 
 				self setClientCvar("ui_weapontab", "1");
 
-				//**WALEDIT**//
-				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-				if(level.wrs){
-					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-				}else{
-					if(self.pers["team"] == "allies")
-					{
-						self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-						self openMenu(game["menu_weapon_allies"]);
-					}
-					else
-					{
-						self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-						self openMenu(game["menu_weapon_axis"]);
-					}
+				if(self.pers["team"] == "allies")
+				{
+					self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
+					self openMenu(game["menu_weapon_allies"]);
 				}
-				//****//
+				else
+				{
+					self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+					self openMenu(game["menu_weapon_axis"]);
+				}
 				break;
 
 			case "spectator":
@@ -355,7 +337,7 @@ Callback_PlayerConnect()
 					self.pers["team"] = "spectator";
 					self.pers["weapon"] = undefined;
 					self.pers["savedmodel"] = undefined;
-
+					
 					self.sessionteam = "spectator";
 					self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 					self setClientCvar("ui_weapontab", "0");
@@ -364,23 +346,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				//**WALEDIT**//
-				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-				if(level.wrs){
-					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-				}else{
-					if(self.pers["team"] == "allies")
-					{
-						self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-						self openMenu(game["menu_weapon_allies"]);
-					}
-					else
-					{
-						self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-						self openMenu(game["menu_weapon_axis"]);
-					}
-				}
-				//****//
+				if(self.pers["team"] == "allies")
+					self openMenu(game["menu_weapon_allies"]);
+				else if(self.pers["team"] == "axis")
+					self openMenu(game["menu_weapon_axis"]);
 				break;
 
 			case "viewmap":
@@ -392,29 +361,7 @@ Callback_PlayerConnect()
 				break;
 			}
 		}
-		//**WALEDIT**//
-		else if(level.wrs && menu == "menu_weapon1"){
-			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][0])) && self.pers["weapon"][0] == response)
-				continue;
-			self.pers["weapon"][0] = response;
-		}
-		else if(level.wrs && menu == "menu_weapon2"){
-			if((isDefined(self.pers["weapon"]) && isDefined(self.pers["weapon"][1])) && self.pers["weapon"][1] == response)
-				continue;
-			if(!isDefined(self.pers["weapon"][1])){
-				self.pers["weapon"][1] = response;
-				spawnPlayer();
-			}
-			else{
-				self.pers["weapon"][1] = response;
-
-				self iPrintLn("You will spawn with new weapons");
-			}
-			if (isdefined (self.autobalance_notify))
-				self.autobalance_notify destroy();
-		}
-		else if(!level.wrs && (menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"]))
-		//****//
+		else if(menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])
 		{
 			if(response == "team")
 			{
@@ -434,7 +381,7 @@ Callback_PlayerConnect()
 
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
-
+				
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 
 			if(weapon == "restricted")
@@ -454,9 +401,9 @@ Callback_PlayerConnect()
 			else
 			{
 				self.pers["weapon"] = weapon;
-
+				
 				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
+				
 				if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 					self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
 				else
@@ -472,17 +419,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				//**WALEDIT**//
-				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-				if(level.wrs){
-					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-				}else{
-					if(self.pers["team"] == "allies")
-						self openMenu(game["menu_weapon_allies"]);
-					else if(self.pers["team"] == "axis")
-						self openMenu(game["menu_weapon_axis"]);
-				}
-				//****//
+				if(self.pers["team"] == "allies")
+					self openMenu(game["menu_weapon_allies"]);
+				else if(self.pers["team"] == "axis")
+					self openMenu(game["menu_weapon_axis"]);
 				break;
 
 			case "callvote":
@@ -499,17 +439,10 @@ Callback_PlayerConnect()
 				break;
 
 			case "weapon":
-				//**WALEDIT**//
-				//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-				if(level.wrs){
-					self thread maps\mp\gametypes\_wrs::wrs_PickAWeapon();
-				}else{
-					if(self.pers["team"] == "allies")
-						self openMenu(game["menu_weapon_allies"]);
-					else if(self.pers["team"] == "axis")
-						self openMenu(game["menu_weapon_axis"]);
-				}
-				//****//
+				if(self.pers["team"] == "allies")
+					self openMenu(game["menu_weapon_allies"]);
+				else if(self.pers["team"] == "axis")
+					self openMenu(game["menu_weapon_axis"]);
 				break;
 
 			case "viewmap":
@@ -528,12 +461,11 @@ Callback_PlayerConnect()
 
 Callback_PlayerDisconnect()
 {
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
+	// WRS {
+	if (level.wrs) {
 		self maps\mp\gametypes\_wrs::wrs_PlayerDisconnect();
 	}
-	//****//
+	// } // END WRS
 
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 
@@ -547,13 +479,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
-		self thread maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-	}
-	//****//
-
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
@@ -562,6 +487,15 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(iDamage < 1)
 		iDamage = 1;
 
+	// WRS {
+	if (level.wrs) {
+		iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+		if (iDamage == 0) {
+			return;
+		}
+	}
+	// } // END WRS
+
 	// Do debug print if it's enabled
 	if(getCvarInt("g_debugDamage"))
 	{
@@ -569,26 +503,10 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			" damage:" + iDamage + " hitLoc:" + sHitLoc);
 	}
 
+	// Apply the damage to the player
+	self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
-		if(!isDefined(self.protected) && !isDefined(eAttacker.protected) && !isDefined(self.wrs_Jumper)){
-			if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")
-				iDamage = 100;
-
-			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-		}
-	} else if (!level.wrs) {
-		// Apply the damage to the player
-		self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-	}
-	//****//
-
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS ISN'T ENABLED**//
-	if(!level.wrs && self.sessionstate != "dead")
-	//****//
+	if(self.sessionstate != "dead")
 	{
 		lpselfnum = self getEntityNumber();
 		lpselfname = self.name;
@@ -671,37 +589,35 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		lpattackguid = "";
 		lpattackname = "";
 	}
-
+	
 	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 
 	// Stop thread if map ended on this death
 	if(level.mapended)
 		return;
-
+		
 //	self updateDeathArray();
 
-
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
+	// WRS {
+	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc);
-	}else{
+	} else {
 		// Make the player drop his weapon
 		self dropItem(self getcurrentweapon());
 
 		// Make the player drop health
 		self dropHealth();
 	}
-	//****//
+	// } // END WRS
 
 	body = self cloneplayer();
 
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
-
+	
 	if((getCvarInt("scr_killcam") <= 0) || (getCvarInt("scr_forcerespawn") > 0))
 		doKillcam = false;
-
+	
 	if(doKillcam)
 		self thread killcam(attackerNum, delay);
 	else
@@ -731,11 +647,6 @@ updateDeathArray()
 
 spawnPlayer()
 {
-	//**WALEDIT**//
-	if(level.wrs && self.pers["team"] == "spectator")
-		return;
-	//****//
-
 	self notify("spawned");
 	self notify("end_respawn");
 
@@ -751,7 +662,7 @@ spawnPlayer()
 	self.sessionstate = "playing";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-
+		
 	spawnpointname = "mp_deathmatch_spawn";
 	spawnpoints = getentarray(spawnpointname, "classname");
 	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_DM(spawnpoints);
@@ -770,11 +681,10 @@ spawnPlayer()
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
+	// WRS {
+	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();
-	}else{
+	} else {
 		maps\mp\gametypes\_teams::givePistol();
 		maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
 
@@ -782,8 +692,8 @@ spawnPlayer()
 		self giveMaxAmmo(self.pers["weapon"]);
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
-	//****//
-
+	// } // END WRS
+	
 	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
 }
 
@@ -791,7 +701,7 @@ spawnSpectator(origin, angles)
 {
 	self notify("spawned");
 	self notify("end_respawn");
-
+	
 	resettimeout();
 
 //	if(isDefined(self.shocked))
@@ -806,7 +716,7 @@ spawnSpectator(origin, angles)
 
 	if(self.pers["team"] == "spectator")
 		self.statusicon = "";
-
+	
 	if(isDefined(origin) && isDefined(angles))
 		self spawn(origin, angles);
 	else
@@ -822,18 +732,13 @@ spawnSpectator(origin, angles)
 	}
 
 	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
-
-	//**WALEDIT**//
-	if(level.wrs && isDefined(level.wrs_MapVote_hud_bg))//Voting going on!
-		self thread maps\mp\gametypes\_wrs::MapVotingPlayer(level.wrs_MapVoting_amount - 1);
-	//****//
 }
 
 spawnIntermission()
 {
 	self notify("spawned");
 	self notify("end_respawn");
-
+	
 	resettimeout();
 
 //	if(isDefined(self.shocked))
@@ -944,7 +849,7 @@ killcam(attackerNum, delay)
 	self.sessionstate = "spectator";
 	self.spectatorclient = attackerNum;
 	self.archivetime = delay + 7;
-
+	
 	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
 	wait 0.05;
 
@@ -953,7 +858,7 @@ killcam(attackerNum, delay)
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
-
+		
 		self thread respawn();
 		return;
 	}
@@ -1026,7 +931,7 @@ killcam(attackerNum, delay)
 	self.spectatorclient = -1;
 	self.archivetime = 0;
 	self.sessionstate = "dead";
-
+	
 	//self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
 	self thread respawn();
 }
@@ -1129,11 +1034,10 @@ endMap()
 			guid = player getGuid();
 		}
 	}
-	//**WALEDIT**//
-	//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-	if(level.wrs){
+	// WRS {
+	if (level.wrs) {
 		maps\mp\gametypes\_wrs::wrs_EndMap(text);
-	}else{
+	} else {
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
 		{
@@ -1146,10 +1050,11 @@ endMap()
 				player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
 			else if(isDefined(playername))
 				player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
-
+			
 			player spawnIntermission();
 		}
 	}
+	// } // END WRS
 	if(isDefined(name))
 		logPrint("W;;" + guid + ";" + name + "\n");
 	wait 10;
@@ -1250,14 +1155,7 @@ updateGametypeCvars()
 			else
 				setarchive(false);
 		}
-
-		//**WALEDIT**//
-		//**ONLY EXECUTING WHEN WALRUS IS ENABLED**//
-		if(level.wrs){
-			thread maps\mp\gametypes\_wrs::wrs_UpdateGametypeCvars();
-		}
-		//****//
-
+		
 		wait 1;
 	}
 }
@@ -1266,12 +1164,12 @@ dropHealth()
 {
 	if(isDefined(level.healthqueue[level.healthqueuecurrent]))
 		level.healthqueue[level.healthqueuecurrent] delete();
-
+	
 	level.healthqueue[level.healthqueuecurrent] = spawn("item_health", self.origin + (0, 0, 1));
 	level.healthqueue[level.healthqueuecurrent].angles = (0, randomint(360), 0);
 
 	level.healthqueuecurrent++;
-
+	
 	if(level.healthqueuecurrent >= 16)
 		level.healthqueuecurrent = 0;
 }

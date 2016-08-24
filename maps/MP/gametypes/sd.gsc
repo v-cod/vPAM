@@ -896,12 +896,14 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			if(iDamage < 1)
 				iDamage = 1;
 
+			// WRS {
 			if (level.wrs) {
 				iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 				if (iDamage == 0) {
 					return;
 				}
 			}
+			// } // END WRS
 
 			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 		}
@@ -1215,11 +1217,6 @@ spawnSpectator(origin, angles)
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
 	else if(game["attackers"] == "axis")
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
-
-	// WRS {
-	if(level.wrs && isDefined(level.wrs_mapvote_hud_bg)) //Voting going on!
-		self thread maps\mp\gametypes\_wrs_mapvote::_monitor_player_mapvote(level.wrs_mapvoting_amount - 1);
-	// } // END WRS
 }
 
 spawnIntermission()
@@ -1571,7 +1568,7 @@ endRound(roundwinner)
 			players[i] playLocalSound("MP_announcer_round_draw");
 	}
 	// WRS {
-	if(!level.wrs){
+	if (!level.wrs) { // Will wait after setting scores
 		wait 5;
 	}
 	// } // END WRS
@@ -2117,11 +2114,8 @@ bombzone_think(bombzone_other)
 
 				other playsound("MP_bomb_plant");
 				other linkTo(self);
-				// WRS {
-				if(!level.wrs){
-					other disableWeapon();
-				}
-				// } // END WRS
+				other disableWeapon();
+			
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.planttime))
 				{
