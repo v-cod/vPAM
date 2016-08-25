@@ -1,5 +1,4 @@
 /**
- * @todo  Fix TDM and DM calls to the mod
  * @todo  Detect spawn campers on attacking side, and AFK/inactive on the defending side (SD)
  * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
  * @todo  Deactivate sprint after round start time (15 secs usually)
@@ -21,13 +20,13 @@ start()
 	maps\mp\gametypes\_wrs_mapvote::init();
 
 	if (level.wrs_labels) {
-		thread _hud_labels_create();
+		_hud_labels_create();
 	}
 	if (level.wrs_alive) {
-		thread _hud_alive_create();
+		_hud_alive_create();
 	}
 	if (level.wrs_feed) {
-		thread _message_feed();
+		_message_feed();
 	}
 
 	thread _monitor();
@@ -165,10 +164,8 @@ _update_variables()
 	level.wrs_mapvoting        = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
 	level.wrs_mapvoting_amount = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
 
-	level.wrs_afs              = _get_cvar("scr_wrs_afs",          1,   0,   1, "int");
-	level.wrs_afs_ticks        = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float") / 0.05;
-	level.wrs_blip             = _get_cvar("scr_wrs_blip",         1,   0,   1, "int");
-	level.wrs_commands         = _get_cvar("scr_wrs_commands",     1,   0,   1, "int");
+	level.wrs_afs              = _get_cvar("scr_wrs_afs",          2,   0,   2, "int");
+	level.wrs_afs_time         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float");
 	level.wrs_countdown        = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
 	level.wrs_fence            = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
 	level.wrs_mg42             = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
@@ -178,7 +175,7 @@ _update_variables()
 	level.wrs_alive            = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
 	level.wrs_labels           = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
 	level.wrs_stats            = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
-	
+
 	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
 
 	level.wrs_weapon_menu      = _get_cvar("scr_wrs_weapon", game["allies"], 0, 0, "string");
@@ -208,7 +205,7 @@ _monitor_player_sprint()
 
 	// Prevent sprint glitch on SD
 	while (self.sessionstate == "playing" && self attackButtonPressed() == true) {
-		wait .05;
+		wait 0.05;
 	}
 
 	while (self.sessionstate == "playing") {
@@ -270,67 +267,65 @@ _monitor_player_sprint()
 
 _monitor_player_afs()
 {
-	while (level.wrs_afs_ticks && self.sessionstate == "playing") {
-		oldA = self getWeaponSlotClipAmmo("primary");   //Get the clipammo
-		oldB = self getWeaponSlotClipAmmo("primaryb");
+	while (self.sessionstate == "playing") {
+		a1 = self getWeaponSlotClipAmmo("primary");   // Reference clip count
+		b1 = self getWeaponSlotClipAmmo("primaryb");
 
-		newA = oldA;                                    //Put it in variable to compare later
-		newB = oldB;
+		a2 = a1; // 'new' values to compare against
+		b2 = b1;
 
-		while (self.sessionstate == "playing" && oldA == newA && oldB == newB) {  //While he's playing and while bullets didn't change
-			newA = self getWeaponSlotClipAmmo("primary");
-			newB = self getWeaponSlotClipAmmo("primaryb");
-			wait .05;
+		// Wait till shot is fired
+		while (a1 == a2 && b1 == b2) {
+			wait 0.05;
+
+			if (self.sessionstate != "playing") {
+				return;
+			}
+
+			a2 = self getWeaponSlotClipAmmo("primary");
+			b2 = self getWeaponSlotClipAmmo("primaryb");
 		}
-		if (oldA < newA || oldB < newB) { //Probably reloaded
+
+		if (a1 < a2 || b1 < b2) { // Likely reloaded
 			continue;
 		}
 
-		if (oldA != newA) {
+		// Check wether slot a or b
+		if (a1 != a2) {
 			a = 1;
 		} else {
 			a = 0;
 		}
 
-		if (a) old = self getWeaponSlotClipAmmo("primary");
-		else  old = self getWeaponSlotClipAmmo("primaryb");
+		if (a) { old = self getWeaponSlotClipAmmo("primary");  }
+		else   { old = self getWeaponSlotClipAmmo("primaryb"); }
 
-		for (i = 0; i < level.wrs_afs_ticks; i++) {
+		for (waited = 0.0; waited < level.wrs_afs_time; waited += 0.05) { // Interval wherein one might have fast shot
+			wait 0.05;
+
 			if (self.sessionstate != "playing") {
 				return;
 			}
-			wait .05;
 		}
 
-		if (a) {
-			new = self getWeaponSlotClipAmmo("primary");
-		} else {
-			new = self getWeaponSlotClipAmmo("primaryb");
-		}
+		if (a) { new = self getWeaponSlotClipAmmo("primary");  }
+		else   { new = self getWeaponSlotClipAmmo("primaryb"); }
 
 		if (self.sessionstate == "playing" && old > new) {
-			if (!isDefined(self.pers["afs"])) {
-				self.pers["afs"] = 0;
-			}
-			self.pers["afs"]++;
+			self.pers["fs"]++;
 
-			logPrint("WRS;FASTSHOOT;" + self.name + ";" + self getGuid() + ";\n");
+			logPrint("wrs;fs;" + self getGuid() + ";" + self.name + ";\n");
+			self iPrintLnBold(level.wrs_print_prefix + "^1fast shooting is not allowed!");
+			iPrintLn(level.wrs_print_prefix + self.name + " ^1shot ^7too ^1fast^7 (" + self.pers["fs"] + ")!");
 
-			if (level.wrs_afs > 0) {
-				iPrintLn(level.wrs_print_prefix + self.name + " ^1shot ^7too ^1fast^7("+self.pers["afs"]+")!");
-			}
-
-			if (level.wrs_afs > 1) {
-				self iPrintLn(level.wrs_print_prefix + "^1FASTSHOOTING IS NOT ALLOWED!");
-				if (self.pers["afs"] > 1) {
-					self dropItem(self getWeaponSlotWeapon("grenade"));
-					self dropItem(self getWeaponSlotWeapon("pistol"));
+			if (level.wrs_afs == 2) {
+				if (self.pers["fs"] == 2) {
 					self dropItem(self getWeaponSlotWeapon("primary"));
 					self dropItem(self getWeaponSlotWeapon("primaryb"));
-				}
-				if (self.pers["afs"] > 2) {
+					self dropItem(self getWeaponSlotWeapon("pistol"));
+					self dropItem(self getWeaponSlotWeapon("grenade"));
+				} else if (self.pers["fs"] > 2) {
 					self suicide();
-					iPrintLn(level.wrs_print_prefix + self.name + " ^1was killed because of fastshooting!");
 				}
 			}
 		}
@@ -473,7 +468,7 @@ _message_feed()
 				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
 				wait level.wrs_feed - .05;
 			}
-			wait .05;
+			wait 0.05;
 		}
 	}
 }
@@ -623,6 +618,8 @@ wrs_PlayerConnect()
 		self.pers["weapon2"] = "kar98k_mp";
 	}
 
+	self.pers["fs"] = 0;
+
 	self.pers["stats"]["score"]     = 0;
 	self.pers["stats"]["bashes"]    = 0;
 	self.pers["stats"]["furthest"]  = 0;
@@ -697,9 +694,7 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 			attacker.pers["stats"]["furthest"] = distance;
 		}
 
-		if (level.wrs_blip) {
-			attacker thread _blip();
-		}
+		attacker thread _blip();
 
 		if (level.wrs_stats) {
 			attacker _stats_update();
