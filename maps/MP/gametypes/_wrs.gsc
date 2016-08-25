@@ -166,7 +166,6 @@ _update_variables()
 
 	level.wrs_afs              = _get_cvar("scr_wrs_afs",          2,   0,   2, "int");
 	level.wrs_afs_time         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float");
-	level.wrs_countdown        = _get_cvar("scr_wrs_countdown",    1,   0,   1, "int"); // TDM
 	level.wrs_fence            = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
 	level.wrs_mg42             = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
 	level.wrs_pistol           = _get_cvar("scr_wrs_pistol",       0,   0,   1, "int");
@@ -178,6 +177,11 @@ _update_variables()
 
 	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
 	level.wrs_1s1k             = _get_cvar("scr_wrs_1s1k",         1,   0,   1, "int");
+
+	level.wrs_drop_primary     = _get_cvar("scr_wrs_drop_primary", 1,   0,   2, "int");
+	level.wrs_drop_health      = _get_cvar("scr_wrs_drop_health",  1,   0,   2, "int");
+
+
 
 	if (level.gametype == "jump" || level.gametype == "bash") {
 		level.wrs_weapon_menu = game["allies"]; // Default
@@ -613,6 +617,9 @@ wrs_PlayerConnect()
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
 	}
 
+	// harbor_jump fix for crash
+	self.isJumper = false;
+
 	// Below this are one-time inits (not every round for SD)
 	if (isDefined(self.pers["team"])) {
 		return;
@@ -686,6 +693,13 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 			attacker.pers["stats"]["spreemax"] = attacker.pers["stats"]["spreecur"];
 		}
 
+		if (level.gametype == "bash") {
+			if (attacker.pers["stats"]["spreecur"] % 5 == 0 && attacker.pers["stats"]["spreecur"] != 5) {
+				attacker.score += 10000 + ((attacker.pers["stats"]["spreecur"] - 10) / 5 * 50000);
+				iPrintLnBold(attacker.name + " ^7is owning with a " + attacker.pers["stats"]["spreecur"] + " killstreak!");
+			}
+		}
+
 		// Incrementing the amount of headshots or bashes
 		if (sMeansOfDeath == "MOD_HEAD_SHOT") {
 			attacker.pers["stats"]["headshots"]++;
@@ -703,6 +717,21 @@ wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sH
 
 		if (level.wrs_stats) {
 			attacker _stats_update();
+		}
+	}
+
+	for (i = 0; i < level.wrs_drop_health; i++) {
+		self maps\mp\gametypes\dm::dropHealth();
+	}
+	if (level.wrs_drop_primary) {
+		self dropItem(self getcurrentweapon());
+	}
+
+	if (level.gametype == "bash" && self.pers["stats"]["spreecur"] >= 10) {
+		if (isPlayer(attacker) && attacker != self) {
+			iPrintLnBold(attacker.name + " ^7killed " + self.name + " ^7and finished his " + self.pers["stats"]["spreecur"] + " killstreak!");
+		} else {
+			iPrintLnBold(self.name + " ^7killed himself and ended his " + self.pers["stats"]["spreecur"] + " killstreak!");
 		}
 	}
 

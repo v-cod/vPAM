@@ -702,12 +702,14 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			if(iDamage < 1)
 				iDamage = 1;
 
+			// WRS {
 			if (level.wrs) {
 				iDamage = self maps\mp\gametypes\_wrs::wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 				if (iDamage == 0) {
 					return;
 				}
 			}
+			// } // END WRS
 
 			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 		}
@@ -1262,21 +1264,27 @@ endMap()
 		}
 	}
 
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
+	// WRS {
+	if (level.wrs) {
+		maps\mp\gametypes\_wrs::wrs_EndMap(text);
+	} else {
+		players = getentarray("player", "classname");
+		for(i = 0; i < players.size; i++)
+		{
+			player = players[i];
 
-		player closeMenu();
-		player setClientCvar("g_scriptMainMenu", "main");
+			player closeMenu();
+			player setClientCvar("g_scriptMainMenu", "main");
 
-		if(isDefined(tied) && tied == true)
-			player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
-		else if(isDefined(playername))
-			player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
+			if(isDefined(tied) && tied == true)
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
+			else if(isDefined(playername))
+				player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
 
-		player spawnIntermission();
+			player spawnIntermission();
+		}
 	}
+	// } // END WRS
 	if(isDefined(name))
 		logPrint("W;;" + guid + ";" + name + "\n");
 	wait 10;
