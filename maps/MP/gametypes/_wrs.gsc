@@ -20,13 +20,13 @@ start()
 	maps\mp\gametypes\_wrs_mapvote::init();
 
 	if (level.wrs_labels) {
-		_hud_labels_create();
+		thread _hud_labels_create();
 	}
 	if (level.wrs_alive) {
-		_hud_alive_create();
+		thread _hud_alive_create();
 	}
 	if (level.wrs_feed) {
-		_message_feed();
+		thread _message_feed();
 	}
 
 	thread _monitor();
@@ -177,8 +177,13 @@ _update_variables()
 	level.wrs_stats            = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
 
 	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
+	level.wrs_1s1k             = _get_cvar("scr_wrs_1s1k",         1,   0,   1, "int");
 
-	level.wrs_weapon_menu      = _get_cvar("scr_wrs_weapon", game["allies"], 0, 0, "string");
+	if (level.gametype == "jump" || level.gametype == "bash") {
+		level.wrs_weapon_menu = game["allies"]; // Default
+	} else {
+		level.wrs_weapon_menu = _get_cvar("scr_wrs_weapon", game["allies"], 0, 0, "string");
+	}
 
 	level.wrs_admins = _get_cvar("sys_admins", [], 0, 0, "array");
 }
@@ -529,7 +534,7 @@ _hud_stats_create()
 
 			self.wrs_hud_stats["spreecur"].fontScale  = 1;
 			self.wrs_hud_stats["spreemax"].fontScale  = 1;
-			self.wrs_hud_stats["spreemax"].x          = 80;
+			self.wrs_hud_stats["spreemax"].x          = 88;
 
 		} else {
 			self.wrs_hud_stats["score"].fontScale = 1;
@@ -659,7 +664,7 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 		case "sd":
 		case "tdm":
 			if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
-				if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE") {
+				if(level.wrs_1s1k && (sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")) {
 					return 100;
 				}
 			}
@@ -735,9 +740,6 @@ wrs_SpawnPlayer()
 	}
 
 	if (level.gametype == "jump") {
-		maps\mp\gametypes\_teams::givePistol();
-		maps\mp\gametypes\_teams::giveGrenades(self.pers["weapon"]);
-
 		self thread maps\mp\gametypes\_wrs_jumper::_monitor();
 	}
 

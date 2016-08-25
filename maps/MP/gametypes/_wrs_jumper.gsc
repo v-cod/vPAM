@@ -1,5 +1,8 @@
 _monitor()
 {
+	self.wrs_jumper_save["origin"] = (0, 0, 0);
+	self.wrs_jumper_save["angles"] = (0, 0, 0);
+
 	self iPrintLn(level.wrs_print_prefix + "Save: double press [{+melee}]");
 	self iPrintLn(level.wrs_print_prefix + "Load: double press [{+activate}]");
 
@@ -28,20 +31,16 @@ _monitor_load()
 		while (self useButtonPressed() && self.sessionstate == "playing") {
 			wait .05;
 		}
-		ticks = 6;
 
-		while (!self useButtonPressed() && self.sessionstate == "playing") {
-			ticks--;
-			if (ticks == 0) {
-				break;
-			}
+		for (i = 0; i < 6 && !self useButtonPressed() && self.sessionstate == "playing"; i++) { 
 			wait .05;
 		}
 
-		if (ticks > 0 && self.sessionstate == "playing") {
+		if (self.sessionstate == "playing" && i < 6) {
 			if (isDefined(self.wrs_jumper_save)) {
 				self setOrigin(self.wrs_jumper_save["origin"]);
 				self setPlayerAngles(self.wrs_jumper_save["angles"]);
+
 				self iPrintLn(level.wrs_print_prefix + "Position loaded.");
 			}
 		}
@@ -57,18 +56,11 @@ _monitor_save()
 			wait .05;
 		}
 
-		ticks = 6;
-
-		while (!self meleeButtonPressed() && self.sessionstate == "playing") {
-			ticks--;
-			if (ticks == 0) {
-				break;
-			}
+		for (i = 0; i < 6 && !self meleeButtonPressed() && self.sessionstate == "playing"; i++) { 
 			wait .05;
 		}
 
-		if (ticks > 0 && self.sessionstate == "playing") {
-			self.wrs_jumper_save = [];
+		if (self.sessionstate == "playing" && i < 6) {
 			self.wrs_jumper_save["origin"] = self.origin;
 			self.wrs_jumper_save["angles"] = self.angles;
 

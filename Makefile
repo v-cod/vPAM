@@ -11,7 +11,9 @@ PK3 = zzz_svr_wrs.pk3
 all: $(PK3)
 
 run: $(PK3)
-	start "_server.lnk"
+	cd "/c/Program Files (x86)/Call of Duty Server/" && \
+	"/c/Program Files (x86)/Call of Duty Server/CoDMP" \
+	+set developer 2 +set dedicated 2 +set rconpassword abcd +exec config_base +exec config_bash
 
 $(PK3): $(SRC_GSC) $(SRC_TXT) $(SRC_WP)
 	@echo "Building" $@
