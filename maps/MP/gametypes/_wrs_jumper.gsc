@@ -1,5 +1,7 @@
 _monitor()
 {
+	self.wrs_jumper = true;
+
 	self.wrs_jumper_save["origin"] = (0, 0, 0);
 	self.wrs_jumper_save["angles"] = (0, 0, 0);
 
@@ -14,7 +16,7 @@ _monitor()
 _monitor_nades()
 {
 	grenade = self getWeaponSlotWeapon("grenade");
-	while (self.sessionstate == "playing") {
+	while (self.sessionstate == "playing" && isDefined(self.wrs_jumper)) {
 		self setWeaponSlotClipAmmo("grenade", 3);
 
 		wait 1;
@@ -24,7 +26,7 @@ _monitor_nades()
 
 _monitor_load()
 {
-	while (self.sessionstate == "playing") {
+	while (self.sessionstate == "playing" && isDefined(self.wrs_jumper)) {
 		while (!self useButtonPressed() && self.sessionstate == "playing") {
 			wait .05;
 		}
@@ -32,7 +34,7 @@ _monitor_load()
 			wait .05;
 		}
 
-		for (i = 0; i < 6 && !self useButtonPressed() && self.sessionstate == "playing"; i++) { 
+		for (i = 0; i < 6 && !self useButtonPressed() && self.sessionstate == "playing"; i++) {
 			wait .05;
 		}
 
@@ -48,7 +50,7 @@ _monitor_load()
 }
 _monitor_save()
 {
-	while (self.sessionstate == "playing") {
+	while (self.sessionstate == "playing" && isDefined(self.wrs_jumper)) {
 		while (!self meleeButtonPressed() && self.sessionstate == "playing") {
 			wait .05;
 		}
@@ -56,7 +58,7 @@ _monitor_save()
 			wait .05;
 		}
 
-		for (i = 0; i < 6 && !self meleeButtonPressed() && self.sessionstate == "playing"; i++) { 
+		for (i = 0; i < 6 && !self meleeButtonPressed() && self.sessionstate == "playing"; i++) {
 			wait .05;
 		}
 

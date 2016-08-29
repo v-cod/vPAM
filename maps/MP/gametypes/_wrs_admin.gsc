@@ -53,12 +53,14 @@ monitor()
 	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1; // Only one value
 	i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_jumper"; pc[i]["f"] = ::_jumper;  pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_kill";   pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_mortar"; pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_nades";  pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spall";  pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spec";   pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_tk";     pc[i]["f"] = ::_tk;      pc[i]["e"] = 1;
 
 	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
 	i++; pc[i]["c"] = "w_name";   pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
@@ -177,7 +179,6 @@ _bunny()
 		wait .1;
 	}
 }
-
 _disarm()
 {
 	if (self.sessionstate != "playing") {
@@ -190,6 +191,19 @@ _disarm()
 	self dropItem(self getWeaponSlotWeapon("pistol"));
 	self dropItem(self getWeaponSlotWeapon("primary"));
 	self dropItem(self getWeaponSlotWeapon("primaryb"));
+}
+_jumper()
+{
+	if (self.sessionstate != "playing") {
+		return;
+	}
+
+	if (isDefined(self.wrs_jumper)) {
+		self.wrs_jumper = undefined;
+		return;
+	}
+
+	self thread maps\mp\gametypes\_wrs_jumper::_monitor();
 }
 _kill()
 {
@@ -308,6 +322,22 @@ _spec()
 	self notify("menuresponse", game["menu_team"], "spectator");
 
 	iPrintLn(level.wrs_print_prefix + self.name + " ^7is moved to spectator mode.");
+}
+_tk()
+{
+	if (self.sessionstate != "playing") {
+		return;
+	}
+
+	if (isDefined(self.wrs_tk)) {
+		self.wrs_tk = undefined;
+		self iPrintLn(level.wrs_print_prefix + "You're not a ^1teamkiller^7 anymore.");
+		return;
+	}
+
+	self.wrs_tk = true;
+
+	self iPrintLn(level.wrs_print_prefix + "You're a ^1teamkiller^7.");
 }
 
 
@@ -467,7 +497,7 @@ _obscure(arg)
 
 _print(arg)
 {
-	iPrintLnBold(level.wrs_print_prefix + arg[0]);
+	iPrintLnBold(arg[0]);
 }
 _cvar(arg)
 {

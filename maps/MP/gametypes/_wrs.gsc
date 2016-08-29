@@ -653,8 +653,20 @@ wrs_PlayerDisconnect()
 }
 wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	switch (level.gametype) {
-		case "bash":
+	if (isDefined(self.wrs_jumper)) {
+		self.health += iDamage;
+		self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
+		return iDamage;
+	}
+
+
+	if (isPlayer(eAttacker) && self != eAttacker) {
+		if (isDefined(eAttacker.wrs_jumper)) {
+			eAttacker iPrintLn(self.wrs_print_prefix + self.name + " ^7is a ^1jumper^7 and can't be killed!");
+			return 0;
+		}
+
+		if (level.gametype == "bash") {
 			if(    sMeansOfDeath == "MOD_PISTOL_BULLET"
 			    || sMeansOfDeath == "MOD_RIFLE_BULLET"
 			    || sMeansOfDeath == "MOD_HEAD_SHOT"){
@@ -662,25 +674,22 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 			} else if (sMeansOfDeath == "MOD_MELEE") {
 				return 100;
 			}
-			break;
-		case "jump":
-			self.health += iDamage;
-			self iPrintLn(level.wrs_print_prefix + "Damage: ^1" + iDamage + "^7.");
-			break;
-		case "dm":
-		case "sd":
-		case "tdm":
-			if(isPlayer(eAttacker) && self != eAttacker && self.pers["team"] != eAttacker.pers["team"]){
-				if(level.wrs_1s1k && (sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")) {
-					return 100;
-				}
+		} else {
+			if(level.wrs_1s1k && (sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE")) {
+				return 100;
 			}
-			break;
-		default:
-			return iDamage;
+		}
 	}
 
 	return iDamage;
+}
+wrs_FriendlyFire(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
+{
+	if (!isDefined(eAttacker.wrs_tk)) {
+		return 0;
+	}
+
+	return 100;
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
