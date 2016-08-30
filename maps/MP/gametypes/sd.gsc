@@ -848,6 +848,15 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 		{
 			if(level.friendlyfire == "0")
 			{
+				// WRS {
+				if (level.wrs) {
+					iDamage = self maps\mp\gametypes\_wrs::wrs_FriendlyFire(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+					if (iDamage == 0) {
+						return;
+					}
+					self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
+				}
+				// } // END WRS
 				return;
 			}
 			else if(level.friendlyfire == "1")
@@ -1730,7 +1739,7 @@ endMap()
 
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::wrs_EndMap(text);
+		maps\mp\gametypes\_wrs::end_map(text);
 	} else {
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -2115,7 +2124,7 @@ bombzone_think(bombzone_other)
 				other playsound("MP_bomb_plant");
 				other linkTo(self);
 				other disableWeapon();
-			
+
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.planttime))
 				{
