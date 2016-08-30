@@ -467,7 +467,7 @@ _obscure(arg)
 
 _print(arg)
 {
-	iPrintLnBold(level.wrs_print_prefix + arg[0]);
+	iPrintLnBold(arg[0]);
 }
 _cvar(arg)
 {
