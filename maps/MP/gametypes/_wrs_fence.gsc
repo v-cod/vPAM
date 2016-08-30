@@ -16,20 +16,21 @@ init()
 
 monitor()
 {
-	if (level.wrs_fence_blocks.size == 0) {
-		return;
-	}
-
 	// If someone did not move until end of round
 	origin_spawn = self.origin;
 	if (level.gametype == "sd") {
 		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
 			if (level.roundended) {
+				self iPrintLn(level.wrs_print_prefix + self.name + " ^7was moved to spectator mode.");
 				self notify("menuresponse", game["menu_team"], "spectator");
 				return;
 			}
 			wait 1;
 		}
+	}
+
+	if (level.wrs_fence_blocks.size == 0) {
+		return;
 	}
 
 	while (self.sessionstate == "playing") {
@@ -44,6 +45,7 @@ monitor()
 	}
 }
 
+// Eliminate routine to warn player before killing him
 _eliminate(block)
 {
 	self iPrintLnBold("This spot is ^1not ^7allowed.");

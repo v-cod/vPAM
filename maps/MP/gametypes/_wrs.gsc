@@ -1,14 +1,12 @@
 /**
  * @todo  Detect spawn campers on attacking side, and AFK/inactive on the defending side (SD)
  * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
- * @todo  Deactivate sprint after round start time (15 secs usually)
  * @todo  Make local functions more uniform and starting with underscores
- * @todo  More dynamic way of adding wrs cvars to initialize and update them (like in AWE mod)
- * @todo  Study roundstarted and gamestarted with their effect on precaches and level variable definitions (SD)
  * @todo  Clean up statistics code with their maintain routines
  * @todo  Clean up map voting code
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
+ * @todo  Deactivate sprint after round start time (15 secs usually)
  */
 
 start()
@@ -187,7 +185,7 @@ _update_variables()
 }
 _monitor_player_sprint()
 {
-    _hud_sprint_create();
+    self _hud_sprint_create();
 
 	// Prevent sprint glitch on SD (holding use and melee button from start of round)
 	while (self.sessionstate == "playing" && self attackButtonPressed()) {
@@ -200,7 +198,7 @@ _monitor_player_sprint()
 	r_ticks = level.wrs_sprint_time_recover * 20; // Maximum recovering ticks
     w_ticks = 0;                                  // Ticks to fullfill recovering period
 
-    sprint_speed = 190 + (190 * level.wrs_sprint);
+    sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
 	while (self.sessionstate == "playing") {
 		if (self useButtonPressed() && s_ticks && self getStance() == "stand") {
@@ -227,10 +225,10 @@ _monitor_player_sprint()
 			}
 		}
 
-		wait .05;
+		wait 0.05;
 	}
 
-    _hud_sprint_destroy();
+    self _hud_sprint_destroy();
 }
 
 _monitor_player_afs()
@@ -567,7 +565,7 @@ _stats_check(stat)
 
 	if (self.pers["stats"][stat] > level.wrs_stats_records[stat].pers["stats"][stat]) {
 		level.wrs_stats_records[stat].wrs_hud_stats[stat].color = (1,1,1);
-		self.pers["stats"][stat].wrs_hud_stats[stat].color      = (0,0,1);
+		self.wrs_hud_stats[stat].color                          = (0,0,1);
 
 		level.wrs_stats_records[stat] = self;
 	}
@@ -594,10 +592,7 @@ wrs_PlayerConnect()
 		_hud_stats_create();
 	}
 
-	if (self.name.size == 0
-	    || self.name == " "
-	    || self.name == "^7"
-	    || self.name == "^7 "
+	if (_strip_colors(_strip_spaces(self.name)) == ""
 	    || self.name == "Unknown Soldier"
 	    || self.name == "UnnamedPlayer"
 	    || _substr(self.name, 0, 11) == "^1Free Porn"
@@ -683,6 +678,8 @@ wrs_FriendlyFire(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
+	self notify("killed");
+
 	if (isPlayer(attacker) && attacker != self) { //He got killed by a player
 		attacker.pers["stats"]["score"] = attacker.score;
 
@@ -891,10 +888,10 @@ cleanUp(everything) {
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
 
-		if (isDefined(players[i].wrs_hud_sprint))
+		/*if (isDefined(players[i].wrs_hud_sprint))
 			players[i].wrs_hud_sprint destroy();
 		if (isDefined(players[i].wrs_hud_sprint_back))
-			players[i].wrs_hud_sprint_bg destroy();
+			players[i].wrs_hud_sprint_bg destroy();*/
 
 		if (everything) {
 			if (isDefined(players[i].wrs_hud_stats)) {
@@ -1079,7 +1076,7 @@ menu(menu, response) {
 }
 
 
-wrs_round_info(time)
+round_info(time)
 {
 	cleanUp(false);
 
@@ -1191,32 +1188,49 @@ wrs_round_info(time)
 
 
 //Miscellaneous functions
-/*_strip_colors(name) {
-	name_dull = "";
+_strip_colors(str)
+{
+	str_dull = "";
 
-	for (i = 0; i < name.size; i++) {
-		if (name[i] == "^") {
-			if (i + 1 < name.size) {
-				switch (name[i + 1]) {
-					case "0":
-					case "1":
-					case "2":
-					case "3":
-					case "4":
-					case "5":
-					case "6":
-					case "7":
-					case "8":
-					case "9":
-
-					default:
-						break;
-				}
+	for (i = 0; i < str.size; i++) {
+		if (str[i] == "^" && i + 1 < str.size) {
+			switch (str[i + 1]) {
+				case "0":
+				case "1":
+				case "2":
+				case "3":
+				case "4":
+				case "5":
+				case "6":
+				case "7":
+				case "8":
+				case "9":
+					i++;
+					continue;
+				default:
+					break;
 			}
 		}
+		str_dull += str[i];
 	}
-}*/
-_in_array(value, array) {
+
+	return str_dull;
+}
+_strip_spaces(str)
+{
+	str_dull = "";
+	for (i = 0; i < str.size; i++) {
+		if (str[i] == " ") {
+			continue;
+		}
+
+		str_dull += str[i];
+	}
+
+	return str_dull;
+}
+_in_array(value, array)
+{
 	for (i = 0; i < array.size; i++) {
 		if (array[i] == value) {
 			return true;
@@ -1225,7 +1239,8 @@ _in_array(value, array) {
 
 	return false;
 }
-_get_stance(checkjump) {
+_get_stance(checkjump)
+{
 	//Using bits!
 	if (checkjump && !self isOnGround())
 		return 8;
