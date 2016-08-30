@@ -58,15 +58,10 @@ init()
 
 	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
 
+	level.wrs_stats_records = [];
+
 	// Other level variables that can be set with scr_wrs_ cvars
 	_update_variables();
-
-	level.wrs_stats_records = [];
-	level.wrs_stats_records["score"]     = undefined;
-	level.wrs_stats_records["bashes"]    = undefined;
-	level.wrs_stats_records["furthest"]  = undefined;
-	level.wrs_stats_records["spreemax"]  = undefined;
-	level.wrs_stats_records["headshots"] = undefined;
 
 	if (!isDefined(game["gamestarted"])) {
 		precacheString(level.wrs_round_info[0]);
@@ -156,10 +151,9 @@ _monitor()
 }
 _update_variables()
 {
-	level.wrs_sprint               = _get_cvar("scr_wrs_sprint",             12,   0,   15, "int");
-	level.wrs_sprint_ticks         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int") * 10;
-	level.wrs_sprint_speed         = _get_cvar("scr_wrs_sprint_speed",      304, 190, 1000, "int");
-	level.wrs_sprint_recover_ticks = _get_cvar("scr_wrs_sprint_recover_time", 3,   1,  100, "int") * 10;
+	level.wrs_sprint              = _get_cvar("scr_wrs_sprint",             60,   0,  300, "int");
+	level.wrs_sprint_time         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int");
+	level.wrs_sprint_time_recover = _get_cvar("scr_wrs_sprint_time_recover", 6,   1,  100, "int");
 
 	level.wrs_mapvoting        = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
 	level.wrs_mapvoting_amount = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
@@ -191,87 +185,52 @@ _update_variables()
 
 	level.wrs_admins = _get_cvar("sys_admins", [], 0, 0, "array");
 }
-
 _monitor_player_sprint()
 {
-	sprintLeft = level.wrs_sprint_ticks;
-	recovertime = 0;
+    _hud_sprint_create();
 
-	self.wrs_hud_sprint_bg = newClientHudElem(self);
-	self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
-	self.wrs_hud_sprint_bg.alignX = "left";
-	self.wrs_hud_sprint_bg.alignY = "top";
-	self.wrs_hud_sprint_bg.x = 488 + 13;
-	self.wrs_hud_sprint_bg.y = 454;
-
-	self.wrs_hud_sprint = newClientHudElem(self);
-	self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", 128, 3);
-	self.wrs_hud_sprint.color = (0, 0, 1);
-	self.wrs_hud_sprint.alignX = "left";
-	self.wrs_hud_sprint.alignY = "top";
-	self.wrs_hud_sprint.x = 488 + 14;
-	self.wrs_hud_sprint.y = 455;
-
-	// Prevent sprint glitch on SD
-	while (self.sessionstate == "playing" && self attackButtonPressed() == true) {
+	// Prevent sprint glitch on SD (holding use and melee button from start of round)
+	while (self.sessionstate == "playing" && self attackButtonPressed()) {
 		wait 0.05;
 	}
 
+	m_ticks = level.wrs_sprint_time * 20; // Maximum sprint ticks
+	s_ticks = m_ticks;                    // Sprint ticks left
+
+	r_ticks = level.wrs_sprint_time_recover * 20; // Maximum recovering ticks
+    w_ticks = 0;                                  // Ticks to fullfill recovering period
+
+    sprint_speed = 190 + (190 * level.wrs_sprint);
+
 	while (self.sessionstate == "playing") {
-		oldOrigin = self.origin;
-		wait .1;
-		if (self.sessionstate != "playing") {
-			break;
-		}
+		if (self useButtonPressed() && s_ticks && self getStance() == "stand") {
+			if (self.maxspeed != sprint_speed) {
+                self.maxspeed = sprint_speed;
+                self disableWeapon();
+            }
 
-		//The amount of sprint left, a float from 0 to 1
-		sprint = (float)(level.wrs_sprint_ticks - sprintLeft) / level.wrs_sprint_ticks;
-
-		if (!isDefined(self.wrs_hud_sprint)) {
-			self.maxspeed = 190;
-			break;
-		}
-		hud_width = (1.0 - sprint) * 128;   //The width should be as wide as there is left
-		if (hud_width > 0) {                 //Minimum of one, so you can see a red pixel.
-			self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", hud_width, 3); //Set the shader to the width we just determined.
+			s_ticks--;
+			self _hud_sprint_update(s_ticks * 128 / m_ticks);
 		} else {
-			self.wrs_hud_sprint setShader("");
+            if (self.maxspeed != 190) {
+                self.maxspeed = 190;
+                self enableWeapon();
+
+                w_ticks = (m_ticks - s_ticks) * r_ticks / m_ticks;
+            }
+
+			if (w_ticks) {
+				w_ticks--;
+			} else if (s_ticks != m_ticks) {
+				s_ticks++;
+				self _hud_sprint_update(s_ticks * 128 / m_ticks);
+			}
 		}
 
-		//The player should have moved, have some 'stamina' left, pressed the button and he should be standing.
-		if (sprintLeft > 0 && self useButtonPressed() && oldOrigin != self.origin && ( level.wrs_sprint & self _get_stance(1) ) ) {
-			if (!isDefined(self.wrs_sprinting)) { //The player didn't sprint yet.
-				self.maxspeed = level.wrs_sprint_speed;    //Set the speed to the sprint speed.
-				self.wrs_sprinting = true;
-			}
-			self disableWeapon();
-			sprintLeft--;
-		}
-		else{   //He didn't do shit
-			if (isDefined(self.wrs_sprinting)) {
-				self.maxspeed = 190;
-				self enableWeapon();
-				self.wrs_sprinting = undefined;
-				recovertime = level.wrs_sprint_recover_ticks;
-				if (sprintLeft > 0) {
-					recovertime = (int)(recovertime * sprint + 0.5);
-				}
-			}
-			if (sprintLeft < (level.wrs_sprint_ticks) && !self useButtonPressed()) {
-				if (recovertime > 0) {
-					recovertime--;
-				} else {
-					sprintLeft++;
-				}
-			}
-		}
+		wait .05;
 	}
-	if (isDefined(self.wrs_hud_sprint)) {
-		self.wrs_hud_sprint destroy();
-	}
-	if (isDefined(self.wrs_hud_sprint_bg)) {
-		self.wrs_hud_sprint_bg destroy();
-	}
+
+    _hud_sprint_destroy();
 }
 
 _monitor_player_afs()
@@ -346,7 +305,7 @@ _blip() {
 		return; // E.g. in case of collatteral
 	}
 
-	self.wrs_blip         = newClientHudElem(self);
+	self.wrs_blip        = newClientHudElem(self);
 	self.wrs_blip.alignX = "center";
 	self.wrs_blip.alignY = "middle";
 	self.wrs_blip.x      = 320;
@@ -355,12 +314,13 @@ _blip() {
 	self.wrs_blip setShader(level.wrs_blip_shader, 32, 32);
 	self.wrs_blip scaleOverTime(.15, 64, 64);
 
-	wait .15;
+	wait 0.15;
 
 	if (isDefined(self.wrs_blip)) {
 		self.wrs_blip destroy();
 	}
 }
+
 
 _hud_labels_create() {
 	level.wrs_hud_label_left           = newHudElem();
@@ -385,6 +345,7 @@ _hud_labels_create() {
 	level.wrs_hud_label_right.archived  = false;
 	level.wrs_hud_label_right setText(level.wrs_label_right);
 }
+
 _hud_alive_create() {
 	level.wrs_hud_info[0]           = newHudElem();
 	level.wrs_hud_info[0].x         = 388;
@@ -467,19 +428,39 @@ _hud_alive_update()
 		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
 	}
 }
-
-
-_message_feed()
+_hud_sprint_create()
 {
-	while (level.wrs_feed) {
-		for (i = 1;i < 10; i++) {
-			if (getCvar("scr_wrs_feed_" + i) != "") {
-				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
-				wait level.wrs_feed - .05;
-			}
-			wait 0.05;
-		}
-	}
+    self.wrs_hud_sprint_bg = newClientHudElem(self);
+    self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
+    self.wrs_hud_sprint_bg.alignX = "left";
+    self.wrs_hud_sprint_bg.alignY = "top";
+    self.wrs_hud_sprint_bg.x = 488 + 13;
+    self.wrs_hud_sprint_bg.y = 454;
+
+    self.wrs_hud_sprint = newClientHudElem(self);
+    self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", 128, 3);
+    self.wrs_hud_sprint.color = (0, 0, 1);
+    self.wrs_hud_sprint.alignX = "left";
+    self.wrs_hud_sprint.alignY = "top";
+    self.wrs_hud_sprint.x = 488 + 14;
+    self.wrs_hud_sprint.y = 455;
+}
+_hud_sprint_update(width)
+{
+    if (width == 0) {
+        self.wrs_hud_sprint setShader("");
+    } else {
+        self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", width, 3);
+    }
+}
+_hud_sprint_destroy()
+{
+    if (isDefined(self.wrs_hud_sprint)) {
+        self.wrs_hud_sprint destroy();
+    }
+    if (isDefined(self.wrs_hud_sprint_bg)) {
+        self.wrs_hud_sprint_bg destroy();
+    }
 }
 
 _hud_stats_create()
@@ -562,10 +543,6 @@ _hud_stats_destroy()
 
 _stats_update()
 {
-	if (level.mapended) {
-		return;
-	}
-
 	self.wrs_hud_stats["score"]     setValue(self.pers["stats"]["score"]);
 	self.wrs_hud_stats["bashes"]    setValue(self.pers["stats"]["bashes"]);
 	self.wrs_hud_stats["furthest"]  setValue(self.pers["stats"]["furthest"]);
@@ -581,10 +558,10 @@ _stats_update()
 	self _stats_check("spreemax");
 	self _stats_check("headshots");
 }
-
 _stats_check(stat)
 {
 	if (!isDefined(level.wrs_stats_records[stat])) {
+        level.wrs_stats_records[stat] = self;
 		return;
 	}
 
@@ -594,6 +571,19 @@ _stats_check(stat)
 
 		level.wrs_stats_records[stat] = self;
 	}
+}
+
+_message_feed()
+{
+    while (level.wrs_feed) {
+        for (i = 1; i < 10; i++) {
+            if (getCvar("scr_wrs_feed_" + i) != "") {
+                iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
+                wait level.wrs_feed - .05;
+            }
+            wait 0.05;
+        }
+    }
 }
 
 
@@ -809,7 +799,7 @@ wrs_SpawnPlayer()
 	}
 }
 
-wrs_EndMap(text) {
+end_map(text) {
 	cleanUp(true);
 
 	players = getEntArray("player", "classname");

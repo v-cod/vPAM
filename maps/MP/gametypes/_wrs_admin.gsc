@@ -82,10 +82,11 @@ monitor()
 	while (1) {
 		for (i = 0; i < pc.size; i++) {
 			v = getCvar(pc[i]["c"]);
-			setCvar(pc[i]["c"], "");
 
 			if (v == "") {
 				continue;
+			} else {
+				setCvar(pc[i]["c"], "");
 			}
 
 			arg = explode(" ", v, pc[i]["e"]);
@@ -106,10 +107,11 @@ monitor()
 		}
 		for (i = 0; i < gc.size; i++) {
 			v = getCvar(gc[i]["c"]);
-			setCvar(gc[i]["c"], "");
 
 			if (v == "") {
 				continue;
+			} else {
+				setCvar(gc[i]["c"], "");
 			}
 
 			arg = explode(" ", v, gc[i]["e"]);

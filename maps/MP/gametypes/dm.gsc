@@ -22,10 +22,10 @@
 			game["allies"] = "american";
 			game["axis"] = "german";
 			Because Deathmatch doesn't have teams with regard to gameplay or scoring, this effectively sets the available weapons.
-	
+
 		If using minefields or exploders:
 			maps\mp\_load::main();
-		
+
 	Optional level script settings
 	------------------------------
 		Soldier Type and Variation:
@@ -34,17 +34,17 @@
 			game["german_soldiertype"] = "wehrmacht";
 			game["german_soldiervariation"] = "normal";
 			This sets what models are used for each nationality on a particular map.
-			
+
 			Valid settings:
 				american_soldiertype		airborne
 				american_soldiervariation	normal, winter
-				
+
 				british_soldiertype		airborne, commando
 				british_soldiervariation	normal, winter
-				
+
 				russian_soldiertype		conscript, veteran
 				russian_soldiervariation	normal, winter
-				
+
 				german_soldiertype		waffen, wehrmacht, fallschirmjagercamo, fallschirmjagergrey, kriegsmarine
 				german_soldiervariation		normal, winter
 
@@ -99,7 +99,7 @@ main()
 
 	allowed[0] = "dm";
 	maps\mp\gametypes\_gameobjects::main(allowed);
-	
+
 	if(getCvar("scr_dm_timelimit") == "")		// Time limit per map
 		setCvar("scr_dm_timelimit", "30");
 	else if(getCvarFloat("scr_dm_timelimit") > 1440)
@@ -122,7 +122,7 @@ main()
 		killcam = "1";
 	setCvar("scr_killcam", killcam, true);
 	level.killcam = getCvarInt("scr_killcam");
-	
+
 	if(!isDefined(game["state"]))
 		game["state"] = "playing";
 
@@ -130,7 +130,7 @@ main()
 	level.mapended = false;
 	level.healthqueue = [];
 	level.healthqueuecurrent = 0;
-	
+
 	if(level.killcam >= 1)
 		setarchive(true);
 }
@@ -225,7 +225,7 @@ Callback_PlayerConnect()
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();
 	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
-	
+
 	if(game["state"] == "intermission")
 	{
 		spawnIntermission();
@@ -337,7 +337,7 @@ Callback_PlayerConnect()
 					self.pers["team"] = "spectator";
 					self.pers["weapon"] = undefined;
 					self.pers["savedmodel"] = undefined;
-					
+
 					self.sessionteam = "spectator";
 					self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 					self setClientCvar("ui_weapontab", "0");
@@ -381,7 +381,7 @@ Callback_PlayerConnect()
 
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
-				
+
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 
 			if(weapon == "restricted")
@@ -401,9 +401,9 @@ Callback_PlayerConnect()
 			else
 			{
 				self.pers["weapon"] = weapon;
-				
+
 				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-				
+
 				if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 					self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
 				else
@@ -589,13 +589,13 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		lpattackguid = "";
 		lpattackname = "";
 	}
-	
+
 	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 
 	// Stop thread if map ended on this death
 	if(level.mapended)
 		return;
-		
+
 //	self updateDeathArray();
 
 	// WRS {
@@ -614,10 +614,10 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before respawn/killcam can execute
-	
+
 	if((getCvarInt("scr_killcam") <= 0) || (getCvarInt("scr_forcerespawn") > 0))
 		doKillcam = false;
-	
+
 	if(doKillcam)
 		self thread killcam(attackerNum, delay);
 	else
@@ -662,7 +662,7 @@ spawnPlayer()
 	self.sessionstate = "playing";
 	self.spectatorclient = -1;
 	self.archivetime = 0;
-		
+
 	spawnpointname = "mp_deathmatch_spawn";
 	spawnpoints = getentarray(spawnpointname, "classname");
 	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_DM(spawnpoints);
@@ -693,7 +693,7 @@ spawnPlayer()
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
 	// } // END WRS
-	
+
 	self setClientCvar("cg_objectiveText", &"DM_KILL_OTHER_PLAYERS");
 }
 
@@ -701,7 +701,7 @@ spawnSpectator(origin, angles)
 {
 	self notify("spawned");
 	self notify("end_respawn");
-	
+
 	resettimeout();
 
 //	if(isDefined(self.shocked))
@@ -716,7 +716,7 @@ spawnSpectator(origin, angles)
 
 	if(self.pers["team"] == "spectator")
 		self.statusicon = "";
-	
+
 	if(isDefined(origin) && isDefined(angles))
 		self spawn(origin, angles);
 	else
@@ -738,7 +738,7 @@ spawnIntermission()
 {
 	self notify("spawned");
 	self notify("end_respawn");
-	
+
 	resettimeout();
 
 //	if(isDefined(self.shocked))
@@ -849,7 +849,7 @@ killcam(attackerNum, delay)
 	self.sessionstate = "spectator";
 	self.spectatorclient = attackerNum;
 	self.archivetime = delay + 7;
-	
+
 	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
 	wait 0.05;
 
@@ -858,7 +858,7 @@ killcam(attackerNum, delay)
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
-		
+
 		self thread respawn();
 		return;
 	}
@@ -931,7 +931,7 @@ killcam(attackerNum, delay)
 	self.spectatorclient = -1;
 	self.archivetime = 0;
 	self.sessionstate = "dead";
-	
+
 	//self thread spawnSpectator(previousorigin + (0, 0, 60), previousangles);
 	self thread respawn();
 }
@@ -1034,10 +1034,10 @@ endMap()
 			guid = player getGuid();
 		}
 	}
-	
+
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::wrs_EndMap(text);
+		maps\mp\gametypes\_wrs::end_map(text);
 	} else {
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1051,7 +1051,7 @@ endMap()
 				player setClientCvar("cg_objectiveText", &"MPSCRIPT_THE_GAME_IS_A_TIE");
 			else if(isDefined(playername))
 				player setClientCvar("cg_objectiveText", &"MPSCRIPT_WINS", playername);
-			
+
 			player spawnIntermission();
 		}
 	}
@@ -1157,7 +1157,7 @@ updateGametypeCvars()
 			else
 				setarchive(false);
 		}
-		
+
 		wait 1;
 	}
 }
@@ -1166,12 +1166,12 @@ dropHealth()
 {
 	if(isDefined(level.healthqueue[level.healthqueuecurrent]))
 		level.healthqueue[level.healthqueuecurrent] delete();
-	
+
 	level.healthqueue[level.healthqueuecurrent] = spawn("item_health", self.origin + (0, 0, 1));
 	level.healthqueue[level.healthqueuecurrent].angles = (0, randomint(360), 0);
 
 	level.healthqueuecurrent++;
-	
+
 	if(level.healthqueuecurrent >= 16)
 		level.healthqueuecurrent = 0;
 }

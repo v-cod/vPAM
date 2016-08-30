@@ -1248,7 +1248,7 @@ endMap()
 
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::wrs_EndMap(text);
+		maps\mp\gametypes\_wrs::end_map(text);
 	}
 	// } // END WRS
 
