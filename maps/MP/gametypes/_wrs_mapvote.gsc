@@ -32,9 +32,9 @@ init()
 //These functions handle the mapvoting
 start(seconds)
 {
-	level.wrs_candidate = _mapvote_candidates(level.wrs_mapvoting_amount);
+	level.wrs_candidate = _mapvote_candidates(level.wrs_mapvote);
 
-	_create_mapvoting_hud(level.wrs_candidate.size);
+	_hud_mapvote_create(level.wrs_candidate.size);
 	level.wrs_mapvote_hud_timer setClock(seconds, 60, "hudStopwatch", 64, 64);
 
 	players = getEntArray("player", "classname");
@@ -75,7 +75,7 @@ _monitor_player_mapvote()
 	self.wrs_mapvote_hud_indicator.color = (0, 0, 1);
 	self.wrs_mapvote_hud_indicator setShader("white", level.wrs_mapvote_width - 8, 24);
 
-	cndts    = level.wrs_mapvoting_amount - 1;
+	cndts    = level.wrs_mapvote - 1;
 	mapVote  = -1;
 	lastVote = -1;
 
@@ -183,7 +183,7 @@ _mapvote_candidates(cndts)
 
 	return candidate;
 }
-_create_mapvoting_hud(cndts)
+_hud_mapvote_create(cndts)
 {
 	level.wrs_mapvote_width = 200;
 	level.wrs_mapvote_height =27 + cndts*24;
