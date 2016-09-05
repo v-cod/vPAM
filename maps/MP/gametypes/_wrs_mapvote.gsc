@@ -57,8 +57,8 @@ _mapvote_winner()
 {
 	winner = 0;
 	votes  = 0;
-	for(i = 0;i < level.wrs_candidate.size;i++){
-		if(level.wrs_candidate[i]["votes"] > votes){
+	for(i = 0;i < level.wrs_candidate.size;i++) {
+		if (level.wrs_candidate[i]["votes"] > votes) {
 			votes = level.wrs_candidate[i]["votes"];
 			winner = i;
 		}
@@ -79,17 +79,17 @@ _monitor_player_mapvote()
 	mapVote  = -1;
 	lastVote = -1;
 
-	while(!isDefined(level.wrs_mapvoting_end)){
-		if(self attackButtonPressed()){
-			if(!self.wrs_mapvote_hud_indicator.alpha)
+	while (!isDefined(level.wrs_mapvoting_end)) {
+		if (self attackButtonPressed()) {
+			if (!self.wrs_mapvote_hud_indicator.alpha)
 				self.wrs_mapvote_hud_indicator.alpha = 0.3;
 
 			mapVote++;
-			if(mapVote > cndts)
+			if (mapVote > cndts)
 				mapVote = 0;
 
 			/////////////// SAME AS ABOVE
-			if(lastVote != -1){
+			if (lastVote != -1) {
 				level.wrs_candidate[lastVote]["votes"]--;
 				level.wrs_mapvote_hud_map_votes[lastVote] setValue(level.wrs_candidate[lastVote]["votes"]);
 			}
@@ -104,45 +104,21 @@ _monitor_player_mapvote()
 			while(self attackButtonPressed())
 				wait .05;
 		}
-		else if(self meleeButtonPressed()){
-			if(!self.wrs_mapvote_hud_indicator.alpha)
-				self.wrs_mapvote_hud_indicator.alpha = 0.3;
-
-			mapVote--;
-			if(mapVote < 0)
-				mapVote = cndts;
-
-			/////////////// SAME AS ABOVE
-			if(lastVote != -1){
-				level.wrs_candidate[lastVote]["votes"]--;
-				level.wrs_mapvote_hud_map_votes[lastVote] setValue(level.wrs_candidate[lastVote]["votes"]);
-			}
-			level.wrs_candidate[mapVote]["votes"]++;
-			level.wrs_mapvote_hud_map_votes[mapVote] setValue(level.wrs_candidate[mapVote]["votes"]);
-			lastVote = mapVote;
-			///////////////
-
-			self.wrs_mapvote_hud_indicator.y = level.wrs_mapvote_y + 24 + mapVote * 24;
-			self playLocalSound("hq_score");
-
-			while(self meleeButtonPressed())
-				wait .05;
-		}
 
 		wait .05;
 	}
 
-	if(isDefined(self.wrs_mapvote_hud_indicator))
+	if (isDefined(self.wrs_mapvote_hud_indicator))
 		self.wrs_mapvote_hud_indicator destroy();
 }
 _mapvote_candidates(cndts)
 {
 	rotation = getCvar("sv_maprotation");
-	if(rotation == ""){
-		if(level.wrs_maps.size < cndts)
+	if (rotation == "") {
+		if (level.wrs_maps.size < cndts)
 			cndts = level.wrs_maps.size;
 
-		for(i = 0;i < cndts;i++){
+		for(i = 0;i < cndts;i++) {
 			candidate[i]["name"]    = level.wrs_maps[i][0];
 			candidate[i]["iString"] = level.wrs_maps[i][1];
 			candidate[i]["title"]   = level.wrs_maps[i][2];
@@ -153,12 +129,12 @@ _mapvote_candidates(cndts)
 		rotation = maps\mp\gametypes\_wrs_admin::explode(" ", rotation, 0);  //Get all words from sv_maprotation.
 		maps = [];
 		current = getCvar("mapname");
-		for(i = 0;i < rotation.size;i++){
-			if(maps\mp\gametypes\_wrs::_substr(rotation[i],0,3) == "mp_" && rotation[i] != current){
+		for(i = 0;i < rotation.size;i++) {
+			if (maps\mp\gametypes\_wrs::_substr(rotation[i],0,3) == "mp_" && rotation[i] != current) {
 				maps[maps.size] = rotation[i];
 			}
 		}
-		if(cndts > maps.size){
+		if (cndts > maps.size) {
 			cndts = maps.size;
 		}
 		index = 0;
@@ -245,7 +221,7 @@ _hud_mapvote_create(cndts)
 	level.wrs_mapvote_hud_UL.sort = 9001;
 	level.wrs_mapvote_hud_UL setShader("white", level.wrs_mapvote_width - 6, 1);
 	//MAPS
-	for(i = 0; i < cndts; i++){
+	for(i = 0; i < cndts; i++) {
 		level.wrs_mapvote_hud_map[i] = newHudElem();
 		level.wrs_mapvote_hud_map[i].archived = false;
 		level.wrs_mapvote_hud_map[i].x = level.wrs_mapvote_x + 8;
@@ -275,60 +251,60 @@ _hud_mapvote_create(cndts)
 removeMapVotingHud()
 {
 	for(i = 0;i < level.wrs_mapvote_hud_map.size;i++)
-		if(isDefined(level.wrs_mapvote_hud_map[i])){
+		if (isDefined(level.wrs_mapvote_hud_map[i])) {
 			level.wrs_mapvote_hud_map[i] fadeOverTime(1);
 			level.wrs_mapvote_hud_map[i].alpha = 0;
 			level.wrs_mapvote_hud_map_votes[i] fadeOverTime(1);
 			level.wrs_mapvote_hud_map_votes[i].alpha = 0;
 		}
 
-	if(isDefined(level.wrs_mapvote_hud_bg)){
+	if (isDefined(level.wrs_mapvote_hud_bg)) {
 		level.wrs_mapvote_hud_bg fadeOverTime(1);
 		level.wrs_mapvote_hud_bg.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_cont)){
+	if (isDefined(level.wrs_mapvote_hud_cont)) {
 		level.wrs_mapvote_hud_cont fadeOverTime(1);
 		level.wrs_mapvote_hud_cont.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_cont_text)){
+	if (isDefined(level.wrs_mapvote_hud_cont_text)) {
 		level.wrs_mapvote_hud_cont_text fadeOverTime(1);
 		level.wrs_mapvote_hud_cont_text.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_LL)){
+	if (isDefined(level.wrs_mapvote_hud_LL)) {
 		level.wrs_mapvote_hud_LL fadeOverTime(1);
 		level.wrs_mapvote_hud_LL.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_RL)){
+	if (isDefined(level.wrs_mapvote_hud_RL)) {
 		level.wrs_mapvote_hud_RL fadeOverTime(1);
 		level.wrs_mapvote_hud_RL.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_UL)){
+	if (isDefined(level.wrs_mapvote_hud_UL)) {
 		level.wrs_mapvote_hud_UL fadeOverTime(1);
 		level.wrs_mapvote_hud_UL.alpha = 0;
 	}
-	if(isDefined(level.wrs_mapvote_hud_timer)){
+	if (isDefined(level.wrs_mapvote_hud_timer)) {
 		level.wrs_mapvote_hud_timer fadeOverTime(1);
 		level.wrs_mapvote_hud_timer.alpha = 0;
 	}
 
 	wait 1;
 
-	if(isDefined(level.wrs_mapvote_hud_bg))
+	if (isDefined(level.wrs_mapvote_hud_bg))
 		level.wrs_mapvote_hud_bg destroy();
-	if(isDefined(level.wrs_mapvote_hud_cont))
+	if (isDefined(level.wrs_mapvote_hud_cont))
 		level.wrs_mapvote_hud_cont destroy();
-	if(isDefined(level.wrs_mapvote_hud_cont_text))
+	if (isDefined(level.wrs_mapvote_hud_cont_text))
 		level.wrs_mapvote_hud_cont_text destroy();
-	if(isDefined(level.wrs_mapvote_hud_LL))
+	if (isDefined(level.wrs_mapvote_hud_LL))
 		level.wrs_mapvote_hud_LL destroy();
-	if(isDefined(level.wrs_mapvote_hud_RL))
+	if (isDefined(level.wrs_mapvote_hud_RL))
 		level.wrs_mapvote_hud_RL destroy();
-	if(isDefined(level.wrs_mapvote_hud_UL))
+	if (isDefined(level.wrs_mapvote_hud_UL))
 		level.wrs_mapvote_hud_UL destroy();
-	if(isDefined(level.wrs_mapvote_hud_timer))
+	if (isDefined(level.wrs_mapvote_hud_timer))
 		level.wrs_mapvote_hud_timer destroy();
 	for(i = 0;i < level.wrs_mapvote_hud_map.size;i++)
-		if(isDefined(level.wrs_mapvote_hud_map[i])){
+		if (isDefined(level.wrs_mapvote_hud_map[i])) {
 			level.wrs_mapvote_hud_map[i] destroy();
 			level.wrs_mapvote_hud_map_votes[i] destroy();
 		}
@@ -337,8 +313,8 @@ removeMapVotingHud()
 
 getMapIString(name)
 {
-	for(i = 0;i < level.wrs_maps.size;i++){
-		if(level.wrs_maps[i][0] == name){
+	for(i = 0;i < level.wrs_maps.size;i++) {
+		if (level.wrs_maps[i][0] == name) {
 			return level.wrs_maps[i][1];
 		}
 	}
@@ -349,7 +325,7 @@ getMapTitle(name)
 {
 	title = 0;
 	for(i = 0;i < level.wrs_maps.size;i++)
-		if(level.wrs_maps[i][0] == name){
+		if (level.wrs_maps[i][0] == name) {
 			title = level.wrs_maps[i][2];
 			break;
 		}

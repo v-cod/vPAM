@@ -1622,7 +1622,7 @@ endRound(roundwinner)
 
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::wrs_round_info(5);
+		maps\mp\gametypes\_wrs::round_info(5);
 	}
 	// } // END WRS
 
