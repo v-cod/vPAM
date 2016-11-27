@@ -18,7 +18,7 @@ monitor()
 {
 	// If someone did not move until end of round
 	origin_spawn = self.origin;
-	if (level.gametype == "sd") {
+	if (level.gametype == "sd" && isDefined(game["matchstarted"])) {
 		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
 			if (level.roundended) {
 				self iPrintLn(level.wrs_print_prefix + self.name + " ^7was moved to spectator mode.");

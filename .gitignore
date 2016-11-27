@@ -4,3 +4,5 @@ config_mp.cfg
 *.pk3
 *.sublime-workspace
 *.tmp
+
+hunkusage.dat

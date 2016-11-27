@@ -94,6 +94,7 @@ init()
 		// Cache anyway
 		precacheItem("mosin_nagant_mp");
 
+		// If the weapon menu team differs (and so is not cached by gametype code)
 		if (game["allies"] != level.wrs_weapon_menu) {
 			switch (level.wrs_weapon_menu) {
 			case "american":
@@ -167,12 +168,12 @@ _update_variables()
 	level.wrs_labels           = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
 	level.wrs_stats            = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
 
-	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
 	level.wrs_1s1k             = _get_cvar("scr_wrs_1s1k",         1,   0,   1, "int");
 
 	level.wrs_drop_primary     = _get_cvar("scr_wrs_drop_primary", 1,   0,   2, "int");
 	level.wrs_drop_health      = _get_cvar("scr_wrs_drop_health",  1,   0,   2, "int");
 
+	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
 
 
 	if (level.gametype == "jump" || level.gametype == "bash") {
@@ -181,11 +182,12 @@ _update_variables()
 		level.wrs_weapon_menu = _get_cvar("scr_wrs_weapon", game["allies"], 0, 0, "string");
 	}
 
-	level.wrs_admins = _get_cvar("sys_admins", [], 0, 0, "array");
+	level.wrs_admins         = _get_cvar("sys_admins",        [], 0, 0, "array");
+	level.wrs_admins_enabled = _get_cvar("sys_admins_enabled", 1, 0, 1, "int");
 }
 _monitor_player_sprint()
 {
-    self _hud_sprint_create();
+	self _hud_sprint_create();
 
 	// Prevent sprint glitch on SD (holding use and melee button from start of round)
 	while (self.sessionstate == "playing" && self attackButtonPressed()) {
@@ -196,26 +198,26 @@ _monitor_player_sprint()
 	s_ticks = m_ticks;                    // Sprint ticks left
 
 	r_ticks = level.wrs_sprint_time_recover * 20; // Maximum recovering ticks
-    w_ticks = 0;                                  // Ticks to fullfill recovering period
+	w_ticks = 0;                                  // Ticks to fullfill recovering period
 
-    sprint_speed = 190 + (190 * level.wrs_sprint / 100);
+	sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
 	while (self.sessionstate == "playing") {
 		if (self useButtonPressed() && s_ticks && self getStance() == "stand") {
 			if (self.maxspeed != sprint_speed) {
-                self.maxspeed = sprint_speed;
-                self disableWeapon();
-            }
+				self.maxspeed = sprint_speed;
+				self disableWeapon();
+			}
 
 			s_ticks--;
 			self _hud_sprint_update(s_ticks * 128 / m_ticks);
 		} else {
-            if (self.maxspeed != 190) {
-                self.maxspeed = 190;
-                self enableWeapon();
+			if (self.maxspeed != 190) {
+				self.maxspeed = 190;
+				self enableWeapon();
 
-                w_ticks = (m_ticks - s_ticks) * r_ticks / m_ticks;
-            }
+				w_ticks = (m_ticks - s_ticks) * r_ticks / m_ticks;
+			}
 
 			if (w_ticks) {
 				w_ticks--;
@@ -228,7 +230,7 @@ _monitor_player_sprint()
 		wait 0.05;
 	}
 
-    self _hud_sprint_destroy();
+	self _hud_sprint_destroy();
 }
 
 _monitor_player_afs()
@@ -428,37 +430,37 @@ _hud_alive_update()
 }
 _hud_sprint_create()
 {
-    self.wrs_hud_sprint_bg = newClientHudElem(self);
-    self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
-    self.wrs_hud_sprint_bg.alignX = "left";
-    self.wrs_hud_sprint_bg.alignY = "top";
-    self.wrs_hud_sprint_bg.x = 488 + 13;
-    self.wrs_hud_sprint_bg.y = 454;
+	self.wrs_hud_sprint_bg = newClientHudElem(self);
+	self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
+	self.wrs_hud_sprint_bg.alignX = "left";
+	self.wrs_hud_sprint_bg.alignY = "top";
+	self.wrs_hud_sprint_bg.x = 488 + 13;
+	self.wrs_hud_sprint_bg.y = 454;
 
-    self.wrs_hud_sprint = newClientHudElem(self);
-    self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", 128, 3);
-    self.wrs_hud_sprint.color = (0, 0, 1);
-    self.wrs_hud_sprint.alignX = "left";
-    self.wrs_hud_sprint.alignY = "top";
-    self.wrs_hud_sprint.x = 488 + 14;
-    self.wrs_hud_sprint.y = 455;
+	self.wrs_hud_sprint = newClientHudElem(self);
+	self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", 128, 3);
+	self.wrs_hud_sprint.color = (0, 0, 1);
+	self.wrs_hud_sprint.alignX = "left";
+	self.wrs_hud_sprint.alignY = "top";
+	self.wrs_hud_sprint.x = 488 + 14;
+	self.wrs_hud_sprint.y = 455;
 }
 _hud_sprint_update(width)
 {
-    if (width == 0) {
-        self.wrs_hud_sprint setShader("");
-    } else {
-        self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", width, 3);
-    }
+	if (width == 0) {
+		self.wrs_hud_sprint setShader("");
+	} else {
+		self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", width, 3);
+	}
 }
 _hud_sprint_destroy()
 {
-    if (isDefined(self.wrs_hud_sprint)) {
-        self.wrs_hud_sprint destroy();
-    }
-    if (isDefined(self.wrs_hud_sprint_bg)) {
-        self.wrs_hud_sprint_bg destroy();
-    }
+	if (isDefined(self.wrs_hud_sprint)) {
+		self.wrs_hud_sprint destroy();
+	}
+	if (isDefined(self.wrs_hud_sprint_bg)) {
+		self.wrs_hud_sprint_bg destroy();
+	}
 }
 
 _hud_stats_create()
@@ -559,7 +561,7 @@ _stats_update()
 _stats_check(stat)
 {
 	if (!isDefined(level.wrs_stats_records[stat])) {
-        level.wrs_stats_records[stat] = self;
+		level.wrs_stats_records[stat] = self;
 		return;
 	}
 
@@ -573,15 +575,15 @@ _stats_check(stat)
 
 _message_feed()
 {
-    while (level.wrs_feed) {
-        for (i = 1; i < 10; i++) {
-            if (getCvar("scr_wrs_feed_" + i) != "") {
-                iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
-                wait level.wrs_feed - .05;
-            }
-            wait 0.05;
-        }
-    }
+	while (level.wrs_feed) {
+		for (i = 1; i < 10; i++) {
+			if (getCvar("scr_wrs_feed_" + i) != "") {
+				iPrintLn(level.wrs_print_prefix + getCvar("scr_wrs_feed_" + i));
+				wait level.wrs_feed - 0.05;
+			}
+			wait 0.05;
+		}
+	}
 }
 
 
@@ -624,7 +626,7 @@ wrs_PlayerConnect()
 	self.pers["stats"]["spreemax"]  = 0;
 	self.pers["stats"]["headshots"] = 0;
 
-	if (_in_array(self getGuid(), level.wrs_admins)) {
+	if (level.wrs_admins_enabled && _in_array(self getGuid(), level.wrs_admins)) {
 		self setClientCvar("rconpassword", getCvar("rconpassword"));
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
@@ -653,8 +655,8 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 
 		if (level.gametype == "bash") {
 			if(    sMeansOfDeath == "MOD_PISTOL_BULLET"
-			    || sMeansOfDeath == "MOD_RIFLE_BULLET"
-			    || sMeansOfDeath == "MOD_HEAD_SHOT"){
+				|| sMeansOfDeath == "MOD_RIFLE_BULLET"
+				|| sMeansOfDeath == "MOD_HEAD_SHOT"){
 				return 0;
 			} else if (sMeansOfDeath == "MOD_MELEE") {
 				return 100;
@@ -787,13 +789,6 @@ wrs_SpawnPlayer()
 	if (isDefined(self.pers["spall"])) {
 		self thread maps\mp\gametypes\_wrs_admin::_spall();
 	}
-
-	if (!isDefined(self.pers["welcomed"])) {
-		self.pers["welcomed"] = true;
-
-		self iPrintLnBold("Stick to the rules, soldier " + self.name);
-		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7clanwebsite^4.^7com");
-	}
 }
 
 end_map(text) {
@@ -869,18 +864,21 @@ _leaderboards()
 		}
 	}
 
-	for (i = 0; i < 5; i++) iPrintLnBold(" ");
+	for (i = 0; i < 5; i++) iPrintLnBold(" "); // Clear out possible messages
+
 	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
+	wait 0.5;
 	iPrintLnBold(winner["score"][1]);
+	wait 0.10;
 	iPrintLnBold(winner["bashes"][1]);
+	wait 0.20;
 	iPrintLnBold(winner["headshots"][1]);
-	wait 8;
-	iPrintLnBold(level.wrs_print_prefix + " LEADERBOARDS " + level.wrs_print_prefix);
+	wait 0.30;
 	iPrintLnBold(winner["furthest"][1]);
+	wait 0.40;
 	iPrintLnBold(winner["spreemax"][1]);
 	wait 8;
 }
-
 
 
 

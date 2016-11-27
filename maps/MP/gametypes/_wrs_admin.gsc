@@ -72,11 +72,14 @@ monitor()
 	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
 	i++; gc[i]["c"] = "w_cvar";  gc[i]["f"] = ::_cvar;  gc[i]["e"] = 2; // Second value can contain spaces
 
-	for (i = 0; i < pc.size; i++) {
-		setCvar(pc[i]["c"], "");
-	}
-	for (i = 0; i < gc.size; i++) {
-		setCvar(gc[i]["c"], "");
+	// Only set them when gamestarted does not exist (is set with SD gametype)
+	if (!isDefined(game["gamestarted"])) {
+		for (i = 0; i < pc.size; i++) {
+			setCvar(pc[i]["c"], "");
+		}
+		for (i = 0; i < gc.size; i++) {
+			setCvar(gc[i]["c"], "");
+		}
 	}
 
 	while (1) {
