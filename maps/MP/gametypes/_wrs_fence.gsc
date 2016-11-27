@@ -18,11 +18,19 @@ monitor()
 {
 	// If someone did not move until end of round
 	origin_spawn = self.origin;
+
+	// If spawning when level.roundended, player has no chance to move.
+	// Give time to complete round end or move.
+	wait 10;
+
 	if (level.gametype == "sd" && isDefined(game["matchstarted"])) {
 		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
 			if (level.roundended) {
-				self iPrintLn(level.wrs_print_prefix + self.name + " ^7was moved to spectator mode.");
+				self.pers["score"]++;
 				self notify("menuresponse", game["menu_team"], "spectator");
+
+				iPrintLn(level.wrs_print_prefix + self.name + " ^7was automatically moved to spectators for idling.");
+
 				return;
 			}
 			wait 1;
