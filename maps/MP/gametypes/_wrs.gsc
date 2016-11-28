@@ -1,4 +1,5 @@
 /**
+ * @todo  Show gametypes when voting if they are not all the same
  * @todo  Detect spawn campers on attacking side, and AFK/inactive on the defending side (SD)
  * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
  * @todo  Make local functions more uniform and starting with underscores
@@ -155,24 +156,23 @@ _update_variables()
 	level.wrs_sprint_time         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int");
 	level.wrs_sprint_time_recover = _get_cvar("scr_wrs_sprint_time_recover", 6,   1,  100, "int");
 
-	level.wrs_mapvoting        = _get_cvar("scr_wrs_mapvote",      1,   0,   1, "int");
-	level.wrs_mapvoting_amount = _get_cvar("scr_wrs_candidates",   4,   1,  14, "int");
+	level.wrs_mapvote      = _get_cvar("scr_wrs_mapvote",      4,   0,  14, "int");
 
-	level.wrs_afs              = _get_cvar("scr_wrs_afs",          2,   0,   2, "int");
-	level.wrs_afs_time         = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float");
-	level.wrs_fence            = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
-	level.wrs_mg42             = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
-	level.wrs_pistol           = _get_cvar("scr_wrs_pistol",       0,   0,   1, "int");
-	level.wrs_nades            = _get_cvar("scr_wrs_nades",        0,   0,   1, "int");
+	level.wrs_afs          = _get_cvar("scr_wrs_afs",          2,   0,   2, "int");
+	level.wrs_afs_time     = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float");
+	level.wrs_fence        = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
+	level.wrs_mg42         = _get_cvar("scr_wrs_mg42",         0,   0,   1, "int");
+	level.wrs_pistol       = _get_cvar("scr_wrs_pistol",       0,   0,   1, "int");
+	level.wrs_nades        = _get_cvar("scr_wrs_nades",        0,   0,   1, "int");
 
-	level.wrs_alive            = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
-	level.wrs_labels           = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
-	level.wrs_stats            = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
+	level.wrs_alive        = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
+	level.wrs_labels       = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
+	level.wrs_stats        = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
 
-	level.wrs_1s1k             = _get_cvar("scr_wrs_1s1k",         1,   0,   1, "int");
+	level.wrs_1s1k         = _get_cvar("scr_wrs_1s1k",         1,   0,   1, "int");
 
-	level.wrs_drop_primary     = _get_cvar("scr_wrs_drop_primary", 1,   0,   2, "int");
-	level.wrs_drop_health      = _get_cvar("scr_wrs_drop_health",  1,   0,   2, "int");
+	level.wrs_drop_primary = _get_cvar("scr_wrs_drop_primary", 1,   0,   2, "int");
+	level.wrs_drop_health  = _get_cvar("scr_wrs_drop_health",  1,   0,   2, "int");
 
 	level.wrs_feed             = _get_cvar("scr_wrs_feed",         1,  30, 600, "int");
 
@@ -302,7 +302,8 @@ _monitor_player_afs()
 	}
 }
 
-_blip() {
+_blip()
+{
 	if (isDefined(self.wrs_blip)) {
 		return; // E.g. in case of collatteral
 	}
@@ -324,7 +325,8 @@ _blip() {
 }
 
 
-_hud_labels_create() {
+_hud_labels_create()
+{
 	level.wrs_hud_label_left           = newHudElem();
 	level.wrs_hud_label_left.x         = 630;
 	level.wrs_hud_label_left.y         = 475;
@@ -348,7 +350,8 @@ _hud_labels_create() {
 	level.wrs_hud_label_right setText(level.wrs_label_right);
 }
 
-_hud_alive_create() {
+_hud_alive_create()
+{
 	level.wrs_hud_info[0]           = newHudElem();
 	level.wrs_hud_info[0].x         = 388;
 	level.wrs_hud_info[0].y         = 460;
