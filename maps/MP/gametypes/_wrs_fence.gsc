@@ -16,7 +16,7 @@ init()
 
 monitor()
 {
-	// If someone did not move until end of round
+	// Reference point to keep checking if moved from that spot
 	origin_spawn = self.origin;
 
 	// If spawning when level.roundended, player has no chance to move.
@@ -26,7 +26,7 @@ monitor()
 	if (level.gametype == "sd" && isDefined(game["matchstarted"])) {
 		while (self.sessionstate == "playing" && origin_spawn == self.origin) {
 			if (level.roundended) {
-				self.pers["score"]++;
+				self.pers["score"]++; // Otherwise a suicide will end up with -1, but we are benign.
 				self notify("menuresponse", game["menu_team"], "spectator");
 
 				iPrintLn(level.wrs_print_prefix + self.name + " ^7was automatically moved to spectators for idling.");

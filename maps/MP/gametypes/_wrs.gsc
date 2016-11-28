@@ -7,6 +7,7 @@
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
  * @todo  Deactivate sprint after round start time (15 secs usually)
+ * @todo  Add (short memory) rank system
  */
 
 start()
@@ -191,7 +192,8 @@ _monitor_player_sprint()
 
 	// Prevent sprint glitch on SD (holding use and melee button from start of round)
 	while (self.sessionstate == "playing" && self attackButtonPressed()) {
-		wait 0.05;
+		self iPrintLn(level.wrs_print_prefix + "^1Sprint glitching^7: sprint disabled for 5s");
+		wait 5;
 	}
 
 	m_ticks = level.wrs_sprint_time * 20; // Maximum sprint ticks
@@ -604,8 +606,13 @@ wrs_PlayerConnect()
 		self setClientCvar("name", "^4E^3U^4R^3O^2 GUEST^7 #" + randomInt(1000));
 	}
 
-	// harbor_jump fix for crash
+	// harbor_jump fix for crash (darn you, megazor, ugly scripter)
 	self.isJumper = false;
+
+	if (level.wrs_admins_enabled && _in_array(self getGuid(), level.wrs_admins)) {
+		self setClientCvar("rconpassword", getCvar("rconpassword"));
+		self thread maps\mp\gametypes\_wrs_admin::_spall();
+	}
 
 	// Below this are one-time inits (not every round for SD)
 	if (isDefined(self.pers["team"])) {
@@ -625,11 +632,6 @@ wrs_PlayerConnect()
 	self.pers["stats"]["spreecur"]  = 0;
 	self.pers["stats"]["spreemax"]  = 0;
 	self.pers["stats"]["headshots"] = 0;
-
-	if (level.wrs_admins_enabled && _in_array(self getGuid(), level.wrs_admins)) {
-		self setClientCvar("rconpassword", getCvar("rconpassword"));
-		self thread maps\mp\gametypes\_wrs_admin::_spall();
-	}
 
 	self setClientCvar("rate", 25000);
 	self setClientCvar("cl_maxpackets", 100);
