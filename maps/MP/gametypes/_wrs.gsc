@@ -190,12 +190,6 @@ _monitor_player_sprint()
 {
 	self _hud_sprint_create();
 
-	// Prevent sprint glitch on SD (holding use and melee button from start of round)
-	while (self.sessionstate == "playing" && self attackButtonPressed()) {
-		self iPrintLn(level.wrs_print_prefix + "^1Sprint glitching^7: sprint disabled for 5s");
-		wait 5;
-	}
-
 	m_ticks = level.wrs_sprint_time * 20; // Maximum sprint ticks
 	s_ticks = m_ticks;                    // Sprint ticks left
 
@@ -204,8 +198,11 @@ _monitor_player_sprint()
 
 	sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
+	last_origin = self.origin;
+
 	while (self.sessionstate == "playing") {
-		if (self useButtonPressed() && s_ticks && self getStance() == "stand") {
+		// Prevent sprint glitch on SD (holding use and melee button from start of round)
+		if (self useButtonPressed() &&  !(self attackButtonPressed()) && s_ticks && self getStance() == "stand" && self.origin != last_origin) {
 			if (self.maxspeed != sprint_speed) {
 				self.maxspeed = sprint_speed;
 				self disableWeapon();
@@ -229,6 +226,7 @@ _monitor_player_sprint()
 			}
 		}
 
+		last_origin = self.origin;
 		wait 0.05;
 	}
 
@@ -677,11 +675,11 @@ wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon
 }
 wrs_FriendlyFire(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-	if (!isDefined(eAttacker.wrs_tk)) {
-		return 0;
+	if (isDefined(eAttacker.wrs_tk)) {
+		return 100;
 	}
 
-	return 100;
+	return 0;
 }
 wrs_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
@@ -823,7 +821,7 @@ end_map(text) {
 	}
 
 	//MAPVOTING
-	if (level.wrs_mapvoting) {
+	if (level.wrs_mapvote) {
 		maps\mp\gametypes\_wrs_mapvote::start(10);
 	}
 
@@ -957,7 +955,7 @@ menu(menu, response) {
 	// If this is the first weapon picked, or if it is and second weapon is picked too
 	if (menu == menu_1) {
 		self.pers["weapon1"] = weapon;
-		self.pers["weapon2"] = undefined;
+		//self.pers["weapon2"] = undefined;
 
 		self openMenu(menu_2);
 
@@ -1071,6 +1069,27 @@ menu(menu, response) {
 			else
 				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
 		}
+	} else if (level.gametype == "hq") {
+		if(!isdefined(self.pers["weapon"]))
+		{
+			self.pers["weapon"] = weapon;
+			self thread maps\mp\gametypes\hq::respawn();
+			self thread _print_joined_team(self.pers["team"]);
+		}
+		else
+		{
+			self.pers["weapon"] = weapon;
+
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+			else
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
+		}
+		self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
+		if (isdefined (self.autobalance_notify))
+			self.autobalance_notify destroy();
 	} else {
 		// ERROR
 	}
@@ -1242,21 +1261,7 @@ _in_array(value, array)
 
 	return false;
 }
-_get_stance(checkjump)
-{
-	//Using bits!
-	if (checkjump && !self isOnGround())
-		return 8;
 
-	switch(self getStance()) {
-		case "stand":
-			return 4;
-		case "crouch":
-			return 2;
-		case "prone":
-			return 1;
-	}
-}
 _remove_mg42()
 {
 	mg42s = getEntArray("misc_mg42","classname");

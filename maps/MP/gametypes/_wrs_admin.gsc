@@ -17,7 +17,6 @@ init()
 	i++; level.wrs_model[i][0] = "chair";        level.wrs_model[i][1] = "xmodel/chair_office";
 	i++; level.wrs_model[i][0] = "closet";       level.wrs_model[i][1] = "xmodel/armoir";
 	i++; level.wrs_model[i][0] = "couch";        level.wrs_model[i][1] = "xmodel/Couch";
-	i++; level.wrs_model[i][0] = "cow";          level.wrs_model[i][1] = "xmodel/cow_standing";
 	i++; level.wrs_model[i][0] = "crate";        level.wrs_model[i][1] = "xmodel/crate_misc1a";
 	i++; level.wrs_model[i][0] = "crypt";        level.wrs_model[i][1] = "xmodel/crypt1";
 	i++; level.wrs_model[i][0] = "desk";         level.wrs_model[i][1] = "xmodel/desk_rolltop";
@@ -65,8 +64,7 @@ monitor()
 	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
 	i++; pc[i]["c"] = "w_name";   pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
 	i++; pc[i]["c"] = "w_model";  pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
-	i++; pc[i]["c"] = "w_throw";  pc[i]["f"] = ::_throw;   pc[i]["e"] = 0; // Second value is height
-	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 0; // Second value is keyword
+	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 3; // Second value is keyword, optional third might contain spaces.
 
 	// Global commands
 	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
@@ -94,19 +92,32 @@ monitor()
 
 			arg = explode(" ", v, pc[i]["e"]);
 
-			player = _get_player(arg[0]);
-			if (!isDefined(player)) {
-				iPrintLn("^1--");
-				continue;
-			}
+			if (arg[0] == "-1") {
+				players = getentarray("player", "classname");
+				for (j = 0; j < players.size; j++) {
+					if (pc[i]["e"] != 1) {
+						players[j] thread [[pc[i]["f"]]](arg);
+					} else {
+						players[j] thread [[pc[i]["f"]]]();
+					}
+				}
 
-			if (pc[i]["e"] != 1) {
-				player thread [[pc[i]["f"]]](arg);
+				logPrint("wrs;-1;" + pc[i]["c"] + ";" + v + "\n");
 			} else {
-				player thread [[pc[i]["f"]]]();
-			}
+				player = _get_player(arg[0]);
+				if (!isDefined(player)) {
+					iPrintLn("^1--");
+					continue;
+				}
 
-			logPrint("wrs;" + ";" + player getGuid() + pc[i]["c"] + ";" + v + "\n");
+				if (pc[i]["e"] != 1) {
+					player thread [[pc[i]["f"]]](arg);
+				} else {
+					player thread [[pc[i]["f"]]]();
+				}
+
+				logPrint("wrs;" + player getGuid() + ";" + pc[i]["c"] + ";" + v + "\n");
+			}
 		}
 		for (i = 0; i < gc.size; i++) {
 			v = getCvar(gc[i]["c"]);
@@ -137,7 +148,8 @@ _annoy()
 
 	self.wrs_annoy = true;
 
-	self iPrintLn(level.wrs_print_prefix + "You are being ^1annoyed^7.");
+	self iPrintLnBold(level.wrs_print_prefix + "Follow the rules! Listen to the admin(s)!");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 is being ^1annoyed^7.");
 
 	for (i = 0; isDefined(self.wrs_annoy) && self.sessionstate == "playing"; i++) {
 		if (i == 8) {
@@ -155,11 +167,13 @@ _bunny()
 {
 	if (isDefined(self.wrs_bunny)) {
 		self.wrs_bunny = undefined;
-		self iPrintLn(level.wrs_print_prefix + "You've been ^1unbunnied^7.");
+		self iPrintLnBold(level.wrs_print_prefix + "You are not a ^1bunny^7 anymore.");
+		iPrintLn(level.wrs_print_prefix + self.name + "^7 is no ^1bunny^7 anymore.");
 		return;
 	}
 
-	self iPrintLn(level.wrs_print_prefix + "You've become a ^1bunny^7: jump!");
+	self iPrintLnBold(level.wrs_print_prefix + "You've become a ^1bunny^7: jump!");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 is now a ^1bunny^7!");
 
 	self.wrs_bunny = true;
 	while (isDefined(self.wrs_bunny)) {
@@ -168,16 +182,17 @@ _bunny()
 			wait .05;
 			originAfter = self.origin;
 			if (!self isOnGround() && originBefore[2] < originAfter[2]) {
-				self.maxspeed = 380;
-				self.health += 1000;
+				self.maxspeed =  380;
+				self.health  += 1000;
 
 				x = (originAfter[0] - originBefore[0])/(float)10;
 				y = (originAfter[1] - originBefore[1])/(float)10;
 
 				self finishPlayerDamage(self, self, 1000, 0, "MOD_PROJECTILE", "panzerfaust_mp",  self.origin, (x, y, 2), "none");
 			}
-			while (isDefined(self.wrs_bunny) && !self isOnGround())
+			while (isDefined(self.wrs_bunny) && !self isOnGround()) {
 				wait .05;
+			}
 
 			self.maxspeed = 190;
 		}
@@ -190,7 +205,8 @@ _disarm()
 		return;
 	}
 
-	self iPrintLn(level.wrs_print_prefix + "You have been ^1disarmed^7.");
+	self iPrintLnBold(level.wrs_print_prefix + "You have been ^1disarmed^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 has been ^1disarmed^7.");
 
 	self dropItem(self getWeaponSlotWeapon("grenade"));
 	self dropItem(self getWeaponSlotWeapon("pistol"));
@@ -217,8 +233,9 @@ _kill()
 	}
 
 	self suicide();
-	iPrintLn(level.wrs_print_prefix + self.name+ " ^7was ^1killed^7.");
+
 	self iPrintLnBold(level.wrs_print_prefix + "You have been ^1killed^7.");
+	iPrintLn(level.wrs_print_prefix + self.name+ " ^7was ^1killed^7.");
 }
 _mortar()
 {
@@ -233,30 +250,41 @@ _mortar()
 
 	self.wrs_mortar = true;
 
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is going to be ^1mortared^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 is targeted by ^1mortars^7.");
+	self iPrintLnBold("You are targeted by mortars. Listen to the admin(s)!");
 
-	soundSource = spawn("script_model", self getOrigin());
-	soundSource linkto(self);
+	sound_src = spawn("script_model", self.origin);
 
-	soundSource playsound("generic_undersuppression_foley");
-	wait 2;
-	self iPrintLnBold(level.wrs_print_prefix + "Incoming!");
-	soundSource playsound("mortar_incoming");
-	wait 1.5;
+	wait 1;
 
 	while (self.sessionstate == "playing" && isDefined(self.wrs_mortar)) {
-		wait randomFloatRange(0, 1.3);  //Wait for a random time
-		target = self.origin + (0, 0, 2); //Set the position
+		// Random wait to 'aim'
+		wait randomFloatRange(0.5, 3);
 
-		wait .4;                        //Wait for it...
+		// Lock, and deviate to simulate bad accuracy
+		target = self.origin + (randomIntRange(0, 70), randomIntRange(0, 70), 2);
+		sound_src.origin = target;
+		sound_src playsound("mortar_incoming2");
 
-		playFx(level.wrs_effect["generic"], target);    //Play the explosion effect
-		soundSource playsound("mortar_explosion");      //Play the explosion sound
+		// Standard waiting time
+		wait 1;
 
-		radiusDamage(target, 300, 200, 25);             //Apply random damage
-		earthquake(0.3, 1.5, target, 400);              //Shake it up a little
+		// Explosion effects
+		playFx(level.wrs_effect["generic"], target);
+		sound_src playsound("mortar_explosion");
+
+		// Calculate damage done, influenced by distance
+		// 400 being maximum distance from impact (educated guess): 40 (distance / 10) health can maximally be spared when far away.
+		distance = distance(target, self.origin);
+		if (distance > 400) { distance = 400; }
+		damage = 50 - (distance / 10);
+
+		// Real impact and earthquake
+		self finishPlayerDamage(self, self, damage, 0, "MOD_EXPLOSIVE", "none", self.origin, (0,0,0), "none");
+		earthquake(0.3, 1.5, target, 400);
 	}
-	soundSource delete();
+
+	sound_src delete();
 }
 _nades()
 {
@@ -266,12 +294,17 @@ _nades()
 
 	if (isDefined(self.wrs_nades)) {
 		self.wrs_nades = undefined;
+
+		self iPrintLnBold(level.wrs_print_prefix + "your ^1nades^7 have been taken away.");
+		iPrintLn(level.wrs_print_prefix + self.name + "^7 had their ^1nades^7 taken away.");
+
 		return;
 	}
 
 	self.wrs_nades = true;
 
-	self iPrintLn(level.wrs_print_prefix + "You've received unlimited ^1nades^7.");
+	self iPrintLnBold(level.wrs_print_prefix + "You've received unlimited ^1nades^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 received unlimited ^1nades^7.");
 
 	self setWeaponSlotWeapon("grenade", "stielhandgranate_mp");
 	self setWeaponSlotClipAmmo("grenade", 3);
@@ -286,8 +319,6 @@ _nades()
 		wait .05;
 	}
 	if (self.sessionstate == "playing") {
-		self iPrintLn(level.wrs_print_prefix + "Your ^1nades^7 have been taken.");
-
 		self takeWeapon("stielhandgranate_mp");
 		self switchToWeapon(self getWeaponSlotWeapon("primary"));
 	}
@@ -305,18 +336,31 @@ _smite()
 
 	self suicide();
 
+	self iPrintLnBold(level.wrs_print_prefix + "Follow the rules! Listen to the admin(s)!");
 	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1smitten^7.");
 }
 _spall()
 {
 	if (!isDefined(self.pers["spall"])) {
 		self.pers["spall"] = true;
+
+		self iPrintLn(level.wrs_print_prefix + "^1Spectate-all^7 enabled.");
 	}
 
-	self allowSpectateTeam("allies", true);
-	self allowSpectateTeam("axis", true);
-	self allowSpectateTeam("freelook", true);
-	self allowSpectateTeam("none", true);
+	if (isDefined(self.wrs_spall)) {
+		return;
+	}
+
+	self.wrs_spall = true;
+
+	while (1) {
+		self allowSpectateTeam("allies", true);
+		self allowSpectateTeam("axis", true);
+		self allowSpectateTeam("freelook", true);
+		self allowSpectateTeam("none", true);
+
+		wait 1;
+	}
 }
 _spec()
 {
@@ -336,13 +380,13 @@ _tk()
 
 	if (isDefined(self.wrs_tk)) {
 		self.wrs_tk = undefined;
-		self iPrintLn(level.wrs_print_prefix + "You're not a ^1teamkiller^7 anymore.");
 		return;
 	}
 
 	self.wrs_tk = true;
 
-	self iPrintLn(level.wrs_print_prefix + "You're a ^1teamkiller^7.");
+	self iPrintLnBold(level.wrs_print_prefix + "You're a ^1teamkiller^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + " ^7is now a ^1teamkiller^7.");
 }
 
 
@@ -387,6 +431,14 @@ _name(arg)
 }
 _model(arg)
 {
+	// Print model names to player
+	if (!isDefined(arg[1])) {
+		for (i = 0; i < level.wrs_model.size; i++) {
+			self iPrintLn(level.wrs_model[i][0]);
+		}
+		return;
+	}
+
 	if (self.sessionstate != "playing") {
 		return;
 	}
@@ -397,15 +449,8 @@ _model(arg)
 		return;
 	}
 
-
-	if (!isDefined(arg[1])) {
-		for (i = 0; i < level.wrs_model.size; i++) {
-			self iPrintLn(level.wrs_model[i][0]);
-		}
-		return;
-	}
-
-	model   = arg[1];
+	// Find model index number
+	model = arg[1];
 	for (i = 0; i < level.wrs_model.size; i++) {
 		if (level.wrs_model[i][0] == model) {
 			model_i = i;
@@ -423,15 +468,9 @@ _model(arg)
 	self disableWeapon();
 	self detachAll();
 
-	if (model == "cow") {
-		self setModel("");
-		cowModel = spawn("script_model", self getOrigin());
-		cowModel.angles = self.angles + (0, 270, 0);
-		cowModel setModel(level.wrs_model[model_i][1]);
-		cowModel linkTo(self);
-	} else {
-		self setModel(level.wrs_model[model_i][1]);
-	}
+	self setModel(level.wrs_model[model_i][1]);
+
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 turned into a(n) ^1" + model + "^7!");
 
 	while (isDefined(self.wrs_model) && self.sessionstate == "playing") {
 		wait .05;
@@ -439,41 +478,34 @@ _model(arg)
 
 	self.wrs_model = undefined;
 
-	if (model == "cow") {
-		self unlink();
-		cowModel delete();
-	}
-
 	self.maxspeed = 190;
 	self setClientCvar("cg_thirdperson", 0);
 	if (self.sessionstate == "playing") {
+		iPrintLn(level.wrs_print_prefix + self.name + "^7 is not a(n) ^1" + model + "^7 anymore.");
+
 		self enableWeapon();
 		self detachAll();
 		self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 	}
 }
-_throw(arg)
-{
-	if (self.sessionstate != "playing") {
-		return;
-	}
 
+
+_print(arg)
+{
+	iPrintLnBold(arg[0]);
+}
+_cvar(arg)
+{
 	if (!isDefined(arg[1])) {
 		iPrintLn("^1--");
-		return;
 	}
 
-	self iPrintLn(level.wrs_print_prefix + "You've been moved");
+	setCvar(arg[0], arg[1]);
 
-	lift = spawn("script_model", self.origin);
-	self linkTo(lift);
-	lift moveZ(arg[1], .5, .2, .2);
-
-	wait .5;
-
-	self unLink();
-	lift delete();
+	iPrintLn(level.wrs_print_prefix + "^3" + arg[0] + " ^2" + arg[1]);
 }
+
+
 _obscure(arg)
 {
 	if (!isDefined(arg[1])) {
@@ -500,21 +532,6 @@ _obscure(arg)
 	}
 }
 
-_print(arg)
-{
-	iPrintLnBold(arg[0]);
-}
-_cvar(arg)
-{
-	if (!isDefined(arg[1])) {
-		iPrintLn("^1--");
-	}
-
-	setCvar(arg[0], arg[1]);
-
-	iPrintLn(level.wrs_print_prefix + "^3" + arg[0] + " ^2" + arg[1]);
-}
-
 
 
 _hide()
@@ -524,7 +541,6 @@ _hide()
 	}
 
 	if (isDefined(self.wrs_hide)) {
-		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1visible^7 again.");
 		self.wrs_hide = undefined;
 		return;
 	}
@@ -544,6 +560,8 @@ _hide()
 	self.maxspeed = 190;
 
 	if (self.sessionstate == "playing") {
+		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1visible^7 again.");
+
 		self detachAll();
 		self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 	}
@@ -562,11 +580,15 @@ _sj()
 {
 	if (isDefined(self.wrs_sj)) {
 		self.wrs_sj = undefined;
-		self iPrintLn(level.wrs_print_prefix + "Your ^1SJ ^7has been disabled.");
+		self iPrintLnBold(level.wrs_print_prefix + "Your ^1super jump^7 has been disabled.");
+		iPrintLn(level.wrs_print_prefix + self.name + "^7 had their ^1super jump^7 taken away.");
 		return;
 	}
 
-	self iPrintLn(level.wrs_print_prefix + "You have received ^1SJ^7.");
+	iPrintLn(level.wrs_print_prefix + self.name + "^7 received ^1super jump^7.");
+	self iPrintLnBold(level.wrs_print_prefix + "You have received ^1super jump^7.");
+	self iPrintLn(level.wrs_print_prefix + "Press [{+melee}] and");
+	self iPrintLn(level.wrs_print_prefix + "[{+activate}] at the same time to be kicked up.");
 	self.wrs_sj = true;
 
 	while (isDefined(self.wrs_sj)) {

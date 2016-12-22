@@ -63,6 +63,8 @@ _eliminate(block)
 		i--;
 		wait 1;
 		if (i <= 0) {
+			iPrintLn(level.wrs_print_prefix + self.name + " ^7was killed for entering an unallowed spot.");
+
 			self suicide();
 			return;
 		}
