@@ -392,6 +392,11 @@ _tk()
 
 _ccvar(arg)
 {
+	if (!isDefined(arg[2])) {
+		iPrintLn("^1--");
+		return;
+	}
+
 	if (arg[1] == "speed") {
 		self.maxspeed = arg[2];
 	} else if (arg[1] == "health") {
@@ -399,11 +404,6 @@ _ccvar(arg)
 	} else if (arg[1] == "score") {
 		self.score = arg[2];
 	} else if (arg[1] == "origin") {
-		if (!isDefined(arg[2])) {
-			iPrintLn("^1--");
-			return;
-		}
-
 		p = explode(" ", arg[2], 3);
 
 		if (!isDefined(p[1]) || !isDefined(p[2])) {
