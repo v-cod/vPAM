@@ -43,6 +43,8 @@ init()
 			precacheModel(level.wrs_model[i][1]);
 		}
 	}
+
+	mptype\german_kriegsmarine::precache();
 }
 
 // Monitor CMD cvars and call function callbacks according to CMDs
@@ -221,7 +223,28 @@ _jumper()
 
 	if (isDefined(self.wrs_jumper)) {
 		self.wrs_jumper = undefined;
+
+		self switchToWeapon(self getWeaponSlotWeapon("primary"));
+		self takeWeapon(self getWeaponSlotWeapon("grenade"));
+		self takeWeapon(self getWeaponSlotWeapon("pistol"));
+
+		if(!isDefined(self.pers["savedmodel"])) {
+			maps\mp\gametypes\_teams::model();
+		} else {
+			maps\mp\_utility::loadModel(self.pers["savedmodel"]);
+		}
+
 		return;
+	}
+
+	self detachAll();
+	self thread mptype\german_kriegsmarine::main();
+	maps\mp\gametypes\_teams::givePistol();
+	maps\mp\gametypes\_teams::giveGrenades(self getWeaponSlotWeapon("primary"));
+	self setWeaponSlotAmmo("pistol", 0);
+	self setWeaponSlotClipAmmo("pistol", 0);
+
+	if (self.sessionstate == "playing") {
 	}
 
 	self thread maps\mp\gametypes\_wrs_jumper::_monitor();
@@ -306,20 +329,19 @@ _nades()
 	self iPrintLnBold(level.wrs_print_prefix + "You've received unlimited ^1nades^7.");
 	iPrintLn(level.wrs_print_prefix + self.name + "^7 received unlimited ^1nades^7.");
 
-	self setWeaponSlotWeapon("grenade", "stielhandgranate_mp");
+	maps\mp\gametypes\_teams::giveGrenades(self getWeaponSlotWeapon("primary"));
 	self setWeaponSlotClipAmmo("grenade", 3);
 
 	wait .05;
-	self switchToWeapon("stielhandgranate_mp");
+	self switchToWeapon(self getWeaponSlotWeapon("grenade"));
 
 	while (self.sessionstate == "playing" && isDefined(self.wrs_nades)) {
-		self setWeaponSlotWeapon("grenade", "stielhandgranate_mp");
 		self setWeaponSlotClipAmmo("grenade", 3);
 
 		wait .05;
 	}
 	if (self.sessionstate == "playing") {
-		self takeWeapon("stielhandgranate_mp");
+		self takeWeapon(self getWeaponSlotWeapon("grenade"));
 		self switchToWeapon(self getWeaponSlotWeapon("primary"));
 	}
 }

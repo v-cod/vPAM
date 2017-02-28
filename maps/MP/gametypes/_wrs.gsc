@@ -794,7 +794,7 @@ wrs_SpawnPlayer()
 	}
 }
 
-end_map(text) {
+end_map(text, playername) {
 	cleanUp(true);
 
 	players = getEntArray("player", "classname");
@@ -805,7 +805,13 @@ end_map(text) {
 		player [[level.fnc_spawnSpectator]]();
 
 		player setClientCvar("g_scriptMainMenu", "main");
-		player setClientCvar("cg_objectiveText", text);
+		if (isDefined(text)) {
+			if (isDefined(playername)) {
+				player setClientCvar("cg_objectiveText", text, playername);
+			} else {
+				player setClientCvar("cg_objectiveText", text);
+			}
+		}
 
 		player allowSpectateTeam("allies", false);
 		player allowSpectateTeam("axis", false);

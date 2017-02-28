@@ -1037,7 +1037,12 @@ endMap()
 
 	// WRS {
 	if (level.wrs) {
-		maps\mp\gametypes\_wrs::end_map(text);
+		if(isDefined(tied) && tied == true) {
+			text = &"MPSCRIPT_THE_GAME_IS_A_TIE";
+		} 	else if(isDefined(playername)) {
+			text = &"MPSCRIPT_WINS";
+		}
+		maps\mp\gametypes\_wrs::end_map(text, playername);
 	} else {
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
