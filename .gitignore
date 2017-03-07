@@ -1,8 +1,9 @@
-*.lnk
+tmp/
+
 config_mp.cfg
+
+*.dat
+*.lnk
 *.log
 *.pk3
-*.sublime-workspace
 *.tmp
-
-hunkusage.dat
