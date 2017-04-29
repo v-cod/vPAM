@@ -74,7 +74,7 @@ init()
 		precacheShader(level.wrs_blip_shader);
 
 		// Sprint
-		precacheShader("gfx/hud/hud@health_back.dds");
+		precacheShader("gfx/hud/hud@health_back.dds"); // cannot cast undefined to bool: (file 'maps\mp\gametypes\_wrs.gsc', line 77)
 		precacheShader("gfx/hud/hud@health_bar.dds");
 
 		// Clock during round switch

@@ -119,7 +119,7 @@ wrs_AFS(){
 			if(!isDefined(self.pers["afs"]))
 				self.pers["afs"] = 0;
 			self.pers["afs"]++;
-			logPrint("WRS;FASTSHOOT;" + self.name + ";" + self.pers["guid"] + ";\n");
+			logPrint("WRS;FASTSHOOT;" + self.name + ";" + self getGuid() + ";\n");
 			if(level.wrs_AFS > 0)
 				iPrintLn(level.wrs_PrintPrefix + self.name + " ^1shot ^7too ^1fast^7("+self.pers["afs"]+")!");
 			if(level.wrs_AFS > 1){
