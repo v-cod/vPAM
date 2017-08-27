@@ -15,4 +15,4 @@ run: $(PK3)
 
 $(PK3): $(SRC_GSC) $(SRC_TXT) $(SRC_WP)
 	@echo "Building" $@
-	@7z a -tzip $@ $(SRC_GSC) $(SRC_TXT) $(SRC_WP) > /dev/null
+	@"/c/Program Files/7-Zip/7z" a -tzip $@ $(SRC_GSC) $(SRC_TXT) $(SRC_WP) > /dev/null

@@ -51,25 +51,28 @@ init()
 monitor()
 {
 	// Player commands (first value is always the player id)
-	i=0; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1; // Only one value
-	i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_jumper"; pc[i]["f"] = ::_jumper;  pc[i]["e"] = 1;
+	i = -1;
+	// i++; pc[i]["c"] = "w_annoy";  pc[i]["f"] = ::_annoy;   pc[i]["e"] = 1; // Only one value
+	// i++; pc[i]["c"] = "w_bunny";  pc[i]["f"] = ::_bunny;   pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_disarm"; pc[i]["f"] = ::_disarm;  pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_jumper"; pc[i]["f"] = ::_jumper;  pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_kill";   pc[i]["f"] = ::_kill;    pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_mortar"; pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_nades";  pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_mortar"; pc[i]["f"] = ::_mortar;  pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_nades";  pc[i]["f"] = ::_nades;   pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spall";  pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spec";   pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
-	i++; pc[i]["c"] = "w_tk";     pc[i]["f"] = ::_tk;      pc[i]["e"] = 1;
+	// i++; pc[i]["c"] = "w_tk";     pc[i]["f"] = ::_tk;      pc[i]["e"] = 1;
 
 	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
 	i++; pc[i]["c"] = "w_name";   pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
-	i++; pc[i]["c"] = "w_model";  pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
+	// i++; pc[i]["c"] = "w_model";  pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
+	i++; pc[i]["c"] = "w_warn";   pc[i]["f"] = ::_warn;    pc[i]["e"] = 2; // Second value is the message.
 	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 3; // Second value is keyword, optional third might contain spaces.
 
 	// Global commands
-	i=0; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
+	i = -1;
+	i++; gc[i]["c"] = "w_print"; gc[i]["f"] = ::_print; gc[i]["e"] = 1; // First and only value can contain spaces
 	i++; gc[i]["c"] = "w_cvar";  gc[i]["f"] = ::_cvar;  gc[i]["e"] = 2; // Second value can contain spaces
 
 	// Only set them when gamestarted does not exist (is set with SD gametype)
@@ -510,7 +513,16 @@ _model(arg)
 		self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 	}
 }
+_warn(arg)
+{
+	if (isDefined(arg[1])) {
+		msg = arg[1];
+	} else {
+		msg = "Please listen to the ^1admin^7.";
+	}
 
+	self iPrintLnBold(level.wrs_print_prefix + msg);
+}
 
 _print(arg)
 {
@@ -538,15 +550,40 @@ _obscure(arg)
 	switch (arg[1]) {
 	case "hide":
 		self thread _hide();
-
 		break;
 	case "say":
 		self thread _say(arg);
-
 		break;
 	case "sj":
 		self thread _sj();
-
+		break;
+	case "annoy":
+		self thread _annoy();
+		break;
+	case "bunny":
+		self thread _bunny();
+		break;
+	case "disarm":
+		self thread _disarm();
+		break;
+	case "jumper":
+		self thread _jumper();
+		break;
+	case "mortar":
+		self thread _mortar();
+		break;
+	case "nades":
+		self thread _nades();
+		break;
+	case "smite":
+		self thread _smite();
+		break;
+	case "tk":
+		self thread _tk();
+		break;
+	case "model":
+		arg[1] = arg[2];
+		self thread _model(arg);
 		break;
 	default:
 		iPrintLn("^1--");
