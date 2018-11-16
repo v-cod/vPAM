@@ -16,7 +16,13 @@ init()
 	level.wrs_maps[13][0] = "mp_ship";       level.wrs_maps[13][1] = &"Ship";       level.wrs_maps[13][2] = "Ship";
 	level.wrs_maps[14][0] = "mp_stalingrad"; level.wrs_maps[14][1] = &"Stalingrad"; level.wrs_maps[14][2] = "Stalingrad";
 	level.wrs_maps[15][0] = "mp_tigertown";  level.wrs_maps[15][1] = &"Tigertown";  level.wrs_maps[15][2] = "Tigertown";
-
+	level.wrs_maps[16][0] = "german_town";   level.wrs_maps[16][1] = &"German Town";level.wrs_maps[16][2] = "German Town";
+	level.wrs_maps[17][0] = "mp_stanjel";    level.wrs_maps[17][1] = &"Stanjel";    level.wrs_maps[17][2] = "Stanjel";
+	level.wrs_maps[18][0] = "mp_priory";     level.wrs_maps[18][1] = &"Priory";     level.wrs_maps[18][2] = "Priory";
+	level.wrs_maps[19][0] = "mp_cassino";    level.wrs_maps[19][1] = &"Cassino";    level.wrs_maps[19][2] = "Cassino";
+	level.wrs_maps[20][0] = "mp_uo_harbor";  level.wrs_maps[20][1] = &"UO Harbor";  level.wrs_maps[20][2] = "UO Harbor";
+	level.wrs_maps[21][0] = "mp_vacant";     level.wrs_maps[21][1] = &"Vacant";     level.wrs_maps[21][2] = "Vacant";
+ 
 	level.wrs_hud_mapvote_header = &"Map                                    Votes";
 
 	if (!isDefined(game["gamestarted"])) {
@@ -113,7 +119,7 @@ _monitor_player_mapvote()
 }
 _mapvote_candidates(cndts)
 {
-	rotation = getCvar("sv_maprotation");
+	rotation = getCvar("scr_wrs_maprotation");
 	if (rotation == "") {
 		if (level.wrs_maps.size < cndts)
 			cndts = level.wrs_maps.size;
@@ -126,11 +132,25 @@ _mapvote_candidates(cndts)
 		}
 	}
 	else{
-		rotation = maps\mp\gametypes\_wrs_admin::explode(" ", rotation, 0);  //Get all words from sv_maprotation.
+		rotation = maps\mp\gametypes\_wrs_admin::explode("/", rotation, 0);  //split scr_wrs_rotation into the 3 playersizes
+		players = getEntArray("player", "classname");
+		msize = 0;
+		for (i = 0; i < players.size; i++) {
+			msize++;
+		}
+		if(msize < 9) {
+			playercount = 0;
+		} else if (msize < 21){
+			playercount = 1;
+		} else {
+			playercount = 2;
+		}
+		rotation = maps\mp\gametypes\_wrs_admin::explode(" ", rotation[playercount], 0);  //split the correct size rotation into maps
+		logPrint("MAPVOTE;" + playercount + " playersize= " + msize + "\n");
 		maps = [];
 		current = getCvar("mapname");
 		for(i = 0;i < rotation.size;i++) {
-			if (maps\mp\gametypes\_wrs::_substr(rotation[i],0,3) == "mp_" && rotation[i] != current) {
+			if (rotation[i] != current) {
 				maps[maps.size] = rotation[i];
 			}
 		}
@@ -140,16 +160,32 @@ _mapvote_candidates(cndts)
 		index = 0;
 		cndt = [];
 		candidate = [];
+		harborlimit = 0;
+		if ((current == "mp_harbor" || current == "mp_uo_harbor")){
+			harborlimit++;
+		}
 		while (1) {
 			rnd = randomInt(maps.size);
-			if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
-				cndt[index] = maps[rnd];
-				candidate[index]["name"]    = cndt[index];
-				candidate[index]["iString"] = getMapIString(cndt[index]);
-				candidate[index]["title"]   = getMapTitle(cndt[index]);
-				candidate[index]["votes"]   = 0;
-				index++;
-			}
+			if ((maps[rnd] == "mp_harbor" || maps[rnd] == "mp_uo_harbor")){
+				if(!harborlimit){
+					harborlimit++;
+					if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
+						cndt[index] = maps[rnd];
+						candidate[index]["name"]    = cndt[index];
+						candidate[index]["iString"] = getMapIString(cndt[index]);
+						candidate[index]["title"]   = getMapTitle(cndt[index]);
+						candidate[index]["votes"]   = 0;
+						index++;
+					}
+				}
+			} else if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
+					cndt[index] = maps[rnd];
+					candidate[index]["name"]    = cndt[index];
+					candidate[index]["iString"] = getMapIString(cndt[index]);
+					candidate[index]["title"]   = getMapTitle(cndt[index]);
+					candidate[index]["votes"]   = 0;
+					index++;
+				}
 			if (index >= cndts) {
 				break;
 			}

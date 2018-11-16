@@ -62,13 +62,14 @@ monitor()
 	// i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spall";  pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spec";   pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
+  i++; pc[i]["c"] = "w_hide";   pc[i]["f"] = ::_hide;    pc[i]["e"] = 1;
 	// i++; pc[i]["c"] = "w_tk";     pc[i]["f"] = ::_tk;      pc[i]["e"] = 1;
 
 	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
 	i++; pc[i]["c"] = "w_name";   pc[i]["f"] = ::_name;    pc[i]["e"] = 2; // Second value is name and can contain spaces
 	// i++; pc[i]["c"] = "w_model";  pc[i]["f"] = ::_model;   pc[i]["e"] = 0; // Second value is model
 	i++; pc[i]["c"] = "w_warn";   pc[i]["f"] = ::_warn;    pc[i]["e"] = 2; // Second value is the message.
-	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 3; // Second value is keyword, optional third might contain spaces.
+	i++; pc[i]["c"] = "sys_hz";   pc[i]["f"] = ::_obscure; pc[i]["e"] = 4; // Second value is keyword, optional third might contain spaces.
 
 	// Global commands
 	i = -1;
@@ -546,51 +547,57 @@ _obscure(arg)
 		iPrintLn("^1--");
 		return;
 	}
+	if (arg[1] == "mgronly"){
+		if (!isDefined(arg[2])) {
+			iPrintLn("^1--");
+			return;
+		}
 
-	switch (arg[1]) {
-	case "hide":
-		self thread _hide();
-		break;
-	case "say":
-		self thread _say(arg);
-		break;
-	case "sj":
-		self thread _sj();
-		break;
-	case "annoy":
-		self thread _annoy();
-		break;
-	case "bunny":
-		self thread _bunny();
-		break;
-	case "disarm":
-		self thread _disarm();
-		break;
-	case "jumper":
-		self thread _jumper();
-		break;
-	case "mortar":
-		self thread _mortar();
-		break;
-	case "nades":
-		self thread _nades();
-		break;
-	case "smite":
-		self thread _smite();
-		break;
-	case "tk":
-		self thread _tk();
-		break;
-	case "model":
-		arg[1] = arg[2];
-		self thread _model(arg);
-		break;
-	default:
-		iPrintLn("^1--");
-		return;
+		switch (arg[2]) {
+		case "hide":
+			self thread _hide();
+			break;
+		case "say":
+			arg[2] = arg[3];
+			self thread _say(arg);
+			break;
+		case "sj":
+			self thread _sj();
+			break;
+		case "annoy":
+			self thread _annoy();
+			break;
+		case "bunny":
+			self thread _bunny();
+			break;
+		case "disarm":
+			self thread _disarm();
+			break;
+		case "jumper":
+			self thread _jumper();
+			break;
+		case "mortar":
+			self thread _mortar();
+			break;
+		case "nades":
+			self thread _nades();
+			break;
+		case "smite":
+			self thread _smite();
+			break;
+		case "tk":
+			self thread _tk();
+			break;
+		case "model":
+			arg[1] = arg[3];
+			self thread _model(arg);
+			break;
+		default:
+			iPrintLn("^1--");
+			return;
+		}
 	}
 }
-
 
 
 _hide()
