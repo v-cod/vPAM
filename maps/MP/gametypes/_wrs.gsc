@@ -637,6 +637,7 @@ wrs_PlayerConnect()
 	self setClientCvar("rate", 25000);
 	self setClientCvar("cl_maxpackets", 100);
 	self setClientCvar("snaps", 40);
+	self setClientCvar("cl_allowdownload", 1);
 }
 wrs_PlayerDisconnect()
 {
