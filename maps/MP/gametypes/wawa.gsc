@@ -220,7 +220,6 @@ Callback_PlayerConnect()
 	self setClientCvar ("cl_allowdownload", 1);
 	self setClientCvar ("snaps", 40);
 	self setClientCvar ("cl_maxpackets", 60);
-	self setClientCvar ("com_maxfps", 125);
 
 	if(self.name == "" || self.name == "^7" || self.name == "^7 " || self.name.size == 0 || self.name == "Unknown Soldier" || self.name == "UnnamedPlayer")
 		self setClientCvar("name", "^3BEST W^7AWA ^3F^7AN #" + randomInt(1000));
@@ -569,8 +568,6 @@ spawnPlayer(arena)
 		self setClientCvar("r_znear", 4);
 		self setClientCvar("r_measureoverdraw", 0);
 	}
-
-	self setClientCvar ("com_maxfps", 125);
 
 	self notify("spawned");
 	self notify("end_respawn");
