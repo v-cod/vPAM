@@ -1,0 +1,5 @@
+.gitignore export-ignore
+.gitattributes export-ignore
+ban.txt export-ignore
+*.sh export-ignore
+*.cfg export-ignore
