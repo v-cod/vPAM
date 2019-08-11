@@ -59,7 +59,7 @@ _eliminate(block)
 	self iPrintLnBold("This spot is ^1not ^7allowed.");
 	i = 5;
 	while (self _is_in_block(block)) {
-		self iPrintLn(i);
+		self iPrintLn(level.wrs_print_prefix + "Killing in " + i + " seconds.");
 		i--;
 		wait 1;
 		if (i <= 0) {

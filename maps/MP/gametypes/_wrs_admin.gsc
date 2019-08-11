@@ -62,7 +62,7 @@ monitor()
 	// i++; pc[i]["c"] = "w_smite";  pc[i]["f"] = ::_smite;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spall";  pc[i]["f"] = ::_spall;   pc[i]["e"] = 1;
 	i++; pc[i]["c"] = "w_spec";   pc[i]["f"] = ::_spec;    pc[i]["e"] = 1;
-  i++; pc[i]["c"] = "w_hide";   pc[i]["f"] = ::_hide;    pc[i]["e"] = 1;
+	i++; pc[i]["c"] = "w_hide";   pc[i]["f"] = ::_hide;    pc[i]["e"] = 1;
 	// i++; pc[i]["c"] = "w_tk";     pc[i]["f"] = ::_tk;      pc[i]["e"] = 1;
 
 	i++; pc[i]["c"] = "w_ccvar";  pc[i]["f"] = ::_ccvar;   pc[i]["e"] = 3; // Third value (cvar value) can contain spaces
