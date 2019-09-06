@@ -7,6 +7,10 @@ init()
 		block[0]["min"] = (2048, -216, 168); // Glitch room
 		block[0]["max"] = (2464,   -8, 292);
 		break;
+	case "mp_carentan":
+		block[0]["min"] = (584,  448, 320); // Sniper roof
+		block[0]["max"] = (1304, 744, 512);
+		break;
 	default:
 		break;
 	}
@@ -56,6 +60,7 @@ monitor()
 // Eliminate routine to warn player before killing him
 _eliminate(block)
 {
+	iPrintLn(level.wrs_print_prefix + self.name + " ^7entered an unallowed spot.");
 	self iPrintLnBold("This spot is ^1not ^7allowed.");
 	i = 5;
 	while (self _is_in_block(block)) {
