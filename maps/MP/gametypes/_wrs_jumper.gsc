@@ -39,7 +39,7 @@ _monitor_load()
 		}
 
 		if (self.sessionstate == "playing" && i < 6) {
-			if (!isDefined(self.wrs_jumper_save) || self.wrs_jumper_save == (0, 0, 0)) {
+			if (!isDefined(self.wrs_jumper_save) || self.wrs_jumper_save["origin"] == (0, 0, 0)) {
 				self iPrintLn(level.wrs_print_prefix + "No position saved yet.");
 				continue;
 			}
