@@ -23,7 +23,9 @@ init()
 	level.wrs_maps[20][0] = "mp_uo_harbor";  level.wrs_maps[20][1] = &"UO Harbor";  level.wrs_maps[20][2] = "UO Harbor";
 	level.wrs_maps[21][0] = "mp_vacant";     level.wrs_maps[21][1] = &"Vacant";     level.wrs_maps[21][2] = "Vacant";
  
-	level.wrs_hud_mapvote_header = &"Map                                    Votes";
+	level.wrs_vote_hud_header_istring = &"Map                                    Votes";
+	level.wrs_vote_hud_entry_height = 24;
+	level.wrs_vote_hud_border_width = 2;
 
 	if (!isDefined(game["gamestarted"])) {
 		for (i = 0; i < level.wrs_maps.size; i++) {
@@ -31,340 +33,332 @@ init()
 		}
 
 		precacheShader("white");
-		precacheString(level.wrs_hud_mapvote_header);
+		precacheShader("black");
+		precacheString(level.wrs_vote_hud_header_istring);
 	}
 }
 
-//These functions handle the mapvoting
-start(seconds)
+start(max_maps, seconds)
 {
-	level.wrs_candidate = _mapvote_candidates(level.wrs_mapvote);
+	// All votable maps.
+	pool = _get_valid_maps();
+	// If too many maps: randomly pick from all votable maps.
+	pool = _select_random(pool, max_maps);
 
-	_hud_mapvote_create(level.wrs_candidate.size);
-	level.wrs_mapvote_hud_timer setClock(seconds, 60, "hudStopwatch", 64, 64);
+	istrings = [];
+	for (i = 0; i < pool.size; i++) {
+		istrings[i] = level.wrs_maps[pool[i]][1];
+		level.wrs_vote_count[i] = 0;
+	}
+
+	_hud_vote_create(istrings);
+	level.wrs_vote_hud_clock setClock(seconds, 60, "hudStopwatch", 64, 64);
 
 	players = getEntArray("player", "classname");
 	for(i = 0; i < players.size; i++) {
-		players[i] thread _monitor_player_mapvote();
+		players[i] thread _monitor_player();
 	}
 
-	wait seconds;                   //Let people vote for seconds
-	level.wrs_mapvoting_end = true; //Put on true, so people can't vote.
-	winner = _mapvote_winner();
+	wait seconds;
 
-	removeMapVotingHud();
+	level notify("wrs_vote_end");
+	_hud_vote_destroy();
 
-	iPrintLnBold("^4Next Map^7: ^3" + level.wrs_candidate[winner]["title"]);    //Count votes and print it
-	setCvar("sv_maprotationcurrent", "gametype "+level.gametype+" map " + level.wrs_candidate[winner]["name"]);
-
-	wait 3;
-}
-_mapvote_winner()
-{
+	// Default winner is 0.
 	winner = 0;
-	votes  = 0;
-	for(i = 0;i < level.wrs_candidate.size;i++) {
-		if (level.wrs_candidate[i]["votes"] > votes) {
-			votes = level.wrs_candidate[i]["votes"];
+	highest = level.wrs_vote_count[winner];
+	// Find higher count.
+	for(i = 1; i < level.wrs_vote_count.size; i++) {
+		if (level.wrs_vote_count[i] > highest) {
 			winner = i;
+			highest = level.wrs_vote_count[winner];
 		}
 	}
-	return winner;
+
+	logPrint("wrs;MAPVOTE;" + players.size + ";" + level.wrs_maps[pool[winner]][0] + "\n");
+
+	iPrintLnBold("^4Next Map^7: ^3" + level.wrs_maps[pool[winner]][2]);
+	setCvar("sv_maprotationcurrent", "gametype " + level.gametype + " map " + level.wrs_maps[pool[winner]][0]);
 }
-_monitor_player_mapvote()
+
+_monitor_player()
 {
-	self.wrs_mapvote_hud_indicator       = newClientHudElem(self);
-	self.wrs_mapvote_hud_indicator.x     = level.wrs_mapvote_x + 4;
-	self.wrs_mapvote_hud_indicator.y     = level.wrs_mapvote_y + 24;
-	self.wrs_mapvote_hud_indicator.sort  = 9998;
-	self.wrs_mapvote_hud_indicator.alpha = 0;
-	self.wrs_mapvote_hud_indicator.color = (0, 0, 1);
-	self.wrs_mapvote_hud_indicator setShader("white", level.wrs_mapvote_width - 8, 24);
+	// Aliases.
+	eh = level.wrs_vote_hud_entry_height;
+	bw = level.wrs_vote_hud_border_width;
 
-	cndts    = level.wrs_mapvote - 1;
-	mapVote  = -1;
-	lastVote = -1;
+	self.wrs_vote_hud_indicator = newClientHudElem(self);
+	self.wrs_vote_hud_indicator.x = level.wrs_vote_x + bw;
+	self.wrs_vote_hud_indicator.y = -128;
+	self.wrs_vote_hud_indicator.sort= 9998;
+	self.wrs_vote_hud_indicator.alpha = 0.3;
+	self.wrs_vote_hud_indicator.color = (0, 0, 1);
+	self.wrs_vote_hud_indicator setShader("white", level.wrs_vote_width - 2*bw, eh);
 
-	while (!isDefined(level.wrs_mapvoting_end)) {
+	self thread _monitor_player_vote();
+
+	level waittill("wrs_vote_end");
+	self.wrs_vote_hud_indicator destroy();
+}
+
+_monitor_player_vote()
+{
+	// Aliases.
+	eh = level.wrs_vote_hud_entry_height;
+	bw = level.wrs_vote_hud_border_width;
+
+	level endon("wrs_vote_end");
+
+	vote = -1;
+	while (true) {
 		if (self attackButtonPressed()) {
-			if (!self.wrs_mapvote_hud_indicator.alpha)
-				self.wrs_mapvote_hud_indicator.alpha = 0.3;
-
-			mapVote++;
-			if (mapVote > cndts)
-				mapVote = 0;
-
-			/////////////// SAME AS ABOVE
-			if (lastVote != -1) {
-				level.wrs_candidate[lastVote]["votes"]--;
-				level.wrs_mapvote_hud_map_votes[lastVote] setValue(level.wrs_candidate[lastVote]["votes"]);
+			// Cancel vote if applicable.
+			if (vote != -1) {
+				level.wrs_vote_count[vote]--;
+				level.wrs_vote_hud_count[vote] setValue(level.wrs_vote_count[vote]);
 			}
-			level.wrs_candidate[mapVote]["votes"]++;
-			level.wrs_mapvote_hud_map_votes[mapVote] setValue(level.wrs_candidate[mapVote]["votes"]);
-			lastVote = mapVote;
-			///////////////
 
-			self.wrs_mapvote_hud_indicator.y = level.wrs_mapvote_y + 24 + mapVote * 24;
+			// Change vote.
+			vote++;
+			if (vote > level.wrs_vote_count.size - 1) {
+				vote = 0;
+			}
+
+			// Apply vote.
+			level.wrs_vote_count[vote]++;
+			level.wrs_vote_hud_count[vote] setValue(level.wrs_vote_count[vote]);
+
+			self.wrs_vote_hud_indicator.y = level.wrs_vote_y + bw + eh + vote*eh;
 			self playLocalSound("hq_score");
 
-			while(self attackButtonPressed())
+			while(self attackButtonPressed()) {
 				wait .05;
+			}
 		}
 
 		wait .05;
 	}
-
-	if (isDefined(self.wrs_mapvote_hud_indicator))
-		self.wrs_mapvote_hud_indicator destroy();
 }
-_mapvote_candidates(cndts)
-{
-	rotation = getCvar("scr_wrs_maprotation");
-	if (rotation == "") {
-		if (level.wrs_maps.size < cndts)
-			cndts = level.wrs_maps.size;
 
-		for(i = 0;i < cndts;i++) {
-			candidate[i]["name"]    = level.wrs_maps[i][0];
-			candidate[i]["iString"] = level.wrs_maps[i][1];
-			candidate[i]["title"]   = level.wrs_maps[i][2];
-			candidate[i]["votes"]   = 0;
+
+// Get array of level.wrs_maps indices that are valid map choices.
+// Takes into account thresholds, no Harbor repeat, and only mod-defined maps (level.wrs_maps).
+_get_valid_maps()
+{
+	// scr_wrs_mapplayers must hold pairs of numbers and maps,
+	// e.g. "5 mp_carentan 20 mp_rocket",  where the number is the minimum
+	// amount of players for this map to be in the pool.
+	thresholds = getCvar("scr_wrs_mapplayers");
+	thresholds = maps\mp\gametypes\_wrs_admin::explode(" ", thresholds, 0);
+	t = [];
+	for (i = 0; i < thresholds.size; i += 2) {
+		t[thresholds[i + 1]] = (int) thresholds[i];
+	}
+	thresholds = t;
+
+	rotation = getCvar("sv_maprotation");
+	rotation = maps\mp\gametypes\_wrs_admin::explode(" ", rotation, 0);
+
+	psize = getEntArray("player", "classname").size;
+
+	map_is_harbor = getCvar("mapname") == "mp_harbor" || getCvar("mapname") == "mp_uo_harbor";
+
+	// Find level.wrs_maps in rotation and store their index number if below its threshold.
+	r = [];
+	for (i = 0; i < rotation.size; i++) {
+		if (isDefined(thresholds[rotation[i]]) && psize < thresholds[rotation[i]]) {
+			continue;
+		}
+
+		// Search for the map string in the level.wrs_maps array.
+		index = maps\mp\gametypes\_wrs::_find_multi(rotation[i], level.wrs_maps, 0);
+		if (index != -1) {
+			if (map_is_harbor && (index == 6 || index == 20)) {
+				continue;
+			}
+
+			r[r.size] = index;
 		}
 	}
-	else{
-		rotation = maps\mp\gametypes\_wrs_admin::explode("/", rotation, 0);  //split scr_wrs_rotation into the 3 playersizes
-		players = getEntArray("player", "classname");
-		msize = 0;
-		for (i = 0; i < players.size; i++) {
-			msize++;
-		}
-		if(msize < 9) {
-			playercount = 0;
-		} else if (msize < 21){
-			playercount = 1;
-		} else {
-			playercount = 2;
-		}
-		rotation = maps\mp\gametypes\_wrs_admin::explode(" ", rotation[playercount], 0);  //split the correct size rotation into maps
-		logPrint("MAPVOTE;" + playercount + " playersize= " + msize + "\n");
-		maps = [];
-		current = getCvar("mapname");
-		for(i = 0;i < rotation.size;i++) {
-			if (rotation[i] != current) {
-				maps[maps.size] = rotation[i];
-			}
-		}
-		if (cndts > maps.size) {
-			cndts = maps.size;
-		}
-		index = 0;
-		cndt = [];
-		candidate = [];
-		harborlimit = 0;
-		if ((current == "mp_harbor" || current == "mp_uo_harbor")){
-			harborlimit++;
-		}
-		while (1) {
-			rnd = randomInt(maps.size);
-			if ((maps[rnd] == "mp_harbor" || maps[rnd] == "mp_uo_harbor")){
-				if(!harborlimit){
-					harborlimit++;
-					if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
-						cndt[index] = maps[rnd];
-						candidate[index]["name"]    = cndt[index];
-						candidate[index]["iString"] = getMapIString(cndt[index]);
-						candidate[index]["title"]   = getMapTitle(cndt[index]);
-						candidate[index]["votes"]   = 0;
-						index++;
-					}
-				}
-			} else if (!maps\mp\gametypes\_wrs::_in_array(maps[rnd],cndt)) {
-					cndt[index] = maps[rnd];
-					candidate[index]["name"]    = cndt[index];
-					candidate[index]["iString"] = getMapIString(cndt[index]);
-					candidate[index]["title"]   = getMapTitle(cndt[index]);
-					candidate[index]["votes"]   = 0;
-					index++;
-				}
-			if (index >= cndts) {
+	
+	return r;
+}
+
+// Randomly select values from an array.
+_select_random(arr, s)
+{
+	if (arr.size <= s) {
+		return arr;
+	}
+
+	arr_last = arr.size;
+
+	// Set random values to undefined, until size is right.
+	while (arr.size > s) {
+		// Random number for set of DEFINED values.
+		rand = randomInt(arr.size);
+		for (i = 0; i < arr_last; i++) {
+			if (!isDefined(arr[i])) {
+				// Correct the random number to discard UNDEFINED values.
+				rand++;
+			} else if (rand == i) {
+				arr[i] = undefined;
 				break;
 			}
 		}
-		return candidate;
 	}
 
-	return candidate;
-}
-_hud_mapvote_create(cndts)
-{
-	level.wrs_mapvote_width = 200;
-	level.wrs_mapvote_height =27 + cndts*24;
-
-	level.wrs_mapvote_x = 320 - level.wrs_mapvote_width/2;
-	level.wrs_mapvote_y = -64 + 240 - level.wrs_mapvote_height/2;
-
-	if (isDefined(level.wrs_mapvote_hud_bg))
-		return;
-	//CONTAINER
-	level.wrs_mapvote_hud_bg = newHudElem();
-	level.wrs_mapvote_hud_bg.archived = false;
-	level.wrs_mapvote_hud_bg.alpha = .7;
-	level.wrs_mapvote_hud_bg.x = level.wrs_mapvote_x;
-	level.wrs_mapvote_hud_bg.y = level.wrs_mapvote_y;
-	level.wrs_mapvote_hud_bg.sort = 9000;
-	level.wrs_mapvote_hud_bg.color = (0,0,0);
-	level.wrs_mapvote_hud_bg setShader("white", level.wrs_mapvote_width, level.wrs_mapvote_height);
-	//TITLE CONTAINER
-	level.wrs_mapvote_hud_cont = newHudElem();
-	level.wrs_mapvote_hud_cont.archived = false;
-	level.wrs_mapvote_hud_cont.alpha = .3;
-	level.wrs_mapvote_hud_cont.x = level.wrs_mapvote_x + 3;
-	level.wrs_mapvote_hud_cont.y = level.wrs_mapvote_y + 3;
-	level.wrs_mapvote_hud_cont.sort = 9001;
-	level.wrs_mapvote_hud_cont setShader("white", level.wrs_mapvote_width - 6, 21);
-	//TITLE TEXT
-	level.wrs_mapvote_hud_cont_text = newHudElem();
-	level.wrs_mapvote_hud_cont_text.archived = false;
-	level.wrs_mapvote_hud_cont_text.alignX = "center";
-	level.wrs_mapvote_hud_cont_text.x = level.wrs_mapvote_x + level.wrs_mapvote_width/2;
-	level.wrs_mapvote_hud_cont_text.y = level.wrs_mapvote_y + 5;
-	level.wrs_mapvote_hud_cont_text.sort = 9998;
-	level.wrs_mapvote_hud_cont_text.label = level.wrs_hud_mapvote_header;
-	level.wrs_mapvote_hud_cont_text.fontscale = 1.2;
-	//LEFT CONTAINER LINE
-	level.wrs_mapvote_hud_LL = newHudElem();
-	level.wrs_mapvote_hud_LL.archived = false;
-	level.wrs_mapvote_hud_LL.alpha = .3;
-	level.wrs_mapvote_hud_LL.x = level.wrs_mapvote_x + 3;
-	level.wrs_mapvote_hud_LL.y = level.wrs_mapvote_y + 24;
-	level.wrs_mapvote_hud_LL.sort = 9001;
-	level.wrs_mapvote_hud_LL setShader("white", 1, level.wrs_mapvote_height - 28);
-	//RIGHT CONTAINER LINE
-	level.wrs_mapvote_hud_RL = newHudElem();
-	level.wrs_mapvote_hud_RL.archived = false;
-	level.wrs_mapvote_hud_RL.alpha = .3;
-	level.wrs_mapvote_hud_RL.x = level.wrs_mapvote_x + (level.wrs_mapvote_width - 4);
-	level.wrs_mapvote_hud_RL.y = level.wrs_mapvote_y + 24;
-	level.wrs_mapvote_hud_RL.sort = 9001;
-	level.wrs_mapvote_hud_RL setShader("white", 1, level.wrs_mapvote_height - 28);
-	//UNDER CONTAINER LINE
-	level.wrs_mapvote_hud_UL = newHudElem();
-	level.wrs_mapvote_hud_UL.archived = false;
-	level.wrs_mapvote_hud_UL.alpha = .3;
-	level.wrs_mapvote_hud_UL.x = level.wrs_mapvote_x + 3;
-	level.wrs_mapvote_hud_UL.y = level.wrs_mapvote_y + (level.wrs_mapvote_height - 3);
-	level.wrs_mapvote_hud_UL.alignY = "bottom";
-	level.wrs_mapvote_hud_UL.sort = 9001;
-	level.wrs_mapvote_hud_UL setShader("white", level.wrs_mapvote_width - 6, 1);
-	//MAPS
-	for(i = 0; i < cndts; i++) {
-		level.wrs_mapvote_hud_map[i] = newHudElem();
-		level.wrs_mapvote_hud_map[i].archived = false;
-		level.wrs_mapvote_hud_map[i].x = level.wrs_mapvote_x + 8;
-		level.wrs_mapvote_hud_map[i].y = level.wrs_mapvote_y + 24 + (i * 24);
-		level.wrs_mapvote_hud_map[i].sort = 9998;
-		level.wrs_mapvote_hud_map[i].fontScale = 1.5;
-		level.wrs_mapvote_hud_map[i] setText(level.wrs_candidate[i]["iString"]);
-
-		level.wrs_mapvote_hud_map_votes[i] = newHudElem();
-		level.wrs_mapvote_hud_map_votes[i].archived = false;
-		level.wrs_mapvote_hud_map_votes[i].alignX = "right";
-		level.wrs_mapvote_hud_map_votes[i].x = level.wrs_mapvote_x + level.wrs_mapvote_Width - 8;
-		level.wrs_mapvote_hud_map_votes[i].y = level.wrs_mapvote_y + 24 + (i * 24);
-		level.wrs_mapvote_hud_map_votes[i].sort = 9998;
-		level.wrs_mapvote_hud_map_votes[i].fontScale = 1.5;
-		level.wrs_mapvote_hud_map_votes[i] setValue(0);
-	}
-
-	level.wrs_mapvote_hud_timer = newHudElem();
-	level.wrs_mapvote_hud_timer.archived = false;
-	level.wrs_mapvote_hud_timer.x = level.wrs_mapvote_x + level.wrs_mapvote_Width/2;
-	level.wrs_mapvote_hud_timer.y = level.wrs_mapvote_y - 3;
-	level.wrs_mapvote_hud_timer.alignX = "center";
-	level.wrs_mapvote_hud_timer.alignY = "middle";
-	level.wrs_mapvote_hud_timer.sort = 9999;
-}
-removeMapVotingHud()
-{
-	for(i = 0;i < level.wrs_mapvote_hud_map.size;i++)
-		if (isDefined(level.wrs_mapvote_hud_map[i])) {
-			level.wrs_mapvote_hud_map[i] fadeOverTime(1);
-			level.wrs_mapvote_hud_map[i].alpha = 0;
-			level.wrs_mapvote_hud_map_votes[i] fadeOverTime(1);
-			level.wrs_mapvote_hud_map_votes[i].alpha = 0;
+	new_arr = [];
+	for (i = 0; i < arr_last; i++) {
+		if (isDefined(arr[i])) {
+			new_arr[new_arr.size] = arr[i];
 		}
+	}
 
-	if (isDefined(level.wrs_mapvote_hud_bg)) {
-		level.wrs_mapvote_hud_bg fadeOverTime(1);
-		level.wrs_mapvote_hud_bg.alpha = 0;
+	return new_arr;
+}
+
+_hud_vote_create(istrings)
+{
+	level.wrs_vote_width = 200;
+	level.wrs_vote_height = 27 + istrings.size * 24;
+
+	level.wrs_vote_x = 320 - level.wrs_vote_width/2;
+	level.wrs_vote_y = -64 + 240 - level.wrs_vote_height/2;
+
+	if (isDefined(level.wrs_vote_hud_cont)) {
+		return;
 	}
-	if (isDefined(level.wrs_mapvote_hud_cont)) {
-		level.wrs_mapvote_hud_cont fadeOverTime(1);
-		level.wrs_mapvote_hud_cont.alpha = 0;
+
+	// Aliases.
+	eh = level.wrs_vote_hud_entry_height;
+	bw = level.wrs_vote_hud_border_width;
+
+	// Container.
+	level.wrs_vote_hud_cont = newHudElem();
+	level.wrs_vote_hud_cont.archived = false;
+	level.wrs_vote_hud_cont.alpha = .75;
+	level.wrs_vote_hud_cont.x = level.wrs_vote_x;
+	level.wrs_vote_hud_cont.y = level.wrs_vote_y;
+	level.wrs_vote_hud_cont.sort = 9000;
+	level.wrs_vote_hud_cont.color = (0,0,0);
+	level.wrs_vote_hud_cont setShader("black", level.wrs_vote_width, level.wrs_vote_height);
+
+	// Header.
+	level.wrs_vote_hud_header = newHudElem();
+	level.wrs_vote_hud_header.archived = false;
+	level.wrs_vote_hud_header.alpha = .25;
+	level.wrs_vote_hud_header.x = level.wrs_vote_x + bw;
+	level.wrs_vote_hud_header.y = level.wrs_vote_y + bw;
+	level.wrs_vote_hud_header.sort = 9001;
+	level.wrs_vote_hud_header setShader("white", level.wrs_vote_width - 2*bw, eh);
+
+	// Header text.
+	level.wrs_vote_hud_header_text = newHudElem();
+	level.wrs_vote_hud_header_text.archived = false;
+	level.wrs_vote_hud_header_text.alignX = "center";
+	level.wrs_vote_hud_header_text.alignY = "middle";
+	level.wrs_vote_hud_header_text.x = level.wrs_vote_x + level.wrs_vote_width/2;
+	level.wrs_vote_hud_header_text.y = level.wrs_vote_y + bw + eh/2;
+	level.wrs_vote_hud_header_text.sort = 9998;
+	level.wrs_vote_hud_header_text.label = level.wrs_vote_hud_header_istring;
+	level.wrs_vote_hud_header_text.fontscale = 1.2;
+
+	// Votables container.
+	level.wrs_vote_hud_votables = newHudElem();
+	level.wrs_vote_hud_votables.archived = false;
+	level.wrs_vote_hud_votables.alpha = .125;
+	level.wrs_vote_hud_votables.x = level.wrs_vote_x + bw;
+	level.wrs_vote_hud_votables.y = level.wrs_vote_y + bw + eh;
+	level.wrs_vote_hud_votables.sort = 9001;
+	level.wrs_vote_hud_votables setShader("white", level.wrs_vote_width - 2*bw, level.wrs_vote_height - 2*bw - eh);
+
+	// Votables.
+	for (i = 0; i < istrings.size; i++) {
+		level.wrs_vote_hud_entry[i] = newHudElem();
+		level.wrs_vote_hud_entry[i].archived = false;
+		level.wrs_vote_hud_entry[i].x = level.wrs_vote_x + 3*bw;
+		level.wrs_vote_hud_entry[i].y = level.wrs_vote_y + bw + eh + (i * eh);
+		level.wrs_vote_hud_entry[i].sort = 9998;
+		level.wrs_vote_hud_entry[i].fontScale = 1.5;
+		level.wrs_vote_hud_entry[i] setText(istrings[i]);
+
+		level.wrs_vote_hud_count[i] = newHudElem();
+		level.wrs_vote_hud_count[i].archived = false;
+		level.wrs_vote_hud_count[i].alignX = "right";
+		level.wrs_vote_hud_count[i].x = level.wrs_vote_x + level.wrs_vote_width - 3*bw;
+		level.wrs_vote_hud_count[i].y = level.wrs_vote_y + bw + eh + (i * eh);
+		level.wrs_vote_hud_count[i].sort = 9998;
+		level.wrs_vote_hud_count[i].fontScale = 1.5;
+		level.wrs_vote_hud_count[i] setValue(0);
 	}
-	if (isDefined(level.wrs_mapvote_hud_cont_text)) {
-		level.wrs_mapvote_hud_cont_text fadeOverTime(1);
-		level.wrs_mapvote_hud_cont_text.alpha = 0;
+
+	// Clock.
+	level.wrs_vote_hud_clock = newHudElem();
+	level.wrs_vote_hud_clock.archived = false;
+	level.wrs_vote_hud_clock.x = level.wrs_vote_x + level.wrs_vote_width/2;
+	level.wrs_vote_hud_clock.y = level.wrs_vote_y - 3;
+	level.wrs_vote_hud_clock.alignX = "center";
+	level.wrs_vote_hud_clock.alignY = "middle";
+	level.wrs_vote_hud_clock.sort = 9999;
+}
+
+_hud_vote_destroy()
+{
+	for(i = 0; i < level.wrs_vote_hud_entry.size; i++) {
+		if (isDefined(level.wrs_vote_hud_entry[i])) {
+			level.wrs_vote_hud_entry[i] fadeOverTime(1);
+			level.wrs_vote_hud_entry[i].alpha = 0;
+			level.wrs_vote_hud_count[i] fadeOverTime(1);
+			level.wrs_vote_hud_count[i].alpha = 0;
+		}
 	}
-	if (isDefined(level.wrs_mapvote_hud_LL)) {
-		level.wrs_mapvote_hud_LL fadeOverTime(1);
-		level.wrs_mapvote_hud_LL.alpha = 0;
+
+	if (isDefined(level.wrs_vote_hud_cont)) {
+		level.wrs_vote_hud_cont fadeOverTime(1);
+		level.wrs_vote_hud_cont.alpha = 0;
 	}
-	if (isDefined(level.wrs_mapvote_hud_RL)) {
-		level.wrs_mapvote_hud_RL fadeOverTime(1);
-		level.wrs_mapvote_hud_RL.alpha = 0;
+	if (isDefined(level.wrs_vote_hud_header)) {
+		level.wrs_vote_hud_header fadeOverTime(1);
+		level.wrs_vote_hud_header.alpha = 0;
 	}
-	if (isDefined(level.wrs_mapvote_hud_UL)) {
-		level.wrs_mapvote_hud_UL fadeOverTime(1);
-		level.wrs_mapvote_hud_UL.alpha = 0;
+	if (isDefined(level.wrs_vote_hud_header_text)) {
+		level.wrs_vote_hud_header_text fadeOverTime(1);
+		level.wrs_vote_hud_header_text.alpha = 0;
 	}
-	if (isDefined(level.wrs_mapvote_hud_timer)) {
-		level.wrs_mapvote_hud_timer fadeOverTime(1);
-		level.wrs_mapvote_hud_timer.alpha = 0;
+	if (isDefined(level.wrs_vote_hud_votables)) {
+		level.wrs_vote_hud_votables fadeOverTime(1);
+		level.wrs_vote_hud_votables.alpha = 0;
+	}
+	if (isDefined(level.wrs_vote_hud_RL)) {
+		level.wrs_vote_hud_RL fadeOverTime(1);
+		level.wrs_vote_hud_RL.alpha = 0;
+	}
+	if (isDefined(level.wrs_vote_hud_UL)) {
+		level.wrs_vote_hud_UL fadeOverTime(1);
+		level.wrs_vote_hud_UL.alpha = 0;
+	}
+	if (isDefined(level.wrs_vote_hud_clock)) {
+		level.wrs_vote_hud_clock fadeOverTime(1);
+		level.wrs_vote_hud_clock.alpha = 0;
 	}
 
 	wait 1;
 
-	if (isDefined(level.wrs_mapvote_hud_bg))
-		level.wrs_mapvote_hud_bg destroy();
-	if (isDefined(level.wrs_mapvote_hud_cont))
-		level.wrs_mapvote_hud_cont destroy();
-	if (isDefined(level.wrs_mapvote_hud_cont_text))
-		level.wrs_mapvote_hud_cont_text destroy();
-	if (isDefined(level.wrs_mapvote_hud_LL))
-		level.wrs_mapvote_hud_LL destroy();
-	if (isDefined(level.wrs_mapvote_hud_RL))
-		level.wrs_mapvote_hud_RL destroy();
-	if (isDefined(level.wrs_mapvote_hud_UL))
-		level.wrs_mapvote_hud_UL destroy();
-	if (isDefined(level.wrs_mapvote_hud_timer))
-		level.wrs_mapvote_hud_timer destroy();
-	for(i = 0;i < level.wrs_mapvote_hud_map.size;i++)
-		if (isDefined(level.wrs_mapvote_hud_map[i])) {
-			level.wrs_mapvote_hud_map[i] destroy();
-			level.wrs_mapvote_hud_map_votes[i] destroy();
-		}
-}
-
-
-getMapIString(name)
-{
-	for(i = 0;i < level.wrs_maps.size;i++) {
-		if (level.wrs_maps[i][0] == name) {
-			return level.wrs_maps[i][1];
+	if (isDefined(level.wrs_vote_hud_cont))
+		level.wrs_vote_hud_cont destroy();
+	if (isDefined(level.wrs_vote_hud_header))
+		level.wrs_vote_hud_header destroy();
+	if (isDefined(level.wrs_vote_hud_header_text))
+		level.wrs_vote_hud_header_text destroy();
+	if (isDefined(level.wrs_vote_hud_votables))
+		level.wrs_vote_hud_votables destroy();
+	if (isDefined(level.wrs_vote_hud_clock))
+		level.wrs_vote_hud_clock destroy();
+	for(i = 0; i < level.wrs_vote_hud_entry.size; i++) {
+		if (isDefined(level.wrs_vote_hud_entry[i])) {
+			level.wrs_vote_hud_entry[i] destroy();
+			level.wrs_vote_hud_count[i] destroy();
 		}
 	}
-
-	return 0;
-}
-getMapTitle(name)
-{
-	title = 0;
-	for(i = 0;i < level.wrs_maps.size;i++)
-		if (level.wrs_maps[i][0] == name) {
-			title = level.wrs_maps[i][2];
-			break;
-		}
-
-	return title;
 }

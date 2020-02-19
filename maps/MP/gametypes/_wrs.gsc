@@ -156,8 +156,6 @@ _update_variables()
 	level.wrs_sprint_time         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int");
 	level.wrs_sprint_time_recover = _get_cvar("scr_wrs_sprint_time_recover", 6,   1,  100, "int");
 
-	level.wrs_mapvote      = _get_cvar("scr_wrs_mapvote",      4,   0,  14, "int");
-
 	level.wrs_afs          = _get_cvar("scr_wrs_afs",          2,   0,   2, "int");
 	level.wrs_afs_time     = _get_cvar("scr_wrs_afs_time",   1.2, 0.0, 2.0, "float");
 	level.wrs_fence        = _get_cvar("scr_wrs_fence",        1,   0,   1, "int");
@@ -829,12 +827,14 @@ end_map(text, playername) {
 
 	//Show Leaderboards
 	if (level.wrs_stats) {
-		_leaderboards();
+		// _leaderboards();
 	}
 
-	//MAPVOTING
-	if (level.wrs_mapvote) {
-		maps\mp\gametypes\_wrs_mapvote::start(10);
+	// MAPVOTING
+	max_maps = _get_cvar("scr_wrs_mapvote", 4, 0, 14, "int");
+	if (max_maps > 0) {
+		maps\mp\gametypes\_wrs_mapvote::start(max_maps, 30);
+		wait 3;
 	}
 
 	players = getEntArray("player", "classname");
@@ -1272,6 +1272,16 @@ _in_array(value, array)
 	}
 
 	return false;
+}
+_find_multi(value, array, index)
+{
+	for (i = 0; i < array.size; i++) {
+		if (array[i][index] == value) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 _remove_mg42()
