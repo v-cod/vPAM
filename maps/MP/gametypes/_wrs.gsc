@@ -642,8 +642,9 @@ wrs_PlayerConnect()
 wrs_PlayerDisconnect()
 {
 	// Change map to Harbor if server is empty.
-	if (getEntArray("player", "classname").size == 0) {
-		map("mp_harbor");
+	if (getEntArray("player", "classname").size <= 1) {
+		setCvar("sv_maprotationcurrent", "gametype " + level.gametype + " map mp_harbor");
+		exitLevel(false);
 	}
 }
 wrs_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
