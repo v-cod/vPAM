@@ -848,7 +848,7 @@ end_map(text, playername) {
 	// MAPVOTING
 	max_maps = _get_cvar("scr_wrs_mapvote", 4, 0, 14, "int");
 	if (max_maps > 0) {
-		maps\mp\gametypes\_wrs_mapvote::start(max_maps, 30);
+		maps\mp\gametypes\_wrs_mapvote::start(max_maps, 10);
 		wait 3;
 	}
 
