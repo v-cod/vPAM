@@ -202,7 +202,7 @@ _is_walking_forward(previous_origin)
 		delta += 360;
 	}
 
-	return delta > -30 && delta < 30;
+	return delta > -60 && delta < 60;
 }
 
 _monitor_player_sprint()
