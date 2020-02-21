@@ -184,6 +184,19 @@ _update_variables()
 	level.wrs_admins         = _get_cvar("sys_admins",        [], 0, 0, "array");
 	level.wrs_admins_enabled = _get_cvar("sys_admins_enabled", 1, 0, 1, "int");
 }
+
+_is_walking_forward(previous_origin)
+{
+	walk_angle = VectorToAngles(self.origin - previous_origin)[1];
+	look_angle = self.angles[1];
+	if (look_angle < 0) {
+		look_angle += 360;
+	}
+	delta = walk_angle - look_angle;
+
+	return delta > -30 && delta < 30;
+}
+
 _monitor_player_sprint()
 {
 	self _hud_sprint_create();
@@ -196,11 +209,13 @@ _monitor_player_sprint()
 
 	sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
+	// Prevent sprint glitch on SD (holding use and melee button from start of round)
+	while (self attackButtonPressed()) wait 0.05;
+
 	last_origin = self.origin;
 
 	while (self.sessionstate == "playing") {
-		// Prevent sprint glitch on SD (holding use and melee button from start of round)
-		if (self useButtonPressed() &&  !(self attackButtonPressed()) && s_ticks && self getStance() == "stand" && self.origin != last_origin) {
+		if (self useButtonPressed()&& s_ticks && self getStance() == "stand" && self.origin != last_origin && self _is_walking_forward(last_origin)) {
 			if (self.maxspeed != sprint_speed) {
 				self.maxspeed = sprint_speed;
 				self disableWeapon();
