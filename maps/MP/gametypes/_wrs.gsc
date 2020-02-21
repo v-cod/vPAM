@@ -842,7 +842,7 @@ end_map(text, playername) {
 
 	//Show Leaderboards
 	if (level.wrs_stats) {
-		// _leaderboards();
+		_leaderboards();
 	}
 
 	// MAPVOTING
