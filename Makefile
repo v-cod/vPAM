@@ -2,7 +2,7 @@ PK3=zzz_svr_wrs.pk3
 BIN_DIR ?= ../out
 
 $(PK3): maps/MP/gametypes/*.gsc
-	git archive --format=zip --worktree-attributes -o $(PK3) $$(git stash create || echo HEAD)
+	git archive --format=zip --worktree-attributes -o $(PK3) $$(test -n "$$(git stash create)" && echo $$(git stash create) || echo HEAD)
 
 clean:
 	rm -f $(PK3)
