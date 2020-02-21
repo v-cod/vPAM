@@ -187,12 +187,20 @@ _update_variables()
 
 _is_walking_forward(previous_origin)
 {
-	walk_angle = VectorToAngles(self.origin - previous_origin)[1];
-	look_angle = self.angles[1];
-	if (look_angle < 0) {
-		look_angle += 360;
+	look_angle = self.angles[1]; // [-180, 180)
+	walk_angle = VectorToAngles(self.origin - previous_origin)[1]; // [0, 360)
+	// Correct to [-180, 180).
+	if (walk_angle > 180) {
+		walk_angle -= 360;
 	}
+
+	// Calculate the difference between the angles.
 	delta = walk_angle - look_angle;
+	if (delta > 180) {
+		delta -= 360;
+	} else if (delta < -180) {
+		delta += 360;
+	}
 
 	return delta > -30 && delta < 30;
 }
