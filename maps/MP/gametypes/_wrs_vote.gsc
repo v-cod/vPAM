@@ -275,6 +275,7 @@ _hud_vote_create(istrings)
 
 	// Votables.
 	for (i = 0; i < istrings.size; i++) {
+		// Left header.
 		level.wrs_vote_hud_entry[i] = newHudElem();
 		level.wrs_vote_hud_entry[i].archived = false;
 		level.wrs_vote_hud_entry[i].x = level.wrs_vote_x + 3*bw;
@@ -283,6 +284,7 @@ _hud_vote_create(istrings)
 		level.wrs_vote_hud_entry[i].fontScale = 1.5;
 		level.wrs_vote_hud_entry[i] setText(istrings[i]);
 
+		// Right header.
 		level.wrs_vote_hud_count[i] = newHudElem();
 		level.wrs_vote_hud_count[i].archived = false;
 		level.wrs_vote_hud_count[i].alignX = "right";

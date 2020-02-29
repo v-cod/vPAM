@@ -4,11 +4,10 @@
  * @todo  Collect fence data (forbidden spots) to put the fence mechanism to work
  * @todo  Make local functions more uniform and starting with underscores
  * @todo  Clean up statistics code with their maintain routines
- * @todo  Clean up map voting code
  * @todo  Clean up unused variables and routines (estimating 10% irrelevant code)
  * @todo  FIX: Players joining during leaderboard/voting get scoreboard, which can take up to 25 seconds
- * @todo  Deactivate sprint after round start time (15 secs usually)
- * @todo  Add (short memory) rank system
+ * @todo  COULD: Deactivate sprint after round started.
+ * @todo  COULD: Show map levelshots at mapvoting.
  */
 
 start()
@@ -17,7 +16,7 @@ start()
 
 	maps\mp\gametypes\_wrs_admin::init();
 	maps\mp\gametypes\_wrs_fence::init();
-	maps\mp\gametypes\_wrs_mapvote::init();
+	maps\mp\gametypes\_wrs_vote::init();
 
 	if (level.wrs_labels) {
 		thread _hud_labels_create();
@@ -185,26 +184,6 @@ _update_variables()
 	level.wrs_admins_enabled = _get_cvar("sys_admins_enabled", 1, 0, 1, "int");
 }
 
-_is_walking_forward(previous_origin)
-{
-	look_angle = self.angles[1]; // [-180, 180)
-	walk_angle = VectorToAngles(self.origin - previous_origin)[1]; // [0, 360)
-	// Correct to [-180, 180).
-	if (walk_angle > 180) {
-		walk_angle -= 360;
-	}
-
-	// Calculate the difference between the angles.
-	delta = walk_angle - look_angle;
-	if (delta > 180) {
-		delta -= 360;
-	} else if (delta < -180) {
-		delta += 360;
-	}
-
-	return delta > -60 && delta < 60;
-}
-
 _monitor_player_sprint()
 {
 	self _hud_sprint_create();
@@ -217,13 +196,17 @@ _monitor_player_sprint()
 
 	sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
-	// Prevent sprint glitch on SD (holding use and melee button from start of round)
-	while (self attackButtonPressed()) wait 0.05;
-
 	last_origin = self.origin;
 
 	while (self.sessionstate == "playing") {
-		if (self useButtonPressed()&& s_ticks && self getStance() == "stand" && self.origin != last_origin && self _is_walking_forward(last_origin)) {
+		if (
+			self useButtonPressed()
+			&& !(self attackButtonPressed()) // Prevent sprint glitch.
+			&& s_ticks
+			&& self getStance() == "stand"
+			&& self.origin != last_origin
+			&& self _is_walking_forward(last_origin) // Only allow forward-facing sprint.
+		) {
 			if (self.maxspeed != sprint_speed) {
 				self.maxspeed = sprint_speed;
 				self disableWeapon();
@@ -856,7 +839,7 @@ end_map(text, playername) {
 	// MAPVOTING
 	max_maps = _get_cvar("scr_wrs_mapvote", 4, 0, 14, "int");
 	if (max_maps > 0) {
-		maps\mp\gametypes\_wrs_mapvote::start(max_maps, 10);
+		maps\mp\gametypes\_wrs_vote::start(max_maps, 10);
 		wait 3;
 	}
 
@@ -1305,6 +1288,26 @@ _find_multi(value, array, index)
 	}
 
 	return -1;
+}
+
+_is_walking_forward(previous_origin)
+{
+	look_angle = self.angles[1]; // [-180, 180)
+	walk_angle = VectorToAngles(self.origin - previous_origin)[1]; // [0, 360)
+	// Correct to [-180, 180).
+	if (walk_angle > 180) {
+		walk_angle -= 360;
+	}
+
+	// Calculate the difference between the angles.
+	delta = walk_angle - look_angle;
+	if (delta > 180) {
+		delta -= 360;
+	} else if (delta < -180) {
+		delta += 360;
+	}
+
+	return delta > -60 && delta < 60;
 }
 
 _remove_mg42()
