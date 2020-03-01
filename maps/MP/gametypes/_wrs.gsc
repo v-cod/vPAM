@@ -59,6 +59,8 @@ init()
 
 	level.wrs_stats_records = [];
 
+	game["wrs_sprint_stop"] = false;
+
 	// Other level variables that can be set with scr_wrs_ cvars
 	_update_variables();
 
@@ -152,6 +154,7 @@ _monitor()
 _update_variables()
 {
 	level.wrs_sprint              = _get_cvar("scr_wrs_sprint",             60,   0,  300, "int");
+	level.wrs_sprint_stop         = _get_cvar("scr_wrs_sprint_stop",         0,   0,  120, "int");
 	level.wrs_sprint_time         = _get_cvar("scr_wrs_sprint_time",         5,   1,  100, "int");
 	level.wrs_sprint_time_recover = _get_cvar("scr_wrs_sprint_time_recover", 6,   1,  100, "int");
 
@@ -184,28 +187,28 @@ _update_variables()
 	level.wrs_admins_enabled = _get_cvar("sys_admins_enabled", 1, 0, 1, "int");
 }
 
-_monitor_player_sprint()
+_sprint_monitor()
 {
-	self _hud_sprint_create();
+	self _sprint_hud_create();
 
 	m_ticks = level.wrs_sprint_time * 20; // Maximum sprint ticks
-	s_ticks = m_ticks;                    // Sprint ticks left
+	s_ticks = m_ticks; // Sprint ticks left
 
 	r_ticks = level.wrs_sprint_time_recover * 20; // Maximum recovering ticks
-	w_ticks = 0;                                  // Ticks to fullfill recovering period
+	w_ticks = 0; // Ticks to fullfill recovering period
 
 	sprint_speed = 190 + (190 * level.wrs_sprint / 100);
 
 	last_origin = self.origin;
 
-	while (self.sessionstate == "playing") {
+	while (self.sessionstate == "playing" && !game["wrs_sprint_stop"]) {
 		if (
 			self useButtonPressed()
 			&& !(self attackButtonPressed()) // Prevent sprint glitch.
 			&& s_ticks
 			&& self getStance() == "stand"
 			&& self.origin != last_origin
-			&& self _is_walking_forward(last_origin) // Only allow forward-facing sprint.
+			&& self _is_not_walking_backward(last_origin) // Only allow forward-facing sprint.
 		) {
 			if (self.maxspeed != sprint_speed) {
 				self.maxspeed = sprint_speed;
@@ -213,7 +216,7 @@ _monitor_player_sprint()
 			}
 
 			s_ticks--;
-			self _hud_sprint_update(s_ticks * 128 / m_ticks);
+			self _sprint_hud_update(s_ticks * 128 / m_ticks);
 		} else {
 			if (self.maxspeed != 190) {
 				self.maxspeed = 190;
@@ -226,7 +229,7 @@ _monitor_player_sprint()
 				w_ticks--;
 			} else if (s_ticks != m_ticks) {
 				s_ticks++;
-				self _hud_sprint_update(s_ticks * 128 / m_ticks);
+				self _sprint_hud_update(s_ticks * 128 / m_ticks);
 			}
 		}
 
@@ -234,7 +237,20 @@ _monitor_player_sprint()
 		wait 0.05;
 	}
 
-	self _hud_sprint_destroy();
+	if (self.sessionstate == "playing" && self.maxspeed != 190) {
+		self.maxspeed = 190;
+		self enableWeapon();
+	}
+
+	self _sprint_hud_destroy();
+}
+
+startRound()
+{
+	if (level.wrs_sprint && level.wrs_sprint_stop) {
+		wait level.wrs_sprint_stop;
+		game["wrs_sprint_stop"] = true;
+	}
 }
 
 _monitor_player_afs()
@@ -427,7 +443,7 @@ _hud_alive_update()
 		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
 	}
 }
-_hud_sprint_create()
+_sprint_hud_create()
 {
 	self.wrs_hud_sprint_bg = newClientHudElem(self);
 	self.wrs_hud_sprint_bg setShader("gfx/hud/hud@health_back.dds", 128 + 2, 5);
@@ -444,7 +460,7 @@ _hud_sprint_create()
 	self.wrs_hud_sprint.x = 488 + 14;
 	self.wrs_hud_sprint.y = 455;
 }
-_hud_sprint_update(width)
+_sprint_hud_update(width)
 {
 	if (width == 0) {
 		self.wrs_hud_sprint setShader("");
@@ -452,7 +468,7 @@ _hud_sprint_update(width)
 		self.wrs_hud_sprint setShader("gfx/hud/hud@health_bar.dds", width, 3);
 	}
 }
-_hud_sprint_destroy()
+_sprint_hud_destroy()
 {
 	if (isDefined(self.wrs_hud_sprint)) {
 		self.wrs_hud_sprint destroy();
@@ -784,7 +800,7 @@ wrs_SpawnPlayer()
 	}
 
 	if (level.wrs_sprint) {
-		self thread _monitor_player_sprint();
+		self thread _sprint_monitor();
 	}
 
 	if (level.wrs_fence) {
@@ -828,10 +844,24 @@ end_map(text, playername) {
 		_leaderboards();
 	}
 
-	// MAPVOTING
+	// Sprint voting.
+	if (_get_cvar("scr_wrs_vote_sprint", 0, 0, 1, "int") > 0) {
+		choice = maps\mp\gametypes\_wrs_vote::sprint(10);
+		if (choice == 0) {
+			setCvar("scr_wrs_sprint", "0");
+		} else if (choice == 1) {
+			setCvar("scr_wrs_sprint", "60");
+			setCvar("scr_wrs_sprint_stop", "10");
+		} else {
+			setCvar("scr_wrs_sprint", "60");
+			setCvar("scr_wrs_sprint_stop", "0");
+		}
+	}
+
+	// Map voting.
 	max_maps = _get_cvar("scr_wrs_mapvote", 4, 0, 14, "int");
 	if (max_maps > 0) {
-		maps\mp\gametypes\_wrs_vote::start(max_maps, 10);
+		maps\mp\gametypes\_wrs_vote::map(max_maps, 10);
 		wait 3;
 	}
 
@@ -1282,7 +1312,7 @@ _find_multi(value, array, index)
 	return -1;
 }
 
-_is_walking_forward(previous_origin)
+_is_not_walking_backward(previous_origin)
 {
 	look_angle = self.angles[1]; // [-180, 180)
 	walk_angle = VectorToAngles(self.origin - previous_origin)[1]; // [0, 360)
@@ -1299,7 +1329,7 @@ _is_walking_forward(previous_origin)
 		delta += 360;
 	}
 
-	return delta > -60 && delta < 60;
+	return delta > -120 && delta < 120;
 }
 
 _remove_mg42()

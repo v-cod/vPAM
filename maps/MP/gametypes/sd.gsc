@@ -1405,6 +1405,12 @@ startRound()
 {
 	level endon("bomb_planted");
 
+	// WRS {
+	if (level.wrs) {
+		thread maps\mp\gametypes\_wrs::startRound();
+	}
+	// } // END WRS
+
 	thread maps\mp\gametypes\_teams::sayMoveIn();
 
 	level.clock = newHudElem();

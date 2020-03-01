@@ -27,9 +27,19 @@ init()
 	level.wrs_vote_hud_entry_height = 24;
 	level.wrs_vote_hud_border_width = 2;
 
+	level.wrs_vote_sprint_header = &"Sprint                                 Votes";
+	level.wrs_vote_sprint[0] = &"Disable sprint";
+	level.wrs_vote_sprint[1] = &"Only round start";
+	level.wrs_vote_sprint[2] = &"Enable sprint";
+
 	if (!isDefined(game["gamestarted"])) {
 		for (i = 0; i < level.wrs_maps.size; i++) {
 			precacheString(level.wrs_maps[i][1]);
+		}
+
+		precacheString(level.wrs_vote_sprint_header);
+		for (i = 0; i < level.wrs_vote_sprint.size; i++) {
+			precacheString(level.wrs_vote_sprint[i]);
 		}
 
 		precacheShader("white");
@@ -38,7 +48,7 @@ init()
 	}
 }
 
-start(max_maps, seconds)
+map(max_maps, seconds)
 {
 	// All votable maps.
 	pool = _get_valid_maps();
@@ -48,10 +58,31 @@ start(max_maps, seconds)
 	istrings = [];
 	for (i = 0; i < pool.size; i++) {
 		istrings[i] = level.wrs_maps[pool[i]][1];
+	}
+
+	players_size = getEntArray("player", "classname").size;
+
+	winner = vote(seconds, level.wrs_vote_hud_header_istring, istrings);
+
+	logPrint("wrs;MAPVOTE;" + players_size + ";" + level.wrs_maps[pool[winner]][0] + "\n");
+
+	iPrintLnBold("^4Next Map^7: ^3" + level.wrs_maps[pool[winner]][2]);
+	setCvar("sv_maprotationcurrent", "gametype " + level.gametype + " map " + level.wrs_maps[pool[winner]][0]);
+}
+
+sprint(seconds)
+{
+	return vote(seconds, level.wrs_vote_sprint_header, level.wrs_vote_sprint);
+}
+
+// Generic helper function to setup voting from istrings.
+vote(seconds, header_istring, istrings)
+{
+	for (i = 0; i < istrings.size; i++) {
 		level.wrs_vote_count[i] = 0;
 	}
 
-	_hud_vote_create(istrings);
+	_hud_vote_create(header_istring, istrings);
 	level.wrs_vote_hud_clock setClock(seconds, 60, "hudStopwatch", 64, 64);
 
 	players = getEntArray("player", "classname");
@@ -64,6 +95,11 @@ start(max_maps, seconds)
 	level notify("wrs_vote_end");
 	_hud_vote_destroy();
 
+	return _get_winner();
+}
+
+_get_winner()
+{
 	// Default winner is 0.
 	winner = 0;
 	highest = level.wrs_vote_count[winner];
@@ -75,10 +111,7 @@ start(max_maps, seconds)
 		}
 	}
 
-	logPrint("wrs;MAPVOTE;" + players.size + ";" + level.wrs_maps[pool[winner]][0] + "\n");
-
-	iPrintLnBold("^4Next Map^7: ^3" + level.wrs_maps[pool[winner]][2]);
-	setCvar("sv_maprotationcurrent", "gametype " + level.gametype + " map " + level.wrs_maps[pool[winner]][0]);
+	return winner;
 }
 
 _monitor_player()
@@ -218,7 +251,7 @@ _select_random(arr, s)
 	return new_arr;
 }
 
-_hud_vote_create(istrings)
+_hud_vote_create(header_istring, istrings)
 {
 	level.wrs_vote_width = 200;
 	level.wrs_vote_height = 27 + istrings.size * 24;
@@ -261,7 +294,7 @@ _hud_vote_create(istrings)
 	level.wrs_vote_hud_header_text.x = level.wrs_vote_x + level.wrs_vote_width/2;
 	level.wrs_vote_hud_header_text.y = level.wrs_vote_y + bw + eh/2;
 	level.wrs_vote_hud_header_text.sort = 9998;
-	level.wrs_vote_hud_header_text.label = level.wrs_vote_hud_header_istring;
+	level.wrs_vote_hud_header_text.label = header_istring;
 	level.wrs_vote_hud_header_text.fontscale = 1.2;
 
 	// Votables container.
