@@ -239,15 +239,15 @@ _monitor_player_sprint()
 
 _monitor_player_afs()
 {
+	self endon("spawned");
+
 	while (self.sessionstate == "playing") {
-		a1 = self getWeaponSlotClipAmmo("primary");   // Reference clip count
+		// Reference clip count.
+		a1 = self getWeaponSlotClipAmmo("primary");
 		b1 = self getWeaponSlotClipAmmo("primaryb");
 
-		a2 = a1; // 'new' values to compare against
-		b2 = b1;
-
-		// Wait till shot is fired
-		while (a1 == a2 && b1 == b2) {
+		// Wait for clip ammo to change.
+		do {
 			wait 0.05;
 
 			if (self.sessionstate != "playing") {
@@ -256,34 +256,26 @@ _monitor_player_afs()
 
 			a2 = self getWeaponSlotClipAmmo("primary");
 			b2 = self getWeaponSlotClipAmmo("primaryb");
-		}
+		} while (a1 == a2 && b1 == b2);
 
-		if (a1 < a2 || b1 < b2) { // Likely reloaded
+		// Check for reload.
+		if (a1 < a2 || b1 < b2) {
 			continue;
 		}
 
-		// Check wether slot a or b
-		if (a1 != a2) {
-			a = 1;
-		} else {
-			a = 0;
+		a1 = a2;
+		b1 = b2;
+
+		wait level.wrs_afs_time;
+
+		if (self.sessionstate != "playing") {
+			return;
 		}
 
-		if (a) { old = self getWeaponSlotClipAmmo("primary");  }
-		else   { old = self getWeaponSlotClipAmmo("primaryb"); }
+		a2 = self getWeaponSlotClipAmmo("primary");
+		b2 = self getWeaponSlotClipAmmo("primaryb");
 
-		for (waited = 0.0; waited < level.wrs_afs_time; waited += 0.05) { // Interval wherein one might have fast shot
-			wait 0.05;
-
-			if (self.sessionstate != "playing") {
-				return;
-			}
-		}
-
-		if (a) { new = self getWeaponSlotClipAmmo("primary");  }
-		else   { new = self getWeaponSlotClipAmmo("primaryb"); }
-
-		if (self.sessionstate == "playing" && old > new) {
+		if (a2 < a1 || b2 < b1) {
 			self.pers["fs"]++;
 
 			logPrint("wrs;fs;" + self getGuid() + ";" + self.name + ";\n");
