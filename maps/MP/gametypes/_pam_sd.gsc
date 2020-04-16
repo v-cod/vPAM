@@ -1,143 +1,4 @@
-main()
-{
-	// WRS
-	level.warmup = 0;	// warmup time reset in case they restart map via menu
-
-	maps\mp\gametypes\_pam_utilities::NonstockPK3Check();
-
-	if(getcvar("g_ot") == "")
-		setcvar("g_ot", "0");
-
-	if(getcvar("g_ot_active") == "")
-		setcvar("g_ot_active", "0");
-
-	if ( getcvar( "g_allowtie" ) == "" )
-		setcvar("g_allowtie", "1");
-
-	if(getCvar("pam_mode") == "")
-		setCvar("pam_mode", "pub");
-
-	if(!isdefined(game["runonce"]))
-	{
-		ruleset = getCvar("pam_mode");
-		switch(ruleset)
-		{
-		case "wrs":
-			thread maps\mp\gametypes\rules\_wrs_rules::LeagueRules();
-			break;
-		case "dlogics_matchmod":
-			thread maps\mp\gametypes\rules\_dlogics_matchmod_rules::LeagueRules();
-			break;
-		case "dlogics_nightmod":
-			thread maps\mp\gametypes\rules\_dlogics_nightmod_rules::LeagueRules();
-			break;
-		case "cb_rifles":
-			thread maps\mp\gametypes\rules\_cb_rifles_rules::LeagueRules();
-			break;
-		case "cb_2v2":
-			thread maps\mp\gametypes\rules\_cb_2v2oc_rules::LeagueRules();
-			break;
-		case "pub":
-			thread maps\mp\gametypes\rules\_public_rules::LeagueRules();
-			break;
-
-		default:
-			thread maps\mp\gametypes\rules\_public_rules::LeagueRules();
-			setCvar("pam_mode", "pub");
-			break;
-		}
-
-		if(!isDefined(game["mode"]))
-			game["mode"] = "match";
-
-		//setcvar("scr_numbots", "11");
-		game["switchprevent"] = false; //Can't switch teams after this bit gets set and you are already on a team
-
-		game["runonce"] = 1;
-	}
-
-	//garetcode
-	if(getcvar("g_roundwarmuptime") == "")	// round warmup time
-		setcvar("g_roundwarmuptime", "5");
-
-	if(getcvar("sv_playersleft") == "")			// display players left
-		setcvar("sv_playersleft", "1");		
-
-	if ( getcvar( "sv_BombPlantTime" ) == ""  )
-		setcvar("sv_BombPlantTime", "5");
-
-	if ( getcvar( "sv_BombDefuseTime" ) == "")
-		setcvar("sv_BombDefuseTime", "10");
-
-	if ( getcvar( "sv_BombTimer" ) == "" )
-		setcvar("sv_BombTimer", "60");
-
-	if ( getcvar( "sv_specblackout" ) == "" )
-		setcvar("sv_specblackout", "0");
-
-
-	/* Set up Level variables */
-	level.timelimit = getCvarFloat("scr_sd_timelimit");
-	level.roundlength = getCvarFloat("scr_sd_roundlength");
-	level.graceperiod = getCvarFloat("scr_sd_graceperiod");
-	level.killcam = getCvarInt("scr_killcam");
-	level.teambalance = getCvarInt("scr_teambalance");
-	level.allowfreelook = getCvarInt("scr_freelook");
-	level.allowenemyspectate = getCvarInt("scr_spectateenemy");
-	level.ffire = getCvarInt("scr_friendlyfire");
-	level.pure = getCvarInt("sv_pure");
-	level.vote = getCvarInt("g_allowVote");
-	level.faust = getcvarint("scr_allow_panzerfaust");
-	level.fg42gun = getcvarint("scr_allow_fg42");
-	level.nodropsniper = getcvar("sv_noDropSniper");
-	level.axissnipelimit = getcvarint("sv_axisSniperLimit");
-	level.allysnipelimit = getcvarint("sv_alliedSniperLimit");
-	level.league = getcvar("pam_mode");
-	level.playersleft = getcvarint("sv_playersleft");
-	level.halfround = getcvarint("scr_half_round");
-	level.halfscore = getcvarint("scr_half_score");
-	level.matchround = getcvarint("scr_end_round");
-	level.matchscore1 = getcvarint("scr_end_score");
-	level.matchscore2 = getcvarint("scr_end_half2score");
-	level.countdraws = getcvarint("scr_count_draws");
-	level.planttime = getcvarFloat("sv_BombPlantTime");
-	level.defusetime = getcvarFloat("sv_BombDefuseTime");
-	level.countdowntime = getcvarFloat("sv_BombTimer");
-	level.overtime = 0;	//Makes sure OT settings get loaded after defaults loaded
-	level.ot_count = getcvarint("g_ot_count");
-	level.hithalftime = 0;
-	level.specmode = "";
-	level.bashdamageonly = false;
-	level.afs_time = getcvarFloat("scr_afs_time");
-
-	level.instrattime = false;
-
-	// Ready-Up
-	level.rdyup = 0;
-	level.R_U_Name = [];
-	level.R_U_State = [];
-
-
-	if(!isdefined(game["halftimeflag"]))
-	{
-		game["dolive"] = "0";
-		game["halftimeflag"] = "0";
-		game["round1alliesscore"] = 0;
-		game["round1axisscore"] = 0; 
-		game["round2alliesscore"] = 0;
-		game["round2axisscore"] = 0;
-		game["DoReadyUp"] = false;
-		game["checkingmatchstart"] = false;
-	}
-
-	// WEAPON EXPLOIT FIX
-	if(!isDefined(game["dropsecondweap"]))
-		game["dropsecondweap"] = false;
-
-	level.readyname = [];
-	level.readystate = [];
-	level.playersready = false;
-}
+// Lines changed compared to original routines prepended with /**/
 
 Callback_StartGameType()
 {
@@ -172,165 +33,6 @@ Callback_StartGameType()
 		game["menu_quickcommands"] = "quickcommands";
 		game["menu_quickstatements"] = "quickstatements";
 		game["menu_quickresponses"] = "quickresponses";
-
-		/* PAM precacheStrings */
-		// HUD Header Elements
-		maps\mp\gametypes\_pam_utilities::Get_Current_PAM_Ver();
-		precacheString(game["pamstring"]);
-		// Logo
-		if (!isdefined(game["leaguestring"]))
-			game["leaguestring"] = &"Unknown Pam_Mode Error";
-		precacheString(game["leaguestring"]);
-		game["overtimemode"] = &"Overtime";
-		precacheString(game["overtimemode"]);
-
-		// Team Win Hud Elements
-		game["team1win"] = &"Team 1 Wins!";
-		precacheString(game["team1win"]);
-		game["team2win"] = &"Team 2 Wins!";
-		precacheString(game["team2win"]);
-		game["dsptie"] = &"Its a TIE!";
-		precacheString(game["dsptie"]);
-		game["matchover"] = &"Match Over";
-		precacheString(game["matchover"]);
-		game["overtime"] = &"Going to OverTime";
-		precacheString(game["overtime"]);
-
-		game["halftime"] = &"Halftime";
-		precacheString(game["halftime"]);
-
-		//Round Starting Display
-		game["round"] = &"Round";
-		precacheString(game["round"]);
-		game["starting"] = &"Starting";
-		precacheString(game["starting"]);
-
-		//Bomb Plant Announcement
-		game["planted"] = &"";
-		precacheString(game["planted"]);
-
-		// Time Expired Announcement
-		game["timeexp"] = &"Time Expired";
-		precacheString(game["timeexp"]);
-
-		// Strat Time Announcement
-		game["strattime"] = &"Strat Time";
-		precacheString(game["strattime"]);
-
-		//Teams Swithcing Announcement
-		game["switching"] = &"Team Auto-Switch";
-		precacheString(game["switching"]);	
-		game["switching2"] = &"Please wait";
-		precacheString(game["switching2"]);
-
-		game["startingin"] = &"Starting In";
-		precacheString(game["startingin"]);		
-		game["matchstarting"] = &"Match Starting In";
-		precacheString(game["matchstarting"]);	
-		game["matchresuming"] = &"Match Resuming In";
-		precacheString(game["matchresuming"]);	
-		game["allready"] = &"All Players are Ready";
-		precacheString(game["allready"]);
-		game["start2ndhalf"] = &"Starting Second Half!";
-		precacheString(game["start2ndhalf"]);
-		game["start1sthalf"] = &"Starting the First Half!";
-		precacheString(game["start1sthalf"]);
-		game["livemsg"] = &"LIVE!";
-		precacheString(game["livemsg"]);
-
-		//Half Starting Display
-		game["first"] = &"First";
-		precacheString(game["first"]);
-		game["second"] = &"Second";
-		precacheString(game["second"]);
-		game["half"] = &"Half";
-		precacheString(game["half"]);
-		game["starting"] = &"Starting";
-		precacheString(game["starting"]);
-
-		// Ready-Up Plugin Requires:
-		game["waiting"] = &"Ready-Up Mode";
-		precacheString(game["waiting"]);
-		game["waitingon"] = &"Waiting on:";
-		precacheString(game["waitingon"]);
-		game["playerstext"] = &"Players";
-		precacheString(game["playerstext"]);
-		game["status"] = &"Your Status";
-		precacheString(game["status"]);
-		game["ready"] = &"Ready";
-		precacheString(game["ready"]);
-		game["notready"] = &"Not Ready";
-		precacheString(game["notready"]);
-		game["headicon_carrier"] = "gfx/hud/headicon@re_objcarrier.tga";
-		precacheStatusIcon(game["headicon_carrier"]);
-
-		game["dspaxisleft"] = &"AXIS LEFT:";
-		precacheString(game["dspaxisleft"]);		
-		game["dspalliesleft"] = &"ALLIES LEFT:";
-		precacheString(game["dspalliesleft"]);
-
-		game["bashrnd"] = &"Starting Bash Round";
-		precacheString(game["bashrnd"]);
-		game["bashbegin"] = &"BEGIN!";
-		precacheString(game["bashbegin"]);
-
-		// Players Left Display		
-		game["dspaxisleft"] = &"AXIS LEFT:";
-		precacheString(game["dspaxisleft"]);		
-		game["dspalliesleft"] = &"ALLIES LEFT:";
-		precacheString(game["dspalliesleft"]);
-
-		game["round"] = &"Round";
-		precacheString(game["round"]);		
-		game["startingin"] = &"Starting In";
-		precacheString(game["startingin"]);		
-		game["matchstarting"] = &"Match Starting In";
-		precacheString(game["matchstarting"]);
-
-		game["matchresuming"] = &"Match Resuming In";
-		precacheString(game["matchresuming"]);
-
-		// Scoreboard Text
-		game["dspteam1"] = &"TEAM 1";
-		precacheString(game["dspteam1"]);
-		game["dspteam2"] = &"TEAM 2";
-		precacheString(game["dspteam2"]);
-		game["scorebd"] = &"Scoreboard";
-		precacheString(game["scorebd"]);
-		game["dspaxisscore"] = &"AXIS SCORE";
-		precacheString(game["dspaxisscore"]);		
-		game["dspalliesscore"] = &"ALLIES SCORE";
-		precacheString(game["dspalliesscore"]);
-		game["1sthalf"] = &"1st Half";
-		precacheString(game["1sthalf"]);	
-		game["2ndhalf"] = &"2nd Half";
-		precacheString(game["2ndhalf"]);
-		game["matchscore2"] = &"Match";
-		precacheString(game["matchscore2"]);
-
-		// OLD Scoreboard
-		/*
-		game["1sthalfscore"] = &"1st Half Scores:";
-		precacheString(game["1sthalfscore"]);	
-		game["2ndhalfscore"] = &"2nd Half Scores:";
-		precacheString(game["2ndhalfscore"]);	
-		game["matchscore"] = &"Match Scores:";
-		precacheString(game["matchscore"]);	
-		*/
-
-		//Clock
-		precacheShader("hudStopwatch");
-		precacheShader("hudStopwatchNeedle");
-		/* end PAM precacheStrings */
-
-
-		// WRS
-		precacheShader("gfx/hud/hud@fire_ready.tga");
-		precacheItem("mosin_nagant_mp");
-		precacheItem("kar98k_mp");
-
-
-//endgaretcode
 
 		precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
 		precacheString(&"MPSCRIPT_KILLCAM");
@@ -376,7 +78,6 @@ Callback_StartGameType()
 		precacheShader("gfx/hud/hud@bombplanted_down.tga");
 		precacheModel("xmodel/mp_bomb1_defuse");
 		precacheModel("xmodel/mp_bomb1");
-
 		
 		maps\mp\gametypes\_teams::precache();
 		maps\mp\gametypes\_teams::scoreboard();
@@ -391,31 +92,17 @@ Callback_StartGameType()
 	thread maps\mp\gametypes\_teams::updateGlobalCvars();
 	thread maps\mp\gametypes\_teams::updateWeaponCvars();
 
-	// WRS {
-	level.allow_mg42 = getCvar("scr_allow_mg42");
-	if(level.allow_mg42 == "")
-		level.allow_mg42 = "1";
-	setCvar("scr_allow_mg42", level.allow_mg42);
-	setCvar("ui_allow_mg42", level.allow_mg42);
-	makeCvarServerInfo("ui_allow_mg42", level.allow_mg42);
-	if(level.allow_mg42 != "1")
-		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
-
-	if (getcvar("scr_allow_pistol") == "")
-		setcvar("scr_allow_pistol", "1");
-
-	// Fix _teams.gsc bug removing wrong entity.
-	if(level.allow_kar98ksniper != "1")
-		deletePlacedEntity("mpweapon_kar98k_scoped");
-	// } END WRS
+/**/// Call main routine for variable setup and precaching.
+/**/maps\mp\gametypes\_pam::main();
 
 	game["gamestarted"] = true;
-
+	
 	setClientNameMode("manual_change");
 
-	thread bombzones();
-	thread startGame();
-	thread updateGametypeCvars();
+/**/// Refer to custom functions.
+/**/thread bombzones();
+/**/thread startGame();
+/**/thread updateGametypeCvars();
 	//thread addBotClients();
 }
 
@@ -433,23 +120,21 @@ Callback_PlayerConnect()
 	lpselfguid = self getGuid();
 	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
-	// WRS {
-	self.pers["killer"] = false; // Used for Ready-up Killing
-	self.bombinteraction = false;
+/**/self.pers["killer"] = false;
 
-	level.R_U_Name[lpselfnum] = self.name;
-	level.R_U_State[lpselfnum] = "notready";
-	self.R_U_Looping = 0;
+/**/level.R_U_Name[lpselfnum] = self.name;
+/**/level.R_U_State[lpselfnum] = "notready";
+/**/self.R_U_Looping = 0;
 
-	if(level.rdyup == 1)
-	{
-		self.statusicon = "";
-		self thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);
-	}
+/**/if(level.rdyup == 1)
+/**/{
+/**/    self.statusicon = "";
+/**/    self thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);
+/**/}
 
 	if(game["state"] == "intermission")
 	{
-		spawnIntermission();
+		maps\mp\gametypes\sd::spawnIntermission();
 		return;
 	}
 	
@@ -464,7 +149,6 @@ Callback_PlayerConnect()
 	{
 		self setClientCvar("ui_weapontab", "1");
 
-		maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
 		if(self.pers["team"] == "allies")
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
 		else
@@ -476,8 +160,7 @@ Callback_PlayerConnect()
 		{
 			self.sessionteam = "spectator";
 
-			spawnSpectator();
-			maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
+			maps\mp\gametypes\sd::spawnSpectator();
 
 			if(self.pers["team"] == "allies")
 				self openMenu(game["menu_weapon_allies"]);
@@ -496,18 +179,16 @@ Callback_PlayerConnect()
 		self.pers["team"] = "spectator";
 		self.sessionteam = "spectator";
 
-		spawnSpectator();
+		maps\mp\gametypes\sd::spawnSpectator();
 	}
-
-	if (getcvar("scr_allow_weapon_drops") == "1")
-		self thread Monitor_Weapon_Drop();
-
-	if (level.instrattime)
-		self.maxspeed = 0;
 
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
+
+/**/	if (menu(menu, response) == true) {
+/**/		continue;
+/**/	}
 
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
@@ -525,11 +206,8 @@ Callback_PlayerConnect()
 			case "allies":
 			case "axis":
 			case "autoassign":
-				if (level.lockteams || level.instrattime)
+				if (level.lockteams)
 					break;
-				if (game["switchprevent"] && self.sessionteam != "spectator")
-					break;
-
 				if(response == "autoassign")
 				{
 					numonteam["allies"] = 0;
@@ -569,7 +247,7 @@ Callback_PlayerConnect()
 				
 				if(response == self.pers["team"] && self.sessionstate == "playing")
 					break;
-
+				
 				//Check if the teams will become unbalanced when the player goes to this team...
 				//------------------------------------------------------------------------------
 				if ( (level.teambalance > 0) && (!isdefined (skipbalancecheck)) )
@@ -657,7 +335,7 @@ Callback_PlayerConnect()
 				break;
 
 			case "spectator":
-				if (level.lockteams || level.instrattime)
+				if (level.lockteams)
 					break;
 				if(self.pers["team"] != "spectator")
 				{
@@ -675,7 +353,7 @@ Callback_PlayerConnect()
 					self.sessionteam = "spectator";
 					self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 					self setClientCvar("ui_weapontab", "0");
-					spawnSpectator();
+					maps\mp\gametypes\sd::spawnSpectator();
 				}
 				break;
 
@@ -748,7 +426,6 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 					spawnPlayer();
 					self thread printJoinedTeam(self.pers["team"]);
-					// TODO: Neccessary?
 					level thread checkMatchStart();
 				}
 			}
@@ -773,7 +450,6 @@ Callback_PlayerConnect()
 						self.spawned = undefined;
 						spawnPlayer();
 						self thread printJoinedTeam(self.pers["team"]);
-						// TODO: Neccessary?
 						level thread checkMatchStart();
 					}
 					else
@@ -811,12 +487,11 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 					spawnPlayer();
 					self thread printJoinedTeam(self.pers["team"]);
-					// TODO: Neccessary?
 					level thread checkMatchStart();
 				}
 				else
 				{
-					weaponname = maps\mp\gametypes\_pam_teams::getWeaponName(self.pers["weapon"]);
+					weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 
 					if(self.pers["team"] == "allies")
 					{
@@ -887,6 +562,198 @@ Callback_PlayerConnect()
 	}
 }
 
+// Return true if request is handled
+menu(menu, response) {
+	// Only handle weapon menu context
+	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
+		return false;
+	}
+
+	// Only handle weapon choices
+	if (response == "team" || response == "viewmap" || response == "callvote") {
+		return false;
+	}
+
+	// Nothing to do with this
+	if(response == "open" || response == "close") {
+		return false;
+	}
+
+	// If not in a team, go back
+	if (!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
+		return false;
+	}
+
+	// Only handle weapon menu context
+	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
+		return false;
+	}
+
+	weapon = self _restrict(response);
+
+	// If the weapon choice is restricted, go back
+	if (weapon == "restricted") {
+		self openMenu(menu);
+		return true;
+	}
+
+	// The menu that is opened for them differs per team
+	if (self.pers["team"] == "allies") {
+		menu_1 = game["menu_weapon_allies"];
+		menu_2 = game["menu_weapon_axis"];
+	} else {
+		menu_1 = game["menu_weapon_axis"];
+		menu_2 = game["menu_weapon_allies"];
+	}
+
+	// PHASE 1: PICKING FIRST WEAPON
+	// If this is the first weapon picked, or if it is and second weapon is picked too
+	if (menu == menu_1) {
+		self.pers["weapon1"] = weapon;
+		//self.pers["weapon2"] = undefined;
+
+		self openMenu(menu_2);
+
+		return true;
+	} else {
+		self.pers["weapon2"] = weapon;
+	}
+
+	if (getCvar("g_gametype") == "sd") {
+		if (!game["matchstarted"] || !level.roundstarted) {
+			if (self.sessionstate == "playing") {
+				self.pers["weapon"] = self.pers["weapon1"];
+
+				self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
+				self setWeaponSlotAmmo("primary", 999);
+				self setWeaponSlotClipAmmo("primary", 999);
+
+				self setWeaponSlotWeapon("primaryb", self.pers["weapon2"]);
+				self setWeaponSlotAmmo("primaryb", 999);
+				self setWeaponSlotClipAmmo("primaryb", 999);
+
+				self switchToWeapon(self.pers["weapon1"]);
+			} else {
+				self.pers["weapon"] = weapon;
+				if (!level.exist[self.pers["team"]]) {
+					self.spawned = undefined;
+					spawnPlayer();
+					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+					level thread checkMatchStart();
+				}
+				else {
+					spawnPlayer();
+					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+				}
+			}
+		} else {
+			self.pers["weapon"] = weapon;
+			self.sessionteam = self.pers["team"];
+
+			if (self.sessionstate != "playing") {
+				self.statusicon = "gfx/hud/hud@status_dead.tga";
+			}
+
+			if (self.pers["team"] == "allies") {
+				otherteam = "axis";
+			} else if (self.pers["team"] == "axis") {
+				otherteam = "allies";
+			}
+
+			// if joining a team that has no opponents, just spawn
+			if (!level.didexist[otherteam] && !level.roundended) {
+				self.spawned = undefined;
+				spawnPlayer();
+				self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+			} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
+				self.spawned = undefined;
+				spawnPlayer();
+				self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+				level thread checkMatchStart();
+			} else {
+				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+				if (self.pers["team"] == "allies") {
+					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
+					} else {
+						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
+					}
+				} else if (self.pers["team"] == "axis") {
+					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
+					} else {
+						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
+					}
+				}
+			}
+		}
+
+		self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
+		if (isDefined(self.autobalance_notify))
+			self.autobalance_notify destroy();
+	} else if (getCvar("g_gametype") == "tdm") {
+		if (!isDefined(self.pers["weapon"])) {
+			self.pers["weapon"] = weapon;
+			spawnPlayer();
+			self thread maps\mp\gametypes\tdm::printJoinedTeam(self.pers["team"]);
+		}
+		else
+		{
+			self.pers["weapon"] = weapon;
+
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+			if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+			else
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
+		}
+		if (isdefined (self.autobalance_notify))
+			self.autobalance_notify destroy();
+	} else if (getCvar("g_gametype") == "dm") {
+		if(!isDefined(self.pers["weapon"])) {
+			self.pers["weapon"] = weapon;
+			spawnPlayer();
+		} else {
+			self.pers["weapon"] = weapon;
+
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+			else
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
+		}
+	} else if (getCvar("g_gametype") == "hq") {
+		if(!isdefined(self.pers["weapon"]))
+		{
+			self.pers["weapon"] = weapon;
+			self thread maps\mp\gametypes\hq::respawn();
+			self thread maps\mp\gametypes\hq::printJoinedTeam(self.pers["team"]);
+		}
+		else
+		{
+			self.pers["weapon"] = weapon;
+
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
+
+			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
+			else
+				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
+		}
+		self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
+		if (isdefined (self.autobalance_notify))
+			self.autobalance_notify destroy();
+	} else {
+		// ERROR
+	}
+
+	return true;
+}
+
+
 Callback_PlayerDisconnect()
 {
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
@@ -929,9 +796,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	if (level.bashdamageonly && sMeansOfDeath != "MOD_MELEE")
-		return;
-
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
@@ -939,8 +803,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if (isPlayer(eAttacker) && self != eAttacker && eAttacker.pers["team"] != self.pers["team"])
 	{
 	eAttacker thread showhit();
-	}  
-
+	}
 
 	// check for completely getting out of the damage
 	if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
@@ -1046,9 +909,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 {
 	self endon("spawned");
 
-	//if(level.rdyup && !self.pers["killer"])
-		//return;
-
 	if(level.warmup)
 		return;
 
@@ -1080,14 +940,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.sessionstate = "dead";
 	self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
-	if(!level.warmup)
+	if (!level.warmup && !isdefined (self.autobalance))
 	{
-		if (!isdefined (self.autobalance))
-		{
-			self.pers["deaths"]++;
-			self.deaths = self.pers["deaths"];
-		}
+		self.pers["deaths"]++;
+		self.deaths = self.pers["deaths"];
 	}
+
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();
 	lpselfname = self.name;
@@ -1138,10 +996,9 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	else // If you weren't killed by a player, you were in the wrong place at the wrong time
 	{
 		doKillcam = false;
-		if(!level.warmup)
-		{
-			self.pers["score"]--;
-			self.score = self.pers["score"];
+		if(!level.warmup) {
+		self.pers["score"]--;
+		self.score = self.pers["score"];
 		}
 		lpattacknum = -1;
 		lpattackguid = "";
@@ -1149,11 +1006,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		lpattackerteam = "world";
 	}
 	if(!level.warmup)
-		logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 
 	// Make the player drop his weapon
-	maps\mp\gametypes\_Check_Snipers::NoDropWeapon();
-	
+	if (!isdefined (self.autobalance))
+		self dropItem(self getcurrentweapon());
+
 	self.pers["weapon1"] = undefined;
 	self.pers["weapon2"] = undefined;
 	self.pers["spawnweapon"] = undefined;
@@ -1171,36 +1029,18 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
 
-	/*if(level.warmup != "0")
-		self thread spawnPlayer();*/
-
 	if(doKillcam && !level.roundended)
-		self thread killcam(attackerNum, delay);
+		self thread maps\mp\gametypes\sd::killcam(attackerNum, delay);
 	else
 	{
 		currentorigin = self.origin;
 		currentangles = self.angles;
-		level.specmode = "death";
-		self thread spawnSpectator(currentorigin + (0, 0, 60), currentangles);
+		self thread maps\mp\gametypes\sd::spawnSpectator(currentorigin + (0, 0, 60), currentangles);
 	}
 }
 
 spawnPlayer()
 {
-	//if(level.warmup)
-	//	wait 5;
-	/*{
-		wait 5;
-		while(self.pers["team"] == "spectator")
-		{
-			self setClientCvar("g_scriptMainMenu", game["menu_team"]);
-			self setClientCvar("ui_weapontab", "0");
-			self openMenu(game["menu_team"]);
-		} //end spec while
-	} //end warmup if
-*/
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
 	self notify("spawned");
 
 	resettimeout();
@@ -1209,10 +1049,14 @@ spawnPlayer()
 	self.spectatorclient = -1;
 	self.archivetime = 0;
 	self.friendlydamage = undefined;
-/*
-	if(isDefined(self.spawned))
-		return;
-*/
+
+/**/// Allow player to spawn multiple times during warm-up
+/**/// if(isDefined(self.spawned))
+/**///	return;
+
+/**/if (level.instrattime)
+/**/	self.maxspeed = 0;
+
 	self.sessionstate = "playing";
 		
 	if(self.pers["team"] == "allies")
@@ -1229,8 +1073,9 @@ spawnPlayer()
 		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
 	
 	self.spawned = true;
-	if(level.rdyup != 1 || self.pers["killer"] != true)
-		self.statusicon = "";
+/**/if(level.rdyup != 1 || self.pers["killer"] != true)
+/**/	self.statusicon = "";
+/**/// self.statusicon = "";
 	self.maxhealth = 100;
 	self.health = self.maxhealth;
 	
@@ -1245,10 +1090,10 @@ spawnPlayer()
 	self.deaths = self.pers["deaths"];
 	
 	if(!isDefined(self.pers["savedmodel"]))
-		maps\mp\gametypes\_pam_teams::model();
+		maps\mp\gametypes\_teams::model();
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
-/*
+	
 	if(isDefined(self.pers["weapon1"]) && isDefined(self.pers["weapon2"]))
 	{
 	 	self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
@@ -1269,40 +1114,13 @@ spawnPlayer()
 
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
-*/
-	if(self.pers["team"] == "allies")
-	{
-		self setWeaponSlotWeapon("primary", "mosin_nagant_mp");
-		self setWeaponSlotAmmo("primary", 999);
-		self setWeaponSlotClipAmmo("primary", 999);
 
-		self setWeaponSlotWeapon("primaryb", "kar98k_mp");
-		self setWeaponSlotAmmo("primaryb", 999);
-		self setWeaponSlotClipAmmo("primaryb", 999);
+/**/maps\mp\gametypes\_pam_teams::givePistol();
+/**/maps\mp\gametypes\_pam_teams::giveGrenades(self.pers["selectedweapon"]);
 
-		self setSpawnWeapon("mosin_nagant_mp");
-	}
-	else
-	{
-		self setWeaponSlotWeapon("primary", "kar98k_mp");
-		self setWeaponSlotAmmo("primary", 999);
-		self setWeaponSlotClipAmmo("primary", 999);
-
-		self setWeaponSlotWeapon("primaryb", "mosin_nagant_mp");
-		self setWeaponSlotAmmo("primaryb", 999);
-		self setWeaponSlotClipAmmo("primaryb", 999);
-
-		self setSpawnWeapon("kar98k_mp");
-	}
-
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-	maps\mp\gametypes\_pam_teams::givePistol();
-	maps\mp\gametypes\_pam_teams::giveGrenades(self.pers["selectedweapon"]);
-	
 	self.usedweapons = false;
-	thread maps\mp\gametypes\_pam_teams::watchWeaponUsage();
-
-	thread maps\mp\gametypes\_pam_teams::watchPlayerFastShoot();
+	thread maps\mp\gametypes\_teams::watchWeaponUsage();
+/**/thread maps\mp\gametypes\_pam_teams::watchPlayerFastShoot();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
@@ -1324,232 +1142,13 @@ spawnPlayer()
 	}
 }
 
-spawnSpectator(origin, angles)
-{
-/*
-	if(isdefined(level.clock))
-	{
-		level.clock.x = 380;
-		level.clock.alignX = "left";
-	}
-*/
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
-	self notify("spawned");
-
-	resettimeout();
-
-	self.sessionstate = "spectator";
-	self.spectatorclient = -1;
-	self.archivetime = 0;
-	self.friendlydamage = undefined;
-
-	if(self.pers["team"] == "spectator")
-		self.statusicon = "";
-		
-	maps\mp\gametypes\_pam_teams::SetSpectatePermissions();
-
-	if(isDefined(origin) && isDefined(angles))
-		self spawn(origin, angles);
-	else
-	{
- 		spawnpointname = "mp_searchanddestroy_intermission";
-		spawnpoints = getentarray(spawnpointname, "classname");
-		spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-		if(isDefined(spawnpoint))
-			self spawn(spawnpoint.origin, spawnpoint.angles);
-		else
-			maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-	}
-
-	updateTeamStatus();
-
-	self.usedweapons = false;
-
-	if(game["attackers"] == "allies")
-		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
-	else if(game["attackers"] == "axis")
-		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
-
-	if ( getcvar( "sv_specblackout" ) == "1" )
-		self thread _specToBlack( level.specmode );
-}
-
-spawnIntermission()
-{
-	self notify("spawned");
-	
-	resettimeout();
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
-	self.sessionstate = "intermission";
-	self.spectatorclient = -1;
-	self.archivetime = 0;
-	self.friendlydamage = undefined;
-
-	spawnpointname = "mp_searchanddestroy_intermission";
-	spawnpoints = getentarray(spawnpointname, "classname");
-	spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
-
-	if(isDefined(spawnpoint))
-		self spawn(spawnpoint.origin, spawnpoint.angles);
-	else
-		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
-}
-
-killcam(attackerNum, delay)
-{
-	self endon("spawned");
-	
-	// killcam
-	if(attackerNum < 0)
-		return;
-
-	self.sessionstate = "spectator";
-	self.spectatorclient = attackerNum;
-	self.archivetime = delay + 7;
-
-	maps\mp\gametypes\_pam_teams::SetKillcamSpectatePermissions();
-
-	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
-	wait 0.50;
-
-	if(self.archivetime <= delay)
-	{
-		self.spectatorclient = -1;
-		self.archivetime = 0;
-	
-		maps\mp\gametypes\_pam_teams::SetSpectatePermissions();
-		return;
-	}
-
-	self.killcam = true;
-
-	if(!isDefined(self.kc_topbar))
-	{
-		self.kc_topbar = newClientHudElem(self);
-		self.kc_topbar.archived = false;
-		self.kc_topbar.x = 0;
-		self.kc_topbar.y = 0;
-		self.kc_topbar.alpha = 0.5;
-		self.kc_topbar setShader("black", 640, 112);
-	}
-
-	if(!isDefined(self.kc_bottombar))
-	{
-		self.kc_bottombar = newClientHudElem(self);
-		self.kc_bottombar.archived = false;
-		self.kc_bottombar.x = 0;
-		self.kc_bottombar.y = 368;
-		self.kc_bottombar.alpha = 0.5;
-		self.kc_bottombar setShader("black", 640, 112);
-	}
-
-	if(!isDefined(self.kc_title))
-	{
-		self.kc_title = newClientHudElem(self);
-		self.kc_title.archived = false;
-		self.kc_title.x = 320;
-		self.kc_title.y = 40;
-		self.kc_title.alignX = "center";
-		self.kc_title.alignY = "middle";
-		self.kc_title.sort = 1; // force to draw after the bars
-		self.kc_title.fontScale = 3.5;
-	}
-	self.kc_title setText(&"MPSCRIPT_KILLCAM");
-
-	if(!isDefined(self.kc_skiptext))
-	{
-		self.kc_skiptext = newClientHudElem(self);
-		self.kc_skiptext.archived = false;
-		self.kc_skiptext.x = 320;
-		self.kc_skiptext.y = 70;
-		self.kc_skiptext.alignX = "center";
-		self.kc_skiptext.alignY = "middle";
-		self.kc_skiptext.sort = 1; // force to draw after the bars
-	}
-	self.kc_skiptext setText(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
-
-	if(!isDefined(self.kc_timer))
-	{
-		self.kc_timer = newClientHudElem(self);
-		self.kc_timer.archived = false;
-		self.kc_timer.x = 320;
-		self.kc_timer.y = 428;
-		self.kc_timer.alignX = "center";
-		self.kc_timer.alignY = "middle";
-		self.kc_timer.fontScale = 3.5;
-		self.kc_timer.sort = 1;
-	}
-	self.kc_timer setTenthsTimer(self.archivetime - delay);
-
-	self thread spawnedKillcamCleanup();
-	self thread waitSkipKillcamButton();
-	self thread waitKillcamTime();
-	self waittill("end_killcam");
-
-	self removeKillcamElements();
-
-	self.spectatorclient = -1;
-	self.archivetime = 0;
-	self.killcam = undefined;
-	
-	maps\mp\gametypes\_pam_teams::SetSpectatePermissions();
-}
-
-waitKillcamTime()
-{
-	self endon("end_killcam");
-	
-	wait(self.archivetime - 0.05);
-	self notify("end_killcam");
-}
-
-waitSkipKillcamButton()
-{
-	self endon("end_killcam");
-	
-	while(self useButtonPressed())
-		wait .05;
-
-	while(!(self useButtonPressed()))
-		wait .05;
-	
-	self notify("end_killcam");	
-}
-
-removeKillcamElements()
-{
-	if(isDefined(self.kc_topbar))
-		self.kc_topbar destroy();
-	if(isDefined(self.kc_bottombar))
-		self.kc_bottombar destroy();
-	if(isDefined(self.kc_title))
-		self.kc_title destroy();
-	if(isDefined(self.kc_skiptext))
-		self.kc_skiptext destroy();
-	if(isDefined(self.kc_timer))
-		self.kc_timer destroy();
-}
-
-spawnedKillcamCleanup()
-{
-	self endon("end_killcam");
-
-	self waittill("spawned");
-	self removeKillcamElements();
-}
-
 startGame()
 {
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
 	level.starttime = getTime();
 	thread startRound();
 	
 	if ( (level.teambalance > 0) && (!game["BalanceTeamsNextRound"]) )
-		level thread maps\mp\gametypes\_pam_teams::TeamBalance_Check_Roundbased();
+		level thread maps\mp\gametypes\_teams::TeamBalance_Check_Roundbased();
 }
 
 startRound()
@@ -1558,22 +1157,12 @@ startRound()
 	if (game["dropsecondweap"])
 		DropSecWeapon();
 
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
 	level endon("bomb_planted");
 
 	if(game["matchstarted"])
 	{
 		if (game["mode"] == "match")
-			game["switchprevent"] = true;
-
-		maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
-		if (getcvar("pam_mode") == "bash_round")
-		{
-			thread Bash_Round();
-			return;
-		}
+			level.lockteams = true;
 
 		// STRAT Time
 		level.clock = newHudElem();
@@ -1638,8 +1227,6 @@ startRound()
 		return;
 	}
 
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
 	if(level.roundended)
 		return;
 
@@ -1674,13 +1261,6 @@ checkMatchStart()
 
 	game["checkingmatchstart"] = true;
 
-	if (getcvar("pam_mode") == "strat")
-	{
-		Do_Strat_Warning();
-		thread Automatic_Nade_Refills();
-		return;
-	}
-
 	//Check to see if we even have 2 teams to start
 	level.exist["teams"] = 0;
 
@@ -1699,9 +1279,6 @@ checkMatchStart()
 		}
 
 		if (level.exist["allies"] && level.exist["axis"])
-			level.exist["teams"] = 1;
-
-		if (getcvar("scr_debug_sd") == "1")
 			level.exist["teams"] = 1;
 
 		wait 1;
@@ -1751,8 +1328,6 @@ checkMatchStart()
 			wait 3;
 
 		Destroy_HUD_Header();
-
-		maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
 
 		level notify("kill_endround");
 		level.roundended = false;
@@ -1983,6 +1558,7 @@ endRound(roundwinner)
 		
 		if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
 		{
+			iPrintLn("culprit");
 			primary = player getWeaponSlotWeapon("primary");
 			primaryb = player getWeaponSlotWeapon("primaryb");
 
@@ -2022,7 +1598,7 @@ endRound(roundwinner)
 				if ( (spawnweapon == "none") && (isdefined (primary)) ) 
 					spawnweapon = primary;
 
-				if(!maps\mp\gametypes\_pam_teams::isPistolOrGrenade(spawnweapon))
+				if(!maps\mp\gametypes\_teams::isPistolOrGrenade(spawnweapon))
 					player.pers["spawnweapon"] = spawnweapon;
 				else
 					player.pers["spawnweapon"] = player.pers["weapon1"];
@@ -2033,7 +1609,7 @@ endRound(roundwinner)
 	if ( (level.teambalance > 0) && (game["BalanceTeamsNextRound"]) )
 	{
 		level.lockteams = true;
-		level thread maps\mp\gametypes\_pam_teams::TeamBalance();
+		level thread maps\mp\gametypes\_teams::TeamBalance();
 		level waittill ("Teams Balanced");
 		wait 4;
 	}
@@ -2086,7 +1662,7 @@ endMap()
 		player closeMenu();
 		player setClientCvar("g_scriptMainMenu", "main");
 		player setClientCvar("cg_objectiveText", text);
-		player spawnIntermission();
+		player maps\mp\gametypes\sd::spawnIntermission();
 	}
 
 	wait 10;
@@ -2268,15 +1844,10 @@ updateGametypeCvars()
 
 	for(;;)
 	{
-		// WORM PAM Disable Check
-		pamenable = getCvarint("svr_pamenable");
-		if (pamenable != level.pamenable && pamenable == 0)
+		players = getentarray("player", "classname");
+		for(i = 0; i < players.size; i++)
 		{
-			enabling = 1;
-			level.pamenable = pamenable;
-
-			maps\mp\gametypes\_pam_utilities::StopPAMUO();
-			level notify("PAMRestart");
+			iPrintLn("weapon:" + isDefined(players[i].pers["weapon"]));
 		}
 
 		league = getCvar("pam_mode");
@@ -2445,7 +2016,7 @@ updateGametypeCvars()
 		if (level.allowfreelook != freelook)
 		{
 			level.allowfreelook = getCvarInt("scr_freelook");
-			level maps\mp\gametypes\_pam_teams::UpdateSpectatePermissions();
+			level maps\mp\gametypes\_teams::UpdateSpectatePermissions();
 			if (freelook == 0)
 				iprintln("^3FREELOOK has been turned ^1OFF!");
 			else
@@ -2456,7 +2027,7 @@ updateGametypeCvars()
 		if (level.allowenemyspectate != enemyspectate)
 		{
 			level.allowenemyspectate = getCvarInt("scr_spectateenemy");
-			level maps\mp\gametypes\_pam_teams::UpdateSpectatePermissions();
+			level maps\mp\gametypes\_teams::UpdateSpectatePermissions();
 			if (enemyspectate == 0)
 				iprintln("^3Spectate Enemies has been turned ^1OFF!");
 			else
@@ -2470,7 +2041,7 @@ updateGametypeCvars()
 			if (level.teambalance > 0)
 			{
 				iprintln("^3TEAMBALANCE has been turned ^2ON!");
-				level thread maps\mp\gametypes\_pam_teams::TeamBalance_Check_Roundbased();
+				level thread maps\mp\gametypes\_teams::TeamBalance_Check_Roundbased();
 			}
 			else
 				iprintln("^3TEAMBALANCE has been turned ^1OFF!");
@@ -2528,52 +2099,6 @@ updateGametypeCvars()
 				iprintln("^3The FG42 has been turned ^1OFF!");
 			else
 				iprintln("^3The FG42 has been turned ^2ON!");
-		}
-
-
-		nodropsniper = getcvarint("sv_noDropSniper");
-		if (nodropsniper != level.nodropsniper)
-		{
-			level.nodropsniper = nodropsniper;
-			if (nodropsniper == 1)
-				iprintln("^3Sniper Rifle Drops have been turned ^2ON!");
-			else
-				iprintln("^3Sniper Rifle Drops have been turned ^1OFF!");
-		}
-
-		allysnipelimit = getcvarint("sv_alliedSniperLimit");
-		if (allysnipelimit != level.allysnipelimit)
-		{
-			level.allysnipelimit = allysnipelimit;
-			iprintln("^3Allied Sniper Rifles limited to ^5" + allysnipelimit);
-		}
-
-		axissnipelimit = getcvarint("sv_axisSniperLimit");
-		if (axissnipelimit != level.axissnipelimit)
-		{
-			level.axissnipelimit = axissnipelimit;
-			iprintln("^3Axis Sniper Rifles limited to ^5" + axissnipelimit);
-		}
-
-		bombplanttime = getcvarFloat("sv_BombPlantTime");
-		if (bombplanttime != level.planttime)
-		{
-			level.bombplanttime = planttime;
-			iprintln("^3Bomb Plant Time has been changed to ^5" + bombplanttime);
-		}
-
-		bombdefusetime = getcvarFloat("sv_BombDefuseTime");
-		if (bombdefusetime != level.defusetime)
-		{
-			level.defusetime = bombdefusetime;
-			iprintln("^3Bomb Defuse Time has been changed to ^5" + bombdefusetime);
-		}
-
-		countdowntime = getcvarFloat("sv_BombTimer");
-		if (countdowntime != level.countdowntime)
-		{
-			level.countdowntime = countdowntime;
-			iprintln("^3Bomb Timer has been changed to ^5" + countdowntime);
 		}
 
 		afs_time = getcvarFloat("scr_afs_time");
@@ -2762,8 +2287,8 @@ updateTeamStatus()
 bombzones()
 {
 	level.barsize = 288;
-	//level.planttime = 5;		// seconds to plant a bomb
-	//level.defusetime = 10;		// seconds to defuse a bomb
+	level.planttime = 5;		// seconds to plant a bomb
+	level.defusetime = 10;		// seconds to defuse a bomb
 
 	bombtrigger = getent("bombtrigger", "targetname");
 	bombtrigger maps\mp\_utility::triggerOff();
@@ -2843,7 +2368,6 @@ bombzone_think(bombzone_other)
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.planttime))
 				{
-					self.bombinteraction = true;
 					self.progresstime += 0.05;
 					wait 0.05;
 				}
@@ -2887,7 +2411,8 @@ bombzone_think(bombzone_other)
 					lpselfguid = other getGuid();
 					logPrint("A;" + lpselfguid + ";" + lpselfnum + ";" + game["attackers"] + ";" + other.name + ";" + "bomb_plant" + "\n");
 					
-					//announcement(&"SD_EXPLOSIVESPLANTED");
+					// WRS: hide announcement.
+					// announcement(&"SD_EXPLOSIVESPLANTED");
 					thread HUD_Bomb_Planted();
 															
 					players = getentarray("player", "classname");
@@ -2899,23 +2424,23 @@ bombzone_think(bombzone_other)
 					
 					level notify("bomb_planted");
 					level.clock destroy();
+
+					// WRS {
 					level.clock = newHudElem();
 					level.clock.x = 320;
 					level.clock.y = 460;
 					level.clock.alignX = "center";
 					level.clock.alignY = "middle";
 					level.clock.font = "bigfixed";
-					level.clock setTimer(level.countdowntime * 1);
+					level.clock setTimer(59);
+					// } END WRS
 
-					self.bombinteraction = false;
-					
 					return;	//TEMP, script should stop after the wait .05
 				}
 				else
 				{
 					other unlink();
 					other enableWeapon();
-					self.bombinteraction = false;
 				}
 				
 				wait .05;
@@ -2946,28 +2471,15 @@ bomb_countdown()
 	self endon("bomb_defused");
 	level endon("intermission");
 
-	
 	level.bombmodel playLoopSound("bomb_tick");	
 	
 	// Fade from yellow to red
-	for(i=0;i<50;i++)
+	for(i = 0; i < 50; i++)
 	{
 		if(isdefined(level.clock))
 			level.clock.color = (1, 1 - i*0.02, 0);
 		wait 1;
 	}
-
-	// Set clock to red
-	if(isdefined(level.clock))
-		level.clock.color = (1, 0, 0);
-
-	// Set clock to yellow
-	if(isdefined(level.clock))
-		level.clock.color = (3, 0, 0);
-
-	// Set clock to green
-	if(isdefined(level.clock))
-		level.clock.color = (2, 0, 0);
 	
 	wait 10;
 
@@ -2975,8 +2487,6 @@ bomb_countdown()
 		level.clock destroy();
 		
 	// bomb timer is up
-	if(isdefined(level.clock))
-		level.clock destroy();
 	objective_delete(0);
 	
 	level.bombexploded = true;
@@ -3060,7 +2570,6 @@ bomb_think()
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.defusetime))
 				{
-					self.bombinteraction = true;
 					self.progresstime += 0.05;
 					wait 0.05;
 				}
@@ -3094,14 +2603,12 @@ bomb_think()
 						players[i] playLocalSound("MP_announcer_bomb_defused");
 
 					level thread endRound(game["defenders"]);
-					self.bombinteraction = false;
 					return;	//TEMP, script should stop after the wait .05
 				}
 				else
 				{
 					other unlink();
 					other enableWeapon();
-					self.bombinteraction = false;
 				}
 				
 				wait .05;
@@ -3133,117 +2640,6 @@ printJoinedTeam(team)
 		iprintln(&"MPSCRIPT_JOINED_ALLIES", self);
 	else if(team == "axis")
 		iprintln(&"MPSCRIPT_JOINED_AXIS", self);
-}
-
-
-addBotClients()
-{
-	// take this out for now
-	return;
-
-	game_menu_team = "team_" + game["allies"] + game["axis"];
-	wait 5;
-	
-	for(;;)
-	{
-		if(getCvarInt("scr_numbots") > 0)
-			break;
-		wait 1;
-	}
-	iNumBots = getCvarInt("scr_numbots");
-	for(i = 0; i < 6; i++)
-	{
-		ent[i] = addtestclient();
-		wait 0.5;
-
-		if(isPlayer(ent[i]))
-		{
-			if(i == 1 || i == 3 || i == 5 )
-			{
-				ent[i] notify("menuresponse", game_menu_team, "axis");
-				wait 0.5;
-				ent[i] notify("menuresponse", game["menu_weapon_axis"], "kar98k_mp");
-				//ent[i].pers["team"] = "axis";
-				//ent[i].pers["weapon"] = "kar98k_mp";
-			}
-			else
-			{
-				ent[i] notify("menuresponse", game_menu_team, "allies");
-				wait 0.5;
-				ent[i] notify("menuresponse", game["menu_weapon_allies"], "m1garand_mp");
-				//ent[i].pers["team"] = "allies";
-				//ent[i].pers["weapon"] = "springfield_mp";
-			}
-		}
-	}
-
-
-}
-
-waitRespawnButton()
-{
-	self endon("end_respawn");
-	self endon("respawn");
-	
-	wait 0; // Required or the "respawn" notify could happen before it's waittill has begun
-/*
-	level.pathlist = [];
-	level.pathlist = getCvar("sv_referencedPaknames");
-	self iprintln("^2Server PK3 Files:");
-	self iprintln("^2" + level.pathlist);
-*/
-	self iprintlnbold(self.name + "^7 Hit Your Use Key to Ready Up");
-
-
-
-		if(!isDefined(self.pers["pamsounds"]))
-		{
-			self.pers["pamsounds"] = 1;
-		}
-		if (self.pers["pamsounds"] == "1")
-
-		{
-		self playsound("readyup");
-		}
-
-
-	wait 2;
-	
-	while (!level.playersready)
-	{
-		wait .5;
-		if(self useButtonPressed() == true)
-		{ //if	
-		
-		for (index=0;index<level.readyname.size;index++)
-		{
-			if (level.readyname[index] == self.name)
-			{
-
-				if (level.readystate[index] == "notready")
-				{
-					level.readystate[index] = "ready";
-					iprintlnbold(self.name + "^2 is Ready");
-					logPrint(self.name + ";" + " is Ready Logfile;" + "\n");
-					wait 1;
-				}
-				else
-				{
-					level.readystate[index] = "notready";
-					iprintlnbold(self.name + "^1 is Not Ready");
-					logPrint(self.name + ";" + " is Not Ready Logfile;" + "\n");
-					wait 1;
-				} // end notready if
-			} // end name = name if
-		}  // end for
-
-		} //if
-	} //while
-
-	self notify("remove_respawntext");
-
-	self notify("respawn");	
-	
 }
 
 Create_HUD_Header()
@@ -3830,171 +3226,11 @@ DropSecWeapon()
 	game["dropsecondweap"] = false;
 }
 
-_specToBlack( whyHere )
-{
-	level endon( "intermission" );
-
-	self notify( "end_spectoblack" );
-	self endon( "end_spectoblack" );
-	self endon( "spawned" );
-
-	if ( whyHere == "kick" )
-	{
-		self closeMenu();
-		self setClientCvar( "g_scriptMainMenu", "main" );
-	}
-
-	if ( !isdefined( self.spec_black ) )
-	{
-		self.spec_black = newClientHudElem( self );
-		self.spec_black.archived = false;
-		self.spec_black.x = 0;
-		self.spec_black.y = 0;
-		self.spec_black.alpha = 1;
-		self.spec_black.sort = 9990;	// Clock is set to 9999
-		self.spec_black setShader( "black", 640, 480 );
-	}
-/*
-	switch ( whyHere )
-	{
-	  case "round":	text = level.blackRound;	break;
-	  case "death":	text = level.blackDeath;	break;
-	  case "kick": 	text = level.blackKicked; 	break;
-	  case "spec": 	text = level.blackSpec; 	break;
-	  default:  	text = undefined;		break;
-	}
-
-	if ( isdefined( text ) )
-	{
-		if ( !isdefined( self.spec_title ) )
-		{
-			self.spec_title = newClientHudElem( self );
-			self.spec_title.archived = false;
-			self.spec_title.x = 320;
-			self.spec_title.y = 200;
-			self.spec_title.alignX = "center";
-			self.spec_title.alignY = "middle";
-			self.spec_title.sort = 9991;
-			self.spec_title.fontScale = 2.0;
-			self.spec_title setText( text );
-		}
-	}
-*/
-	if ( whyHere != "kick" )
-	{
-		self thread _removeSpecBlack();
-		self thread _msgSpecBlack( "spawned" );
-	}
-
-	for (;;)
-	{
-		self.spectatorclient = self getEntityNumber();
-		wait( 0.05 );	// Stay put until next round
-	}
-}
-
-//
-_msgSpecBlack( msg )
-{
-	self endon( "end_spectoblack" );
-	self endon( "remove_specblack" );
-
-	self waittill( msg );
-	self notify( "remove_specblack" );
-	return;
-}
-
-//
-_removeSpecBlack()
-{
-	self endon( "end_spectoblack" );
-
-	self waittill( "remove_specblack" );
-	if ( isdefined( self.spec_black ) )
-		self.spec_black destroy();
-	if ( isdefined( self.spec_title ) )
-		self.spec_title destroy();
-	return;
-}
-
 Prepare_map_Tie()
 {
 	otcount = getcvarint("g_ot_active");
 	otcount = otcount + 1;
 	setcvar("g_ot_active", otcount);
-}
-
-Bash_Round()
-{
-	level.bashdamageonly = true;
-
-	wait 3;
-
-	// get rid of weapons
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{ 
-		//drop weapons
-		player = players[i];
-
-		player setWeaponSlotAmmo("pistol", 0);
-		player setWeaponSlotClipAmmo("pistol", 0);
-
-		if (isdefined(player.pers["weapon"]))
-			player dropItem(player.pers["weapon"]);
-		if (isdefined(player.pers["weapon1"]))
-			player dropItem(player.pers["weapon1"]);
-		if (isdefined(player.pers["weapon2"]))
-			player dropItem(player.pers["weapon2"]);
-
-		if (player.pers["team"] == "allies")
-		{
-			switch(game["allies"])		
-			{
-			case "american":
-				grenadetype = "fraggrenade_mp";
-				break;
-
-			case "british":
-				grenadetype = "rgd-33russianfrag_mp";
-				break;
-
-			case "russian":
-				grenadetype = "rgd-33russianfrag_mp";
-				break;
-			}
-		}
-		else if(player.pers["team"] == "axis")
-		{
-			switch(game["axis"])
-			{
-			case "german":
-				grenadetype = "stielhandgranate_mp";
-				break;
-			}			
-		}
-
-		player dropItem(grenadetype);
-	}
-
-	Delete_Dropped_Weapons();
-}
-
-
-Delete_Dropped_Weapons()
-{
-	deletePlacedEntity("mpweapon_bar");
-	deletePlacedEntity("mpweapon_bren");
-	deletePlacedEntity("mpweapon_ppsh");
-	deletePlacedEntity("mpweapon_mp44");
-	
-	deletePlacedEntity("mpweapon_fraggrenade");
-	deletePlacedEntity("mpweapon_mk1britishfrag");
-	deletePlacedEntity("mpweapon_russiangrenade");
-	deletePlacedEntity("mpweapon_stielhandgranate");
-
-	deletePlacedEntity("mpweapon_fg42");
-	deletePlacedEntity("mpweapon_panzerfaust");
 }
 
 deletePlacedEntity(entity)
@@ -4024,8 +3260,6 @@ Do_Ready_Up()
 		level.demosrecording destroy();
 
 	Destroy_HUD_Header();
-
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
 
 	if(isdefined(level.allready))
 		level.allready destroy();
@@ -4265,8 +3499,6 @@ Do_Half_Time()
 
 	}  // end for loop
 
-	maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
-
 	/* READY UP */
 	if( game["mode"] == "match")
 	{
@@ -4320,8 +3552,7 @@ HalftimeSpawn()
 	{
 		//self.sessionteam = "spectator";
 
-		spawnSpectator();
-		maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
+		maps\mp\gametypes\sd::spawnSpectator();
 
 		if(self.pers["team"] == "allies")
 		{
@@ -4464,61 +3695,6 @@ Hold_All_Players()
 	}
 }
 
-
-Monitor_Weapon_Drop()
-{
-	while (1)
-	{
-		timer = 0;
-		primaryb = self getWeaponSlotWeapon("primaryb");
-		current = self getcurrentweapon();
-
-		while (self UseButtonPressed() && primaryb == current && !self.bombinteraction)
-		{
-			timer = timer + .2;
-
-			if (timer > 1.6)
-				self dropItem(self getcurrentweapon());
-
-			wait .2;
-			current = self getcurrentweapon();
-		}
-
-		wait .5;
-	}
-}
-
-Do_Strat_Warning()
-{
-	level.pammode = newHudElem();
-	level.pammode.x = 10;
-	level.pammode.y = 10;
-	level.pammode.alignX = "left";
-	level.pammode.alignY = "middle";
-	level.pammode.fontScale = 1;
-	level.pammode.color = (1, 1, 0);
-	level.pammode setText(game["leaguestring"]);
-}
-
-Automatic_Nade_Refills()
-{
-	// Allow Clipping
-	setcvar("sv_cheats", "1");			// Cheats? Oh no!
-
-	while (1)
-	{
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{ 
-			player = players[i];
-
-			player setWeaponSlotClipAmmo("grenade", 3);
-		}
-
-		wait 3;
-	}
-}
-
 showhit()
 {
 	if(isdefined(self.hitblip))
@@ -4537,4 +3713,107 @@ showhit()
 
 	if(isdefined(self.hitblip))
 		self.hitblip destroy();
+}
+
+// Modified to allow one team to pick weapons from another.
+_restrict(response)
+{
+	switch(response) {
+	case "bar_mp":
+		if (!getcvar("scr_allow_bar")) {
+			self iprintln(&"MPSCRIPT_BAR_IS_A_RESTRICTED_WEAPON");
+			return "restricted";
+		}
+		break;
+	case "bren_mp":
+		if (!getcvar("scr_allow_bren")) {
+			self iprintln(&"MPSCRIPT_BREN_LMG_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "enfield_mp":
+		if (!getcvar("scr_allow_enfield")) {
+			self iprintln(&"MPSCRIPT_LEEENFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "kar98k_mp":
+		if (!getcvar("scr_allow_kar98k")) {
+			self iprintln(&"MPSCRIPT_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "kar98k_sniper_mp":
+		if (!getcvar("scr_allow_kar98ksniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_KAR98K_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1carbine_mp":
+		if (!getcvar("scr_allow_m1carbine")) {
+			self iprintln(&"MPSCRIPT_M1A1_CARBINE_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "m1garand_mp":
+		if (!getcvar("scr_allow_m1garand")) {
+			self iprintln(&"MPSCRIPT_M1_GARAND_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mp40_mp":
+		if (!getcvar("scr_allow_mp40")) {
+			self iprintln(&"MPSCRIPT_MP40_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mp44_mp":
+		if (!getcvar("scr_allow_mp44")) {
+			self iprintln(&"MPSCRIPT_MP44_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_mp":
+		if (!getcvar("scr_allow_nagant")) {
+			self iprintln(&"MPSCRIPT_MOSINNAGANT_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "mosin_nagant_sniper_mp":
+		if (!getcvar("scr_allow_nagantsniper")) {
+			self iprintln(&"MPSCRIPT_SCOPED_MOSINNAGANT_IS");
+			return "restricted";
+		}
+		break;
+	case "ppsh_mp":
+		if (!getcvar("scr_allow_ppsh")) {
+			self iprintln(&"MPSCRIPT_PPSH_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "springfield_mp":
+		if (!getcvar("scr_allow_springfield")) {
+			self iprintln(&"MPSCRIPT_SPRINGFIELD_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "sten_mp":
+		if (!getcvar("scr_allow_sten")) {
+			self iprintln(&"MPSCRIPT_STEN_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	case "thompson_mp":
+		if (!getcvar("scr_allow_thompson")) {
+			self iprintln(&"MPSCRIPT_THOMPSON_IS_A_RESTRICTED");
+			return "restricted";
+		}
+		break;
+	default: {
+			self iprintln(&"MPSCRIPT_UNKNOWN_WEAPON_SELECTED");
+			return "restricted";
+		}
+		break;
+	}
+	return response;
 }

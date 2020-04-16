@@ -7,9 +7,9 @@ LeagueRules()
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
 	/*========================================================*/
-	setcvar("scr_half_round" , "1");		// Switch AFTER this round.
+	setcvar("scr_half_round" , "2");		// Switch AFTER this round.
 	setcvar("scr_half_score" , "0");		// Switch AFTER this score.
-	setcvar("scr_end_round" , "2");		// End Map AFTER this round.
+	setcvar("scr_end_round" , "4");		// End Map AFTER this round.
 	setcvar("scr_end_score" , "0");		// End Map AFTER this total score.
 	setcvar("scr_end_half2score" , "0");	// End Map AFTER this 2nd-half score.
 	setcvar("scr_count_draws", "0");		// Re-play rounds that end in a draw
@@ -29,17 +29,10 @@ LeagueRules()
 	
 	// Grace/Strat Period
 	setcvar("scr_sd_graceperiod", "3");		// Grace Period
-	setcvar("scr_strat_time", "0");			//Hold players still during Strat Time?
-
-
-	//Bomb Plant Settings
-	setcvar("sv_BombPlantTime", "5");			// bomb plant time
-	setcvar("sv_BombDefuseTime", "10");			// bomb defuse time
-	setcvar("sv_BombTimer", "60");				// bomb timer
+	setcvar("scr_strat_time", "1");			//Hold players still during Strat Time?
 
 
 	// Allow Voting 
-	setcvar("scr_allow_vote" , "0");
 	setcvar("g_allowvote" , "0");
 	setcvar("g_allowvotetempbanuser" , "0");
 	setcvar("g_allowvotetempbanclient" , "0");
@@ -64,82 +57,52 @@ LeagueRules()
 	/* ============== Weapon Setup Options ===================*/
 	/*========================================================*/
 
-	//Do we allow players to drop their secondary weapons?
-	setcvar("scr_allow_weapon_drops", "0");
-
 	//Force Bolt-Action Rifles Only
 	setcvar("scr_force_bolt_rifles", "1");
 
 
 	//Snipers
-	setcvar("sv_noDropSniper", "0");	// can't drop sniper rifle
-	setcvar("sv_SniperLimit", "0");		// sniper limit
-
-	setcvar("scr_allow_springfield", "0");
-	setcvar("scr_allow_kar98ksniper", "0");
-	setcvar("scr_allow_nagantsniper", "0");
-	setcvar("scr_allow_fg42", "0");
+	setcvar("scr_allow_springfield", "1");
+	setcvar("scr_allow_kar98ksniper", "1");
+	setcvar("scr_allow_nagantsniper", "1");
+	setcvar("scr_allow_fg42", "1");
 
 
 	//Rifles
 	setcvar("scr_allow_enfield", "1");
 	setcvar("scr_allow_kar98k", "1");
-	setcvar("scr_allow_m1carbine", "0");
+	setcvar("scr_allow_m1carbine", "1");
 	setcvar("scr_allow_m1garand", "1");
 	setcvar("scr_allow_nagant", "1");
 
 
 	//SMGs
-	setcvar("sv_SMGLimit", "0");		// smg limit
+	setcvar("scr_allow_mp40", "1");
+	setcvar("scr_allow_sten", "1");
+	setcvar("scr_allow_thompson", "1");
 
-	setcvar("scr_allow_mp40", "0");
-	setcvar("scr_allow_sten", "0");
-	setcvar("scr_allow_thompson", "0");
-	setcvar("scr_allow_MG30cal", "0");
-	
-	setcvar("mg42", "0");
-	setcvar("mg42", "off");
-
-	// Deployable Machine Guns
-	setcvar("sv_noDropDMG", "0");	// 1=can't drop 	Deployable MG, 0=DMG Drops
-	setcvar("sv_DMGLimit", "0"); // deployable mg limit
-
-
-
-	//MGs
-	setcvar("sv_MGLimit", "0");		// mg limit
-	setcvar("sv_mg42_disable", "1");	
-	setcvar("scr_mg42_disable", "1");
-
-
-	setcvar("scr_allow_bar", "0");
-	setcvar("scr_allow_bren", "0");
-	setcvar("scr_allow_mp44", "0");
-	setcvar("scr_allow_ppsh", "0");
-	setcvar("scr_allow_stielhandgranate", "0");
-	setcvar("scr_allow_rgd-33russianfrag", "0");
-	setcvar("scr_allow_mk1britishfrag", "0");
-	setcvar("scr_allow_fraggrenade", "0");
-	setcvar("scr_allow_nade", "0");
-	setcvar("scr_allow_nades", "0");
-
-
+	setcvar("scr_allow_bar", "1");
+	setcvar("scr_allow_bren", "1");
+	setcvar("scr_allow_mp44", "1");
+	setcvar("scr_allow_ppsh", "1");
+	setcvar("scr_allow_stielhandgranate", "1");
+	setcvar("scr_allow_rgd-33russianfrag", "1");
+	setcvar("scr_allow_mk1britishfrag", "1");
+	setcvar("scr_allow_fraggrenade", "1");
 
 	//Rockets
-	setcvar("scr_allow_panzerfaust", "0");
-
+	setcvar("scr_allow_panzerfaust", "1");
 
 	//MG42
-	setcvar("scr_allow_MG42", "0");
-	setcvar("scr_allow_MG34", "0");
-
+	setcvar("scr_allow_MG42", "1");
 
 	//Nade Spawn Ammo Settings
 	setcvar("scr_rifle_nade_count", "0");
 	setcvar("scr_smg_nade_count", "0");
 	setcvar("scr_mg_nade_count", "0");
 	setcvar("scr_sniper_nade_count", "0");
-     setcvar("scr_allow_fraggrenade_mp", "0");
+
+	setcvar("scr_allow_fraggrenade_mp", "0");
 	setcvar("scr_allow_mk1britishfrag_mp", "0");
 	setcvar("scr_allow_rgd-33russianfrag_mp", "0");
 	setcvar("scr_allow_stielhandgranate_mp", "0");
@@ -165,15 +128,13 @@ LeagueRules()
 	// Warm-up Mines
 	setcvar("sv_warmupmines", "0"); //Leave this on for now. Mines need to be re-worked.
 
-	//Auto Screenshots / Console / Black Spec
+	//Auto Screenshots / Console
 	setcvar("g_autoscreenshot", "1");			// turns on autoscreenshot
 	setcvar("g_disableClientConsole", "0");		// disable client console
-	setcvar("sv_specblackout", "0");			// blackout for specs
 
 
 	// PAM Sounds	
 	setcvar("sv_pamsounds", "0");		// pamsounds
-	setcvar("sv_axisgoat", "0");		// axis goat sound when bashed
 
 
 	/* NOT Likely to ever change */

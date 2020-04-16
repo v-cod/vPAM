@@ -26,15 +26,6 @@ LeagueRules()
 
 	if (getcvar("g_roundwarmuptime") == "")
 		setcvar("g_roundwarmuptime", "3");
-	
-	if (getcvar("sv_noDropSniper") == "")
-		setcvar("sv_noDropSniper", "0");
-	if (getcvar("sv_SniperLimit") == "")
-		setcvar("sv_SniperLimit", "99");
-	if (getcvar("sv_SMGLimit") == "")
-		setcvar("sv_SMGLimit", "99");
-	if (getcvar("sv_MGLimit") == "")
-		setcvar("sv_MGLimit", "99");
 
 	if(getCvar("sv_playersleft") == "")
 		setCvar("sv_playersleft", "1");
@@ -57,7 +48,6 @@ LeagueRules()
 	setcvar("g_timeoutLength", "90000");	// length of timeouts
 	setcvar("g_timeoutRecovery", "10000");	// counter before match resumes
 	setcvar("g_timeoutBank", "180000");		// timeout bank
-	setcvar("sv_specblackout", "0");		// blackout for specs
 	setcvar("g_disableClientConsole", "0");	// disable client console
 	setcvar("scr_strat_time", "0");			// Changes Grace Period to Hold players still
 

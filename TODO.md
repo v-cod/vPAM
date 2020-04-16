@@ -9,10 +9,11 @@
 ## Could
 
 - Fix strat time lag bind bug.
-- Bomb defusal time bug fix (defuse on 10 still explodes).
 - Overtime automatically after draw.
+- Weapon picking upgrade (single, secondary/picking from opposite team).
+- Keep score during warm-up.
 - No weapon menu if no choice.
-- Weapon picking upgrade (default, kar/mos, secondary pick, etc).
+- Rebrand 'strat' as e.g. (grace period) freeze time.
 
 ## Would
 

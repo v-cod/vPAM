@@ -1,11 +1,5 @@
 // This File has various PAM ulitities
 
-// Curent Revision placed here
-Get_Current_PAM_Ver()
-{
-	game["pamstring"] = &"^7d^4`^9logics^4.";
-}
-
 //The below lines should be updated each new release:
 Get_Stock_PK3()
 {
