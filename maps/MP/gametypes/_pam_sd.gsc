@@ -1,97 +1,9 @@
-/*	
-
-CoD PAM 1.5 Rifles edit for d`logics by inflexZ
-
-	
-*/
-PamMain()
+main()
 {
-	level.callbackStartGameType = ::Callback_StartGameType;
-	level.callbackPlayerConnect = ::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage = ::Callback_PlayerDamage;
-	level.callbackPlayerKilled = ::Callback_PlayerKilled;
-
-	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
-
-	level.mapname = getcvar("mapname");
-	maps\mp\gametypes\_pam_utilities::NonstockPK3Check();
-
-	level._effect["bombexplosion"] = loadfx("fx/explosions/mp_bomb.efx");
-
-	allowed[0] = "sd";
-	allowed[1] = "bombzone";
-	allowed[2] = "blocker";
-	maps\mp\gametypes\_gameobjects::main(allowed);
-	
+	// WRS
 	level.warmup = 0;	// warmup time reset in case they restart map via menu
 
-	if(getCvar("scr_sd_timelimit") == "")		// Time limit per map
-		setCvar("scr_sd_timelimit", "0");
-	else if(getCvarFloat("scr_sd_timelimit") > 1440)
-		setCvar("scr_sd_timelimit", "1440");
-	level.timelimit = getCvarFloat("scr_sd_timelimit");
-	setCvar("ui_sd_timelimit", level.timelimit);
-	makeCvarServerInfo("ui_sd_timelimit", "0");
-
-	if(!isDefined(game["timepassed"]))
-		game["timepassed"] = 0;
-
-	if(getCvar("scr_sd_scorelimit") == "")		// Score limit per map
-		setCvar("scr_sd_scorelimit", "0");
-	level.scorelimit = getCvarInt("scr_sd_scorelimit");
-	setCvar("ui_sd_scorelimit", level.scorelimit);
-	makeCvarServerInfo("ui_sd_scorelimit", "10");
-
-	if(getCvar("scr_sd_roundlimit") == "")		// Round limit per map
-		setCvar("scr_sd_roundlimit", "0");
-	level.roundlimit = getCvarInt("scr_sd_roundlimit");
-	setCvar("ui_sd_roundlimit", level.roundlimit);
-	makeCvarServerInfo("ui_sd_roundlimit", "0");
-
-	if(getCvar("scr_sd_roundlength") == "")		// Time length of each round
-		setCvar("scr_sd_roundlength", "4");
-	else if(getCvarFloat("scr_sd_roundlength") > 10)
-		setCvar("scr_sd_roundlength", "10");
-	level.roundlength = getCvarFloat("scr_sd_roundlength");
-
-	if(getCvar("scr_sd_graceperiod") == "")		// Time at round start where spawning and weapon choosing is still allowed
-		setCvar("scr_sd_graceperiod", "15");
-	else if(getCvarFloat("scr_sd_graceperiod") > 60)
-		setCvar("scr_sd_graceperiod", "60");
-	level.graceperiod = getCvarFloat("scr_sd_graceperiod");
-
-	if(getCvar("scr_killcam") == "")			//Kill Cam
-		killcam = "1";
-	level.killcam = getCvarInt("scr_killcam");
-	
-	if(getCvar("scr_teambalance") == "")		// Auto Team Balancing
-		setCvar("scr_teambalance", "0");
-	level.teambalance = getCvarInt("scr_teambalance");
-	level.lockteams = false;
-
-	if(getCvar("scr_freelook") == "")			// Free look spectator
-		setCvar("scr_freelook", "1");
-	level.allowfreelook = getCvarInt("scr_freelook");
-	
-	if(getCvar("scr_spectateenemy") == "")		// Spectate Enemy Team
-		setCvar("scr_spectateenemy", "1");
-	level.allowenemyspectate = getCvarInt("scr_spectateenemy");
-	
-	if(getCvar("scr_drawfriend") == "")			// Draws a team icon over teammates
-		setCvar("scr_drawfriend", "0");
-
-	if(getCvar("scr_friendlyfire") == "")
-		setCvar("scr_friendlyfire", "1");
-
-	if(getCvar("scr_roundswitch") == "")
-		setCvar("scr_roundswitch", "0");
-
-	if(getCvar("sv_pure") == "")
-		setCvar("sv_pure", "0");
-
-	if(getCvar("g_allowVote") == "")
-		setCvar("g_allowVote", "0");
+	maps\mp\gametypes\_pam_utilities::NonstockPK3Check();
 
 	if(getcvar("g_ot") == "")
 		setcvar("g_ot", "0");
@@ -101,23 +13,18 @@ PamMain()
 
 	if ( getcvar( "g_allowtie" ) == "" )
 		setcvar("g_allowtie", "1");
-	
-	if(getCvar("sv_messagecenter") == "")
-		setCvar("sv_messagecenter", "0");
 
 	if(getCvar("pam_mode") == "")
 		setCvar("pam_mode", "pub");
 
 	if(!isdefined(game["runonce"]))
 	{
-
-		/* Get Game Settings */
-		level.scorelimit = getCvarInt("scr_sd_scorelimit");
-		level.roundlimit = getCvarInt("scr_sd_roundlimit");
-
 		ruleset = getCvar("pam_mode");
 		switch(ruleset)
 		{
+		case "wrs":
+			thread maps\mp\gametypes\rules\_wrs_rules::LeagueRules();
+			break;
 		case "dlogics_matchmod":
 			thread maps\mp\gametypes\rules\_dlogics_matchmod_rules::LeagueRules();
 			break;
@@ -150,30 +57,11 @@ PamMain()
 	}
 
 	//garetcode
-	if(getcvar("g_matchwarmuptime") == "")	// match warmup time
-		setcvar("g_matchwarmuptime", "10");
 	if(getcvar("g_roundwarmuptime") == "")	// round warmup time
 		setcvar("g_roundwarmuptime", "5");
-	if(getcvar("g_matchintermission") == "")		// match intermission
-		setcvar("g_matchintermission", "10");
 
 	if(getcvar("sv_playersleft") == "")			// display players left
 		setcvar("sv_playersleft", "1");		
-		
-	if(getcvar("sv_axisgoat") == "")			// axis goat off/on
-		setcvar("sv_axisgoat", "1");	
-		
-	if(getcvar("sv_pamsounds") == "")			// pam sounds off/on
-		setcvar("sv_pamsounds", "1");	
-			
-	if(getcvar("sv_warmupmines") == "")			// warmup mines off/on
-		setcvar("sv_warmupmines", "0");	
-
-	if(getcvar("sv_showshots") == "")			// display shots off/on
-		setcvar("sv_showshots", "1");	
-
-	if(getcvar("sv_showstats") == "")			// display stats after rounds off/on
-		setcvar("sv_showstats", "1");
 
 	if ( getcvar( "sv_BombPlantTime" ) == ""  )
 		setcvar("sv_BombPlantTime", "5");
@@ -187,9 +75,6 @@ PamMain()
 	if ( getcvar( "sv_specblackout" ) == "" )
 		setcvar("sv_specblackout", "0");
 
-	if ( getcvar( "sv_teamwarmupdmg" ) == "" )
-		setcvar("sv_teamwarmupdmg", "0");
-
 
 	/* Set up Level variables */
 	level.timelimit = getCvarFloat("scr_sd_timelimit");
@@ -199,7 +84,6 @@ PamMain()
 	level.teambalance = getCvarInt("scr_teambalance");
 	level.allowfreelook = getCvarInt("scr_freelook");
 	level.allowenemyspectate = getCvarInt("scr_spectateenemy");
-	level.drawfriend = getCvarInt("scr_drawfriend");
 	level.ffire = getCvarInt("scr_friendlyfire");
 	level.pure = getCvarInt("sv_pure");
 	level.vote = getCvarInt("g_allowVote");
@@ -223,8 +107,8 @@ PamMain()
 	level.ot_count = getcvarint("g_ot_count");
 	level.hithalftime = 0;
 	level.specmode = "";
-	level.teamwarmupdmg = getcvar( "sv_teamwarmupdmg" );
 	level.bashdamageonly = false;
+	level.afs_time = getcvarFloat("scr_afs_time");
 
 	level.instrattime = false;
 
@@ -246,50 +130,13 @@ PamMain()
 		game["checkingmatchstart"] = false;
 	}
 
-	if(!isDefined(game["state"]))
-		game["state"] = "playing";
-	if(!isDefined(game["roundsplayed"]))
-		game["roundsplayed"] = 0;
-	if(!isDefined(game["matchstarted"]))
-		game["matchstarted"] = false;
-
 	// WEAPON EXPLOIT FIX
 	if(!isDefined(game["dropsecondweap"]))
 		game["dropsecondweap"] = false;
 
-		
-	if(!isDefined(game["alliedscore"]))
-		game["alliedscore"] = 0;
-	setTeamScore("allies", game["alliedscore"]);
-
-	if(!isDefined(game["axisscore"]))
-		game["axisscore"] = 0;
-	setTeamScore("axis", game["axisscore"]);
-
 	level.readyname = [];
 	level.readystate = [];
 	level.playersready = false;
-
-	level.bombplanted = false;
-	level.bombexploded = false;
-	level.roundstarted = false;
-	level.roundended = false;
-	level.mapended = false;
-	
-	if (!isdefined (game["BalanceTeamsNextRound"]))
-		game["BalanceTeamsNextRound"] = false;
-	
-	level.exist["allies"] = 0;
-	level.exist["axis"] = 0;
-	level.exist["teams"] = false;
-	level.didexist["allies"] = false;
-	level.didexist["axis"] = false;
-
-	if(game["mode"] != "match" && getCvar("sv_messagecenter") == "1")
-		thread maps\mp\gametypes\_message_center::messages();
-
-	if(level.killcam >= 1)
-		setarchive(true);
 }
 
 Callback_StartGameType()
@@ -477,6 +324,12 @@ Callback_StartGameType()
 		/* end PAM precacheStrings */
 
 
+		// WRS
+		precacheShader("gfx/hud/hud@fire_ready.tga");
+		precacheItem("mosin_nagant_mp");
+		precacheItem("kar98k_mp");
+
+
 //endgaretcode
 
 		precacheString(&"MPSCRIPT_PRESS_ACTIVATE_TO_SKIP");
@@ -524,22 +377,37 @@ Callback_StartGameType()
 		precacheModel("xmodel/mp_bomb1_defuse");
 		precacheModel("xmodel/mp_bomb1");
 
-
-		precacheShader("gfx/hud/hud@fire_ready.tga");
-
 		
-		maps\mp\gametypes\_pam_teams::precache();
-		maps\mp\gametypes\_pam_teams::scoreboard();
+		maps\mp\gametypes\_teams::precache();
+		maps\mp\gametypes\_teams::scoreboard();
 
 		//thread addBotClients();
 	}
 	
-	maps\mp\gametypes\_pam_teams::modeltype();
-	maps\mp\gametypes\_pam_teams::initGlobalCvars();
-	maps\mp\gametypes\_pam_teams::initWeaponCvars();
-	maps\mp\gametypes\_pam_teams::restrictPlacedWeapons();
-	thread maps\mp\gametypes\_pam_teams::updateGlobalCvars();
-	thread maps\mp\gametypes\_pam_teams::updateWeaponCvars();
+	maps\mp\gametypes\_teams::modeltype();
+	maps\mp\gametypes\_teams::initGlobalCvars();
+	maps\mp\gametypes\_teams::initWeaponCvars();
+	maps\mp\gametypes\_teams::restrictPlacedWeapons();
+	thread maps\mp\gametypes\_teams::updateGlobalCvars();
+	thread maps\mp\gametypes\_teams::updateWeaponCvars();
+
+	// WRS {
+	level.allow_mg42 = getCvar("scr_allow_mg42");
+	if(level.allow_mg42 == "")
+		level.allow_mg42 = "1";
+	setCvar("scr_allow_mg42", level.allow_mg42);
+	setCvar("ui_allow_mg42", level.allow_mg42);
+	makeCvarServerInfo("ui_allow_mg42", level.allow_mg42);
+	if(level.allow_mg42 != "1")
+		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
+
+	if (getcvar("scr_allow_pistol") == "")
+		setcvar("scr_allow_pistol", "1");
+
+	// Fix _teams.gsc bug removing wrong entity.
+	if(level.allow_kar98ksniper != "1")
+		deletePlacedEntity("mpweapon_kar98k_scoped");
+	// } END WRS
 
 	game["gamestarted"] = true;
 
@@ -558,13 +426,16 @@ Callback_PlayerConnect()
 	self.statusicon = "";
 	self.pers["teamTime"] = 1000000;
 
-	self.pers["killer"] = false; // Used for Ready-up Killing
-	self.bombinteraction = false;
-
 	if(!isDefined(self.pers["team"]))
 		iprintln(&"MPSCRIPT_CONNECTED", self);
 
 	lpselfnum = self getEntityNumber();
+	lpselfguid = self getGuid();
+	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
+
+	// WRS {
+	self.pers["killer"] = false; // Used for Ready-up Killing
+	self.bombinteraction = false;
 
 	level.R_U_Name[lpselfnum] = self.name;
 	level.R_U_State[lpselfnum] = "notready";
@@ -576,13 +447,15 @@ Callback_PlayerConnect()
 		self thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);
 	}
 
-	lpselfguid = self getGuid();
-	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
-
 	if(game["state"] == "intermission")
 	{
 		spawnIntermission();
 		return;
+	}
+	
+	if (getCvar("g_autodemo") == "1")
+	{
+		self autoDemoStart();
 	}
 	
 	level endon("intermission");
@@ -593,13 +466,9 @@ Callback_PlayerConnect()
 
 		maps\mp\gametypes\_Check_Snipers::CheckSnipersScript();
 		if(self.pers["team"] == "allies")
-		{
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-		}
 		else
-		{
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-		}
 
 		if(isDefined(self.pers["weapon"]))
 			spawnPlayer();
@@ -644,8 +513,7 @@ Callback_PlayerConnect()
 		{
 			self.pers["skipserverinfo"] = true;
 			self openMenu(game["menu_team"]);
-		}	
-
+		}
 
 		if(response == "open" || response == "close")
 			continue;
@@ -707,7 +575,7 @@ Callback_PlayerConnect()
 				if ( (level.teambalance > 0) && (!isdefined (skipbalancecheck)) )
 				{
 					//Get a count of all players on Axis and Allies
-					players = maps\mp\gametypes\_pam_teams::CountPlayers();
+					players = maps\mp\gametypes\_teams::CountPlayers();
 					
 					if (self.sessionteam != "spectator")
 					{
@@ -772,7 +640,7 @@ Callback_PlayerConnect()
 				self.pers["savedmodel"] = undefined;
 
 				// update spectator permissions immediately on change of team
-				maps\mp\gametypes\_pam_teams::SetSpectatePermissions();
+				maps\mp\gametypes\_teams::SetSpectatePermissions();
 
 				self setClientCvar("ui_weapontab", "1");
 
@@ -880,6 +748,7 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 					spawnPlayer();
 					self thread printJoinedTeam(self.pers["team"]);
+					// TODO: Neccessary?
 					level thread checkMatchStart();
 				}
 			}
@@ -904,6 +773,7 @@ Callback_PlayerConnect()
 						self.spawned = undefined;
 						spawnPlayer();
 						self thread printJoinedTeam(self.pers["team"]);
+						// TODO: Neccessary?
 						level thread checkMatchStart();
 					}
 					else
@@ -941,6 +811,7 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 					spawnPlayer();
 					self thread printJoinedTeam(self.pers["team"]);
+					// TODO: Neccessary?
 					level thread checkMatchStart();
 				}
 				else
@@ -949,22 +820,21 @@ Callback_PlayerConnect()
 
 					if(self.pers["team"] == "allies")
 					{
-						if(maps\mp\gametypes\_pam_teams::useAn(self.pers["weapon"]))
+						if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 							self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
 						else
 							self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
 					}
 					else if(self.pers["team"] == "axis")
 					{
-						if(maps\mp\gametypes\_pam_teams::useAn(self.pers["weapon"]))
+						if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
 							self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
 						else
 							self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
 					}
 				}
 			}
-
-			self thread maps\mp\gametypes\_pam_teams::SetSpectatePermissions();
+			self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
 			if (isdefined (self.autobalance_notify))
 				self.autobalance_notify destroy();
 		}
@@ -1009,11 +879,11 @@ Callback_PlayerConnect()
 			}
 		}
 		else if(menu == game["menu_quickcommands"])
-			maps\mp\gametypes\_pam_teams::quickcommands(response);
+			maps\mp\gametypes\_teams::quickcommands(response);
 		else if(menu == game["menu_quickstatements"])
-			maps\mp\gametypes\_pam_teams::quickstatements(response);
+			maps\mp\gametypes\_teams::quickstatements(response);
 		else if(menu == game["menu_quickresponses"])
-			maps\mp\gametypes\_pam_teams::quickresponses(response);
+			maps\mp\gametypes\_teams::quickresponses(response);
 	}
 }
 
@@ -1022,6 +892,11 @@ Callback_PlayerDisconnect()
 	iprintln(&"MPSCRIPT_DISCONNECTED", self);
 	
 	lpselfnum = self getEntityNumber();
+	lpselfguid = self getGuid();
+	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
+
+	if(game["matchstarted"])
+		level thread updateTeamStatus();
 
 	level.R_U_Name[lpselfnum] = "disconnected";
 	level.R_U_State[lpselfnum] = "disconnected";
@@ -1029,12 +904,6 @@ Callback_PlayerDisconnect()
 
 	if(level.rdyup == 1)
 		thread maps\mp\gametypes\_pam_readyup::Check_All_Ready();
-
-	lpselfguid = self getGuid();
-	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
-
-	if(game["matchstarted"])
-		level thread updateTeamStatus();
 }
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
@@ -1129,12 +998,15 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 				iDamage = 1;
 
 			self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
-		} //end else if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
+		}
 	}
 
 	// Do debug print if it's enabled
 	if(getCvarInt("g_debugDamage"))
-		println("client:" + self getEntityNumber() + " health:" + self.health + " damage:" + iDamage + " hitLoc:" + sHitLoc);
+	{
+		println("client:" + self getEntityNumber() + " health:" + self.health +
+			" damage:" + iDamage + " hitLoc:" + sHitLoc);
+	}
 
 	if(self.sessionstate != "dead")
 	{
@@ -1170,26 +1042,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	}
 }
 
-showhit()
-{
-	if(isdefined(self.hitblip))
-		self.hitblip destroy();
-
-	self.hitblip = newClientHudElem(self);
-	self.hitblip.alignX = "center";
-	self.hitblip.alignY = "middle";
-	self.hitblip.x = 320;
-	self.hitblip.y = 240;
-	self.hitblip.alpha = 0.5;
-	self.hitblip setShader("gfx/hud/hud@fire_ready.tga", 32, 32);
-	self.hitblip scaleOverTime(0.15, 64, 64);
-
-	wait 0.15;
-
-	if(isdefined(self.hitblip))
-		self.hitblip destroy();
-}
-
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
 {
 	self endon("spawned");
@@ -1210,17 +1062,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	if(sHitLoc == "head" && sMeansOfDeath != "MOD_MELEE")
 		sMeansOfDeath = "MOD_HEAD_SHOT";
 
-	//garetcode
-	if(sMeansOfDeath == "MOD_MELEE" && 	getcvar("sv_axisgoat") == "1")
-	{
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{ 
-			player = players[i];
-			player playsound("axisgoat");
-		}
-	}
-
 	// send out an obituary message to all clients about the kill
 	obituary(self, attacker, sWeapon, sMeansOfDeath);
 
@@ -1228,7 +1069,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	{
 		self.sessionstate = "dead";
 		self.headicon = "";
-		self.grenadecount = undefined;
 
 		updateTeamStatus();
 		wait 6;
@@ -1240,7 +1080,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.sessionstate = "dead";
 	self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
-	self.grenadecount = undefined;
 	if(!level.warmup)
 	{
 		if (!isdefined (self.autobalance))
@@ -1262,14 +1101,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		if(attacker == self) // killed himself
 		{
 			doKillcam = false;
-			if(!level.warmup)
+			if (!level.warmup && !isdefined (self.autobalance))
 			{
-				if (!isdefined (self.autobalance))
-				{
-					attacker.pers["score"]--;
-					attacker.score = attacker.pers["score"];
-				}
+				attacker.pers["score"]--;
+				attacker.score = attacker.pers["score"];
 			}
+
 			if(isDefined(attacker.friendlydamage))
 				clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
 		}
@@ -1280,18 +1117,16 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 			if(!level.warmup)
 			{
-				if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
-				{
-					attacker.pers["score"]--;
-					attacker.score = attacker.pers["score"];
-				}
-				else
-				{
-					attacker.pers["score"]++;
-					attacker.score = attacker.pers["score"];
-					//attacker.pers["pamstats_kills"]++;
-					//self.pers["pamstats_deaths"]++;
-				}
+			if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
+			{
+				attacker.pers["score"]--;
+				attacker.score = attacker.pers["score"];
+			}
+			else
+			{
+				attacker.pers["score"]++;
+				attacker.score = attacker.pers["score"];
+			}
 			}
 		}
 		
@@ -1466,6 +1301,8 @@ spawnPlayer()
 	
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_pam_teams::watchWeaponUsage();
+
+	thread maps\mp\gametypes\_pam_teams::watchPlayerFastShoot();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
@@ -2737,6 +2574,13 @@ updateGametypeCvars()
 		{
 			level.countdowntime = countdowntime;
 			iprintln("^3Bomb Timer has been changed to ^5" + countdowntime);
+		}
+
+		afs_time = getcvarFloat("scr_afs_time");
+		if (afs_time != level.afs_time)
+		{
+			level.afs_time = afs_time;
+			iprintln("^3scr_afs_time ^7has been changed to ^3" + afs_time);
 		}
 
 		wait 1;
@@ -4623,8 +4467,6 @@ Hold_All_Players()
 
 Monitor_Weapon_Drop()
 {
-	primary = self getWeaponSlotWeapon("primary");
-
 	while (1)
 	{
 		timer = 0;
@@ -4677,3 +4519,22 @@ Automatic_Nade_Refills()
 	}
 }
 
+showhit()
+{
+	if(isdefined(self.hitblip))
+		self.hitblip destroy();
+
+	self.hitblip = newClientHudElem(self);
+	self.hitblip.alignX = "center";
+	self.hitblip.alignY = "middle";
+	self.hitblip.x = 320;
+	self.hitblip.y = 240;
+	self.hitblip.alpha = 0.5;
+	self.hitblip setShader("gfx/hud/hud@fire_ready.tga", 32, 32);
+	self.hitblip scaleOverTime(0.15, 64, 64);
+
+	wait 0.15;
+
+	if(isdefined(self.hitblip))
+		self.hitblip destroy();
+}

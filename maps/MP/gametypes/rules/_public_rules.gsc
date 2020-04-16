@@ -22,7 +22,8 @@ LeagueRules()
 
 	if (getcvar("scr_force_bolt_rifles") == "") 
 		setcvar("scr_force_bolt_rifles", "0");
-	
+	setcvar("scr_afs_time", "1.2");			// Anti fast shoot interval time (s)
+
 	if (getcvar("g_roundwarmuptime") == "")
 		setcvar("g_roundwarmuptime", "3");
 	

@@ -1,14 +1,3 @@
-/*	Project Ares Mod version 1.07 Beta
-	by Garetjax
-	
-	(c) Michael Berkowitz - aka Garetjax
-	
-	Garetjax@garetgg.com
-
-	http://www.garetgg.com      (Website for PAM and CODTV)
-	
-	
-*/
 /*
 	Search and Destroy
 	Attackers objective: Bomb one of 2 positions
@@ -145,15 +134,6 @@ main()
 	for(i = 0; i < spawnpoints.size; i++)
 		spawnpoints[i] PlaceSpawnpoint();
 
-	// PAM CALLBACKS
-	if (getCvar("svr_pamenable") == "" )
-		setCvar("svr_pamenable", "1");
-	level.pamenable = getCvarint("svr_pamenable");
-
-	if (getCvar("svr_pamenable") == "0") //PAM is NOT ENABLED, Run like Stock
-	{
-
-
 	level.callbackStartGameType = ::Callback_StartGameType;
 	level.callbackPlayerConnect = ::Callback_PlayerConnect;
 	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
@@ -259,10 +239,14 @@ main()
 
 	if(level.killcam >= 1)
 		setarchive(true);
-	}
-	else //PAM Enabled, Run PAM Version of Scripts
-	{
-		maps\mp\gametypes\_pam_sd::PamMain(); // Run this script upon load.
+
+	// PAM CALLBACKS
+	if (getCvar("svr_pamenable") == "" )
+		setCvar("svr_pamenable", "1");
+	level.pamenable = getCvarint("svr_pamenable");
+	if (level.pamenable) {
+		maps\mp\gametypes\_pam_sd::main();
+		return;
 	}
 }
 
@@ -344,10 +328,6 @@ Callback_StartGameType()
 		precacheShader("gfx/hud/hud@bombplanted_down.tga");
 		precacheModel("xmodel/mp_bomb1_defuse");
 		precacheModel("xmodel/mp_bomb1");
-
-
-		precacheShader("gfx/hud/hud@fire_ready.tga");
-
 		
 		maps\mp\gametypes\_teams::precache();
 		maps\mp\gametypes\_teams::scoreboard();
@@ -390,6 +370,11 @@ Callback_PlayerConnect()
 	{
 		spawnIntermission();
 		return;
+	}
+	
+	if (getCvar("g_autodemo") == "1")
+	{
+		self autoDemoStart();
 	}
 	
 	level endon("intermission");
@@ -828,10 +813,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
 
-	// Showhit by inflexZ
- 	if(isPlayer(eAttacker) && eAttacker != self)
-			eAttacker thread showhit();
-
 	// check for completely getting out of the damage
 	if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
 	{
@@ -878,11 +859,8 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 				eAttacker finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
 				eAttacker.friendlydamage = undefined;
 				
-				friendly = false;
+				friendly = true;
 			}
-
-
-			eAttacker thread showhit();
 		}
 		else
 		{
@@ -933,26 +911,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 
 		logPrint("D;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 	}
-}
-
-showhit()
-{
-	if(isdefined(self.hitblip))
-		self.hitblip destroy();
-
-	self.hitblip = newClientHudElem(self);
-	self.hitblip.alignX = "center";
-	self.hitblip.alignY = "middle";
-	self.hitblip.x = 320;
-	self.hitblip.y = 240;
-	self.hitblip.alpha = 0.5;
-	self.hitblip setShader("gfx/hud/hud@fire_ready.tga", 32, 32);
-	self.hitblip scaleOverTime(0.15, 64, 64);
-
-	wait 0.15;
-
-	if(isdefined(self.hitblip))
-		self.hitblip destroy();
 }
 
 Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDir, sHitLoc)
@@ -1118,8 +1076,6 @@ spawnPlayer()
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 	
-////////// Changed By KiLL3R ////////////////////
-/*
 	if(isDefined(self.pers["weapon1"]) && isDefined(self.pers["weapon2"]))
 	{
 	 	self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
@@ -1140,23 +1096,9 @@ spawnPlayer()
 
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
-*/
 
 	maps\mp\gametypes\_teams::givePistol();
 	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
-
-	self takeallweapons();
-
-	self giveWeapon("mosin_nagant_mp");
-	self setWeaponSlotClipAmmo("primary", 999 );
-	self setWeaponSlotAmmo("primary", 999 );
-
-	self giveWeapon("kar98k_mp");
-	self setWeaponSlotClipAmmo("primaryb", 999 );
-	self setWeaponSlotAmmo("primaryb", 999 );
-
-	self setSpawnWeapon("mosin_nagant_mp");
-//////////////////////////////////////////////////////////////////
 
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
@@ -1407,6 +1349,17 @@ startRound()
 	level.clock.alignY = "middle";
 	level.clock.font = "bigfixed";
 	level.clock setTimer(level.roundlength * 60);
+	
+	if (getCvar("g_autodemo") == "1")
+	{
+		players = getentarray("player", "classname");
+		for(i = 0; i < players.size; i++)
+		{
+			player = players[i];
+		
+			player autoDemoStart();
+		}
+	}
 
 	if(game["matchstarted"])
 	{
@@ -1520,12 +1473,9 @@ endRound(roundwinner)
 	{
 		player = players[i];
 		
-//		if (getCvar("g_autodemo") == "1")
-//			player autoDemoStop();
-
-//		if (getCvar("g_autoscreenshot") == "1")
-//			player autoScreenshot();
-
+		if (getCvar("g_autodemo") == "1")
+			player autoDemoStop();
+		
 		if(isDefined(player.planticon))
 			player.planticon destroy();
 
@@ -1717,7 +1667,20 @@ endMap()
 		player spawnIntermission();
 	}
 
-	wait 10;
+	wait 1;
+
+	if (getCvar("g_autoscreenshot") == "1")
+	{
+		players = getentarray("player", "classname");
+		for(i = 0; i < players.size; i++)
+		{
+			player = players[i];
+		
+			player autoScreenshot();
+		}
+	}
+
+	wait 9;
 	exitLevel(false);
 }
 
@@ -2186,7 +2149,6 @@ bomb_countdown()
 	
 	level.bombmodel playLoopSound("bomb_tick");
 	
-	// set the countdown time
 	countdowntime = 60;
 
 	wait countdowntime;
@@ -2301,8 +2263,9 @@ bomb_think()
 					
 					players = getentarray("player", "classname");
 					for(i = 0; i < players.size; i++)
+					{
 						players[i] playLocalSound("MP_announcer_bomb_defused");
-
+					}
 					level thread endRound(game["defenders"]);
 					return;	//TEMP, script should stop after the wait .05
 				}

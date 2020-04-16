@@ -383,8 +383,6 @@ precache()
 		precacheItem("thompson_mp");
 		precacheItem("bar_mp");
 		precacheItem("springfield_mp");
-		precacheItem("mosin_nagant_mp");
-		precacheItem("kar98k_mp");
 		break;
 	
 	case "british":
@@ -396,8 +394,6 @@ precache()
 		precacheItem("sten_mp");
 		precacheItem("bren_mp");
 		precacheItem("springfield_mp");
-		precacheItem("mosin_nagant_mp");
-		precacheItem("kar98k_mp");
 		break;
 	
 	case "russian":
@@ -407,7 +403,7 @@ precache()
 		precacheItem("luger_mp");
 		precacheItem("mosin_nagant_mp");
 		precacheItem("ppsh_mp");
-		precacheItem("mosin_nagant_sniper_mp");	
+		precacheItem("mosin_nagant_sniper_mp");
 		break;
 	}
 
@@ -422,7 +418,6 @@ precache()
 		precacheItem("mp40_mp");
 		precacheItem("mp44_mp");
 		precacheItem("kar98k_sniper_mp");
-		precacheItem("mosin_nagant_mp");
 		break;
 	}
 	
@@ -614,16 +609,6 @@ initWeaponCvars()
 	setCvar("scr_allow_panzerfaust", level.allow_panzerfaust);
 	setCvar("ui_allow_panzerfaust", level.allow_panzerfaust);
 	makeCvarServerInfo("ui_allow_panzerfaust", "1");
-
-	level.allow_mg42 = getCvar("scr_allow_mg42");
-	if(level.allow_mg42 == "")
-		level.allow_mg42 = "1";
-	setCvar("scr_allow_mg42", level.allow_mg42);
-	setCvar("ui_allow_mg42", level.allow_mg42);
-	makeCvarServerInfo("ui_allow_mg42", "1");
-
-	if (getcvar("scr_allow_pistol") == "")
-		setcvar("scr_allow_pistol", "1");
 }
 
 updateGlobalCvars()
@@ -785,13 +770,6 @@ updateWeaponCvars()
 			setCvar("ui_allow_panzerfaust", level.allow_panzerfaust);
 		}
 
-		scr_allow_mg42 = getCvar("scr_allow_mg42");
-		if(level.allow_mg42 != scr_allow_mg42)
-		{
-			level.allow_mg42 = scr_allow_mg42;
-			setCvar("ui_allow_mg42", level.allow_mg42);
-		}
-
 		wait 5;
 	}
 }
@@ -827,14 +805,11 @@ restrictPlacedWeapons()
 	if(level.allow_mp44 != "1")
 		deletePlacedEntity("mpweapon_mp44");
 	if(level.allow_kar98ksniper != "1")
-		deletePlacedEntity("mpweapon_kar98k_scoped");
+		deletePlacedEntity("mpweapon_kar98ksniper");
 	if(level.allow_fg42 != "1")
 		deletePlacedEntity("mpweapon_fg42");
 	if(level.allow_panzerfaust != "1")
 		deletePlacedEntity("mpweapon_panzerfaust");
-
-	if(level.allow_mg42 != "1")
-		deletePlacedEntity("misc_mg42");
 
 	// Need to not automatically give these to players if I allow restricting them
 	// colt_mp
@@ -943,51 +918,27 @@ giveGrenades(spawnweapon)
 
 getWeaponBasedGrenadeCount(weapon)
 {
-	riflenades = getcvarint("scr_rifle_nade_count");
-	if (riflenades < 0)
-		riflenades = 0;
-
-	smgnades = getcvarint("scr_smg_nade_count");
-	if (smgnades < 0)
-		smgnades = 0;
-
-	mgnades = getcvarint("scr_mg_nade_count");
-	if (mgnades < 0)
-		mgnades = 0;
-
-	snipernades = getcvarint("scr_sniper_nade_count");
-	if (snipernades < 0)
-		snipernades = 0;
-
 	switch(weapon)
 	{
-	case "m1carbine_mp": 
-	case "m1garand_mp": 
-	case "enfield_mp": 
-	case "mosin_nagant_mp": 
+	case "m1carbine_mp":
+	case "m1garand_mp":
+	case "enfield_mp":
+	case "mosin_nagant_mp":
 	case "kar98k_mp":
-		if (riflenades == 0)
-			self.grenadecount = undefined;
-		return riflenades;
+		return getcvarint("scr_rifle_nade_count");
 	case "thompson_mp":
 	case "sten_mp":
 	case "ppsh_mp":
 	case "mp40_mp":	
-		if (smgnades == 0)
-			self.grenadecount = undefined;
-		return smgnades;
+		return getcvarint("scr_smg_nade_count");
 	case "bar_mp":
 	case "bren_mp":
 	case "mp44_mp":
-		if (mgnades == 0)
-			self.grenadecount = undefined;
-		return mgnades;
+		return getcvarint("scr_mg_nade_count");
 	case "springfield_mp":
 	case "mosin_nagant_sniper_mp":
 	case "kar98k_sniper_mp":
-		if (snipernades == 0)
-			self.grenadecount = undefined;
-		return snipernades;
+		return getcvarint("scr_sniper_nade_count");
 	}
 }
 
@@ -2551,4 +2502,48 @@ watchWeaponUsage()
 		wait .05;
 		
 	self.usedweapons = true;
+}
+
+watchPlayerFastShoot()
+{
+	self endon("spawned");
+
+	while (self.sessionstate == "playing") {
+		// Reference clip count.
+		a1 = self getWeaponSlotClipAmmo("primary");
+		b1 = self getWeaponSlotClipAmmo("primaryb");
+
+		// Wait for clip ammo to change.
+		do {
+			wait 0.05;
+
+			if (self.sessionstate != "playing") {
+				return;
+			}
+
+			a2 = self getWeaponSlotClipAmmo("primary");
+			b2 = self getWeaponSlotClipAmmo("primaryb");
+		} while (a1 == a2 && b1 == b2);
+
+		// Check for reload.
+		if (a1 < a2 || b1 < b2) {
+			continue;
+		}
+
+		a1 = a2;
+		b1 = b2;
+
+		wait level.afs_time;
+
+		if (self.sessionstate != "playing") {
+			return;
+		}
+
+		a2 = self getWeaponSlotClipAmmo("primary");
+		b2 = self getWeaponSlotClipAmmo("primaryb");
+
+		if (a2 < a1 || b2 < b1) {
+			iPrintLn("^1Fastshoot^7: " + self.name);
+		}
+	}
 }

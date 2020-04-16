@@ -14,6 +14,7 @@ LeagueRules()
 	setcvar("scr_end_half2score" , "0");	// End Map AFTER this 2nd-half score.
 	setcvar("scr_count_draws", "0");		// Re-play rounds that end in a draw
 	setcvar("g_ot", "0");					// overtime off/on
+	setcvar("scr_afs_time", "1.2");			// Anti fast shoot interval time (s)
 
 	//OT Settings
 	setcvar("g_ot_active", "0");			// NEVER OT in this mode
@@ -159,9 +160,7 @@ LeagueRules()
 
 
 	// Timers
-	setcvar("g_matchwarmuptime", "10");			// match warmup time					
 	setcvar("g_roundwarmuptime", "5");			// round warmup time
-	setcvar("g_matchintermission", "20");		// match intermission
 
 	// Warm-up Mines
 	setcvar("sv_warmupmines", "0"); //Leave this on for now. Mines need to be re-worked.

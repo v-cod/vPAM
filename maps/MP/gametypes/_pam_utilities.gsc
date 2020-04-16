@@ -22,6 +22,7 @@ Check_PAM_Modes(pammode)
 	{
 		switch (pammode)
 		{
+		case "wrs":
 		case "dlogics_matchmod":
 		case "dlogics_nightmod":
 		case "cb_rifles":
