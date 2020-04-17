@@ -85,27 +85,12 @@ LeagueRules()
 	setcvar("scr_allow_bren", "1");
 	setcvar("scr_allow_mp44", "1");
 	setcvar("scr_allow_ppsh", "1");
-	setcvar("scr_allow_stielhandgranate", "1");
-	setcvar("scr_allow_rgd-33russianfrag", "1");
-	setcvar("scr_allow_mk1britishfrag", "1");
-	setcvar("scr_allow_fraggrenade", "1");
 
 	//Rockets
 	setcvar("scr_allow_panzerfaust", "1");
 
 	//MG42
 	setcvar("scr_allow_MG42", "1");
-
-	//Nade Spawn Ammo Settings
-	setcvar("scr_rifle_nade_count", "0");
-	setcvar("scr_smg_nade_count", "0");
-	setcvar("scr_mg_nade_count", "0");
-	setcvar("scr_sniper_nade_count", "0");
-
-	setcvar("scr_allow_fraggrenade_mp", "0");
-	setcvar("scr_allow_mk1britishfrag_mp", "0");
-	setcvar("scr_allow_rgd-33russianfrag_mp", "0");
-	setcvar("scr_allow_stielhandgranate_mp", "0");
  
 
 	//Pistols

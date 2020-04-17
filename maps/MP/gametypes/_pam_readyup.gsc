@@ -1,12 +1,7 @@
 PAM_Ready_UP()
 {
-	wait 0;
-
-	level.rdyup = 1;
-	level.warmup = 0;
-	level.playersready = false;
-	if (!isdefined(game["firstreadyupdone"]) )
-		game["firstreadyupdone"] = 0;
+	level.p_readying = true;
+	level.p_warmingup = false;
 
 	// Ready-Up Mode HUD
 	level.waiting = newHudElem();
@@ -18,47 +13,16 @@ PAM_Ready_UP()
 	level.waiting.fontScale = 1.5;
 	level.waiting setText(game["waiting"]);
 
-	setClientNameMode("manual_change");
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-
-		player.pers["killer"] = false;
-
-		lpselfnum = player getEntityNumber();
-		player.statusicon = "";
-		level.R_U_Name[lpselfnum] = player.name;
-		level.R_U_State[lpselfnum] = "notready";
-		player.R_U_Looping = 0;
-
-		player thread readyup(lpselfnum);
-	}
-
 	Waiting_On_Players(); //used to be its own thread, now we wait in there until its finished
 
 	if(isdefined(level.waiting))
 		level.waiting destroy();
 
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-		player.statusicon = "";
-	}
-
-	setClientNameMode("auto_change");
-	game["dolive"] = 1;
-	level.rdyup = 0;
-	level.warmup = 1;
-	game["firstreadyupdone"] = 1;
+	level.p_warmingup = true;
 }
 
 Waiting_On_Players()
 {
-	wait 0;
-	wait_on_timer = 0;
-
 	level.waitingon = newHudElem(self);
 	level.waitingon.x = 575;
 	level.waitingon.y = 40;
@@ -85,33 +49,19 @@ Waiting_On_Players()
 	level.notreadyhud.fontScale = 1.2;
 	level.notreadyhud.color = (.98, .98, .60);
 
-	// print out players not ready every 13 seconds and maintain Player Not Ready count
-	//wait_on_timer = 0;
-	while(!level.playersready)
-	{
+	// Maintain Player Not Ready count.
+	while (level.p_readying) {
 		notready = 0;
 
 		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{
-			player = players[i];
-
-			lpselfnum = player getEntityNumber();
-			if (level.R_U_State[lpselfnum] == "notready")
-			{
+		for(i = 0; i < players.size; i++) {
+			if (!players[i].p_ready) {
 				notready++;
-				//if (wait_on_timer == 13)
-				//	iprintlnbold("Waiting for " + level.R_U_Name[lpselfnum]);
 			}
 		}
 
 		level.notreadyhud setValue(notready);
-
-		// increment waitready and wait a second before running through script again
-		//if (wait_on_timer == 13)
-		//	wait_on_timer = 0;
-
-		//wait_on_timer++;
+	
 		wait 1;
 	}
 
@@ -125,26 +75,12 @@ Waiting_On_Players()
 
 readyup(entity)
 {
-	wait .5; // Required or the "respawn" notify could happen before it's waittill has begun
+	self.statusicon = "";
 
+	// Required or the "respawn" notify could happen before it's waittill has begun
+	wait .5;
 
-	//ClanBase Warning
-	if(game["halftimeflag"] == "0")
-		self ClanBase_Warning();
-	else
-		self ClanBase_Warning2();
-
-
-	//Announce what Team the player is on
-	if ( (self.pers["team"] == "axis" && game["firstreadyupdone"]  == 0) || (self.pers["team"] == "allies" && game["firstreadyupdone"] != 0) )
-		self iprintlnbold("^7You are on team ^41^7.");
-	else
-		self iprintlnbold("^7You are on team ^42^7.");
-	
-	self iprintlnbold("^7Hit the ^9USE ^7key to begin^4.");
-
-	// PK3 Checker **Put it here so it shows up after weapon is selected**
-	maps\mp\gametypes\_pam_utilities::CheckPK3files();
+	self iprintlnbold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
 
 	status = newClientHudElem(self);
 	status.x = 575;
@@ -164,52 +100,38 @@ readyup(entity)
 	readyhud.color = (1, .66, .66);
 	readyhud setText(game["notready"]);
 
-	playername = level.R_U_Name[entity];
-
-	while(!level.playersready)
-	{
-		self.R_U_Looping = 1;
-
-		if(self useButtonPressed() == true)
-		{
-			if (level.R_U_State[entity] == "notready")
-			{
-				level.R_U_State[entity] = "ready";
-				self.statusicon = game["headicon_carrier"];
-				iprintln(playername + "^7 is ^2ready");
-				logPrint(playername + ";" + " is Ready Logfile;" + "\n");
-
-				// change players hud to indicate player not ready
-				readyhud.color = (.73, .99, .73);
-				readyhud setText(game["ready"]);
-
-				wait 1;
-				thread Check_All_Ready();
-
-			}
-			else if (level.R_U_State[entity] == "ready")
-			{
-				level.R_U_State[entity] = "notready";
-				self.statusicon = "";
-				iprintln(playername + "^7 is ^1not ready");
-				logPrint(playername + ";" + " is Not Ready Logfile;" + "\n");
-
-				// change players hud to indicate player not ready
-				readyhud.color = (1, .84, .84);
-				readyhud setText(game["notready"]);
-				wait 1;
-			}
-			while (self useButtonPressed() == true)
-				wait .05;
+	while (level.p_readying) {
+		// Wait for use button press.
+		while (self useButtonPressed() == false) {
+			wait .05;
 		}
-		else
-			wait .1;
 
-		if (level.R_U_State[entity] == "disconnected")
-		{
-			self.R_U_Looping = 0;
-			level.R_U_Name[entity] = "disconnected";
-			return;
+		iPrintLn(self.p_ready);
+
+		// Toggle ready boolean.
+		self.p_ready = !self.p_ready;
+
+		if (self.p_ready) {
+			self.statusicon = game["headicon_carrier"];
+			iprintln(self.p_name + "^7 is ^2ready");
+
+			// Change players hud to indicate player not ready
+			readyhud.color = (.73, .99, .73);
+			readyhud setText(game["ready"]);
+
+			update_ready();
+		} else {
+			self.statusicon = "";
+			iprintln(self.p_name + "^7 is ^1not ready");
+
+			// Change players hud to indicate player not ready
+			readyhud.color = (1, .84, .84);
+			readyhud setText(game["notready"]);
+		}
+
+		// Wait for use button release.
+		while (self useButtonPressed() == true) {
+			wait .05;
 		}
 	}
 
@@ -219,93 +141,25 @@ readyup(entity)
 		status destroy();
 }
 
-Check_All_Ready()
+is_level_ready()
 {
-	wait .1;
-	checkready = true;
+	if (level.exist["allies"] == 0 || level.exist["axis"] == 0) {
+		return false;
+	}
 
-	// Check to see if all players are looping
 	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-
-		lpselfnum = player getEntityNumber();
-
-		if (!isdefined(player.R_U_Looping) )
-		{
-			level.R_U_Name[lpselfnum] = self.name;
-			level.R_U_State[lpselfnum] = "notready";
-			player.R_U_Looping = 0;
+	for(i = 0; i < players.size; i++) {
+		if (!players[i].p_ready) {
+			return false;
 		}
-			
-		if (player.R_U_Looping == 0)
-		{
-			player thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);
-			return;
-		}
-
-		//Player is looping, now see if he is ready
-		if (level.R_U_State[lpselfnum] == "notready")
-			checkready = false;
 	}
 
-	// See if we checkready is still true
-	if (checkready == true)
-		level.playersready = true;
+	return true;
 }
 
-
-ClanBase_Warning()
+update_ready()
 {
-	mode = getcvar("pam_mode");
-	switch (mode)
-	{
-	case "dlogics_matchmod":
-	case "dlogics_nightmod":
-	case "cb_rifles":
-	case "cb_2v2":
-		x = 1;
-		break;
-
-	default:
-		x = 0;
-		break;
-	}
-	if (x)
-	{
-		self iprintlnbold("^7Welcome to the d^4`^9logics^4. ^7warserver^4!");
-		self iprintlnbold("^7d^4`^9logics^4. ^7PAM by inflexZ^4!");
-		wait 2.8;
-		self iprintlnbold("^7No hacking ^4~ ^7glitching ^4~ ^7tweaking^4!");
-		self iprintlnbold("^7Good luck and have fun^4!");
-		wait 3.8;
+	if (is_level_ready() == true) {
+		level.p_readying = false;
 	}
 }
-
-ClanBase_Warning2()
-{
-	mode = getcvar("pam_mode");
-	switch (mode)
-	{
-	case "dlogics_matchmod":
-	case "dlogics_nightmod":
-	case "cb_rifles":
-	case "cb_2v2":
-		x = 1;
-		break;
-
-	default:
-		x = 0;
-		break;
-	}
-	if (x)
-	{
-		self iprintlnbold("^7d^4`^9logics^4. ^7PAM by inflexZ^4!");
-		self iprintlnbold("^7Hit the ^9USE ^7key to begin the second half^4!");
-		wait 3.8;
-	}
-}
-
-
-

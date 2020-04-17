@@ -41,17 +41,13 @@ main()
     level.gametype = getCvar("g_gametype");
 
 	if(!isDefined(game["halftimeflag"])) {
-		game["dolive"] = "0";
 		game["halftimeflag"] = "0";
 		game["round1alliesscore"] = 0;
 		game["round1axisscore"] = 0; 
 		game["round2alliesscore"] = 0;
 		game["round2axisscore"] = 0;
-		game["DoReadyUp"] = false;
 		game["checkingmatchstart"] = false;
 	}
-
-	level.warmup = 0;	// warmup time reset in case they restart map via menu
 
 	if(getcvar("g_ot") == "")
 		setcvar("g_ot", "0");
@@ -93,18 +89,15 @@ main()
 
 	level.instrattime = false;
 
-	// Ready-Up
-	level.rdyup = 0;
-	level.R_U_Name = [];
-	level.R_U_State = [];
+	// Ready up phase before half start.
+	level.p_readying = false;
+
+	// Round restart delay time.
+	level.p_warmingup = false;
 
 	// WEAPON EXPLOIT FIX
 	if(!isDefined(game["dropsecondweap"]))
 		game["dropsecondweap"] = false;
-
-	level.readyname = [];
-	level.readystate = [];
-	level.playersready = false;
 
 	level.allow_mg42 = getCvar("scr_allow_mg42");
 	if(level.allow_mg42 == "")
@@ -117,7 +110,11 @@ main()
 	}
 
 	if (getcvar("scr_allow_pistol") == "") {
-		setcvar("scr_allow_pistol", "1");
+		setcvar("scr_allow_pistol", "0");
+	}
+
+	if (getcvar("scr_allow_nades") == "") {
+		setcvar("scr_allow_nades", "0");
 	}
 
 	// Fix _teams.gsc bug removing wrong entity.

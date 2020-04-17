@@ -1,6 +1,7 @@
 ## Must
 
 - Code restructuring.
+- CVAR loop and good setup/rules infrastrcture.
 
 ## Should
 
@@ -13,7 +14,6 @@
 - Weapon picking upgrade (single, secondary/picking from opposite team).
 - Keep score during warm-up.
 - No weapon menu if no choice.
-- Rebrand 'strat' as e.g. (grace period) freeze time.
 
 ## Would
 
@@ -24,3 +24,8 @@
 - Vote/veto for map(s) pre-game.
 - Restart map/mod on empty server.
 - Anti fast shoot for weapons other than kar/mos.
+- Configurable: Allow killing during warmup.
+- Rebrand 'strat' as e.g. (grace period) freeze time.
+- Rebrand 'warmup' as e.g. round restart delay.
+- auto_change name during readying.
+- Auto demo/screenshot mechanism (probably not optimal).

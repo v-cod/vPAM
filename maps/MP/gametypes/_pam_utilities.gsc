@@ -406,3 +406,47 @@ InitClock(clock, time)
 	clock.sort = 9999;
 	clock setClock(time, 60, "hudStopwatch", 64, 64); // count down for 5 of 60 seconds, size is 64x64
 }
+
+watchPlayerFastShoot()
+{
+	self endon("spawned");
+
+	while (self.sessionstate == "playing") {
+		// Reference clip count.
+		a1 = self getWeaponSlotClipAmmo("primary");
+		b1 = self getWeaponSlotClipAmmo("primaryb");
+
+		// Wait for clip ammo to change.
+		do {
+			wait 0.05;
+
+			if (self.sessionstate != "playing") {
+				return;
+			}
+
+			a2 = self getWeaponSlotClipAmmo("primary");
+			b2 = self getWeaponSlotClipAmmo("primaryb");
+		} while (a1 == a2 && b1 == b2);
+
+		// Check for reload.
+		if (a1 < a2 || b1 < b2) {
+			continue;
+		}
+
+		a1 = a2;
+		b1 = b2;
+
+		wait level.afs_time;
+
+		if (self.sessionstate != "playing") {
+			return;
+		}
+
+		a2 = self getWeaponSlotClipAmmo("primary");
+		b2 = self getWeaponSlotClipAmmo("primaryb");
+
+		if (a2 < a1 || b2 < b1) {
+			iPrintLn("^1Fastshoot^7: " + self.name);
+		}
+	}
+}
