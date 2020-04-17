@@ -1656,7 +1656,7 @@ endRound(roundwinner)
 
 	// WRS {
 	if (level.wrs) {
-		players = []; // To pass next weapon storing loop
+		players = []; // To skip next weapon storing loop
 	} else {
 		players = getentarray("player", "classname");
 	}
