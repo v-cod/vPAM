@@ -124,6 +124,7 @@ Callback_PlayerConnect()
 
 /**/self.p_name = self.name;
 /**/self.p_ready = false;
+/**/self.p_readying = false;
 
 /**/if (level.p_readying == true) {
 /**/    self thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);

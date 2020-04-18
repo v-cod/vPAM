@@ -13,6 +13,11 @@ PAM_Ready_UP()
 	level.waiting.fontScale = 1.5;
 	level.waiting setText(game["waiting"]);
 
+	players = getEntArray("player", "classname");
+	for(i = 0; i < players.size; i++) {
+		players[i] thread readyup();
+	}
+
 	Waiting_On_Players(); //used to be its own thread, now we wait in there until its finished
 
 	if(isdefined(level.waiting))
@@ -73,8 +78,13 @@ Waiting_On_Players()
 		level.playerstext destroy();
 }
 
-readyup(entity)
+readyup()
 {
+	if (self.p_readying) {
+		return;
+	}
+	self.p_readying = true;
+
 	self.statusicon = "";
 
 	// Required or the "respawn" notify could happen before it's waittill has begun
