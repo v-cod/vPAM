@@ -184,10 +184,6 @@ Callback_PlayerConnect()
 	{
 		self waittill("menuresponse", menu, response);
 
-/**/	if (menu(menu, response) == true) {
-/**/		continue;
-/**/	}
-
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
 			self.pers["skipserverinfo"] = true;
@@ -392,6 +388,10 @@ Callback_PlayerConnect()
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
 
+/**/		// TODO: Default weapon procedure.
+/**/		menu_weapon(menu, response);
+/**/		continue;
+
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 
 			if(weapon == "restricted")
@@ -415,10 +415,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (getcvarint("scr_allow_pistol") > 0) {
+/**/				if (getCvarInt("scr_allow_pistol") > 0) {
 /**/					maps\mp\gametypes\_teams::givePistol();
 /**/				}
-/**/				if (getcvarint("scr_allow_nades") > 0) {
+/**/				if (getCvarInt("scr_allow_nades") > 0) {
 /**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 /**/				}
 				}
@@ -441,10 +441,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (getcvarint("scr_allow_pistol") > 0) {
+/**/				if (getCvarInt("scr_allow_pistol") > 0) {
 /**/					maps\mp\gametypes\_teams::givePistol();
 /**/				}
-/**/				if (getcvarint("scr_allow_nades") > 0) {
+/**/				if (getCvarInt("scr_allow_nades") > 0) {
 /**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 /**/				}
 				}
@@ -568,39 +568,14 @@ Callback_PlayerConnect()
 	}
 }
 
-// Return true if request is handled
-menu(menu, response) {
-	// Only handle weapon menu context
-	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
-		return false;
-	}
-
-	// Only handle weapon choices
-	if (response == "team" || response == "viewmap" || response == "callvote") {
-		return false;
-	}
-
-	// Nothing to do with this
-	if(response == "open" || response == "close") {
-		return false;
-	}
-
-	// If not in a team, go back
-	if (!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis")) {
-		return false;
-	}
-
-	// Only handle weapon menu context
-	if (menu != game["menu_weapon_allies"] && menu != game["menu_weapon_axis"]) {
-		return false;
-	}
-
-	weapon = self _restrict(response);
+// Weapon procedure allowing second weapon pick.
+menu_weapon(menu, response) {
+	weapon = self maps\mp\gametypes\_teams::restrict_anyteam(response);
 
 	// If the weapon choice is restricted, go back
 	if (weapon == "restricted") {
 		self openMenu(menu);
-		return true;
+		return;
 	}
 
 	// The menu that is opened for them differs per team
@@ -615,148 +590,78 @@ menu(menu, response) {
 	// PHASE 1: PICKING FIRST WEAPON
 	// If this is the first weapon picked, or if it is and second weapon is picked too
 	if (menu == menu_1) {
-		self.pers["weapon1"] = weapon;
-		//self.pers["weapon2"] = undefined;
+		self.pers["weapon"] = weapon;
 
 		self openMenu(menu_2);
 
 		return true;
 	} else {
-		self.pers["weapon2"] = weapon;
+		self.pers["weapon_secondary"] = weapon;
 	}
 
-	if (getCvar("g_gametype") == "sd") {
-		if (!game["matchstarted"] || !level.roundstarted) {
-			if (self.sessionstate == "playing") {
-				self.pers["weapon"] = self.pers["weapon1"];
+	if (!game["matchstarted"] || !level.roundstarted) {
+		if (self.sessionstate == "playing") {
+			self setWeaponSlotWeapon("primary", self.pers["weapon"]);
+			self setWeaponSlotAmmo("primary", 999);
+			self setWeaponSlotClipAmmo("primary", 999);
 
-				self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
-				self setWeaponSlotAmmo("primary", 999);
-				self setWeaponSlotClipAmmo("primary", 999);
+			self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
+			self setWeaponSlotAmmo("primaryb", 999);
+			self setWeaponSlotClipAmmo("primaryb", 999);
 
-				self setWeaponSlotWeapon("primaryb", self.pers["weapon2"]);
-				self setWeaponSlotAmmo("primaryb", 999);
-				self setWeaponSlotClipAmmo("primaryb", 999);
-
-				self switchToWeapon(self.pers["weapon1"]);
-			} else {
-				self.pers["weapon"] = weapon;
-				if (!level.exist[self.pers["team"]]) {
-					self.spawned = undefined;
-					spawnPlayer();
-					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-					level thread checkMatchStart();
-				}
-				else {
-					spawnPlayer();
-					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-				}
-			}
+			self switchToWeapon(self.pers["weapon"]);
 		} else {
-			self.pers["weapon"] = weapon;
-			self.sessionteam = self.pers["team"];
+			// TODO: Figure out if we should check for level.exist here.
+			spawnPlayer();
+			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+			level thread checkMatchStart();
+		}
+	} else {
+		self.pers["weapon"] = weapon;
+		self.sessionteam = self.pers["team"];
 
-			if (self.sessionstate != "playing") {
-				self.statusicon = "gfx/hud/hud@status_dead.tga";
-			}
+		if (self.sessionstate != "playing") {
+			self.statusicon = "gfx/hud/hud@status_dead.tga";
+		}
+
+		if (self.pers["team"] == "allies") {
+			otherteam = "axis";
+		} else if (self.pers["team"] == "axis") {
+			otherteam = "allies";
+		}
+
+		// if joining a team that has no opponents, just spawn
+		if (!level.didexist[otherteam] && !level.roundended) {
+			self.spawned = undefined;
+			spawnPlayer();
+			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+		} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
+			self.spawned = undefined;
+			spawnPlayer();
+			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
+			level thread checkMatchStart();
+		} else {
+			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 
 			if (self.pers["team"] == "allies") {
-				otherteam = "axis";
+				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
+				} else {
+					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
+				}
 			} else if (self.pers["team"] == "axis") {
-				otherteam = "allies";
-			}
-
-			// if joining a team that has no opponents, just spawn
-			if (!level.didexist[otherteam] && !level.roundended) {
-				self.spawned = undefined;
-				spawnPlayer();
-				self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-			} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
-				self.spawned = undefined;
-				spawnPlayer();
-				self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-				level thread checkMatchStart();
-			} else {
-				weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
-				if (self.pers["team"] == "allies") {
-					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
-						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
-					} else {
-						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
-					}
-				} else if (self.pers["team"] == "axis") {
-					if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
-						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
-					} else {
-						self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
-					}
+				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
+					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
+				} else {
+					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
 				}
 			}
 		}
-
-		self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
-		if (isDefined(self.autobalance_notify))
-			self.autobalance_notify destroy();
-	} else if (getCvar("g_gametype") == "tdm") {
-		if (!isDefined(self.pers["weapon"])) {
-			self.pers["weapon"] = weapon;
-			spawnPlayer();
-			self thread maps\mp\gametypes\tdm::printJoinedTeam(self.pers["team"]);
-		}
-		else
-		{
-			self.pers["weapon"] = weapon;
-
-			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
-			if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
-			else
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
-		}
-		if (isdefined (self.autobalance_notify))
-			self.autobalance_notify destroy();
-	} else if (getCvar("g_gametype") == "dm") {
-		if(!isDefined(self.pers["weapon"])) {
-			self.pers["weapon"] = weapon;
-			spawnPlayer();
-		} else {
-			self.pers["weapon"] = weapon;
-
-			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
-			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
-			else
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
-		}
-	} else if (getCvar("g_gametype") == "hq") {
-		if(!isdefined(self.pers["weapon"]))
-		{
-			self.pers["weapon"] = weapon;
-			self thread maps\mp\gametypes\hq::respawn();
-			self thread maps\mp\gametypes\hq::printJoinedTeam(self.pers["team"]);
-		}
-		else
-		{
-			self.pers["weapon"] = weapon;
-
-			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-
-			if(maps\mp\gametypes\_teams::useAn(self.pers["weapon"]))
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_AN", weaponname);
-			else
-				self iprintln(&"MPSCRIPT_YOU_WILL_RESPAWN_WITH_A", weaponname);
-		}
-		self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
-		if (isdefined (self.autobalance_notify))
-			self.autobalance_notify destroy();
-	} else {
-		// ERROR
 	}
 
-	return true;
+	self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
+	if (isDefined(self.autobalance_notify))
+		self.autobalance_notify destroy();
 }
 
 
