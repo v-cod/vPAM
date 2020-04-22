@@ -2245,7 +2245,7 @@ bomb_countdown()
 			if(!isDefined(level.clock)){
 				break;
 			}
-			level.clock.color = (1,1-i/50.0,0);
+			level.clock.color = (1,1 - i/50.0,0);
 			wait 1;
 		}
 		if(isDefined(level.clock)){
@@ -2253,8 +2253,10 @@ bomb_countdown()
 		}
 		wait 10;
 		level.clock destroy();
-	}else{
+	} else {
 		countdowntime = 60;
+
+		wait countdowntime;
 	}
 	// } // END WRS
 
