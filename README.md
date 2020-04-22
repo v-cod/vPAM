@@ -42,6 +42,10 @@ Additional:
 
 
 https://web.archive.org/web/20041229081422/http://www.callofduty.com/patch/readme_patch_1.5.txt
+https://web.archive.org/web/20150731231429/http://www.evenbalance.com:80/publications/cod-ad/index.htm
+
+Get user values: `/rcon pb_sv_cvarval fs_homepath`
+
 takeallweapons
 
 set - set cvar
@@ -54,3 +58,8 @@ level - round duration; resets on map_restart (e.g. round end in SD)
 game - map duration; resets on exitLevel (map change)
 
 fonts: bigfixed smallfixed default(?)
+
+g_logSync: 1 to flush after print.
+logfile: 1 to log, 2 to flush after print. // 1 = buffer log, 2 = flush after each print
+dedicated: "dedicated 1" is for lan play, "dedicated 2" is for inet public play
+developer: 1 to print developer stuff.
