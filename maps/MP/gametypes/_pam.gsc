@@ -2,8 +2,8 @@ main()
 {
 	game["pamstring"] = &"^7d^4`^9logics^4.";
 
-    if(!isDefined(game["gamestarted"])) {
-        precache();
+	if (!isDefined(game["gamestarted"])) {
+		precache();
 
 		ruleset = getCvar("pam_mode");
 
@@ -258,3 +258,34 @@ precache()
     precacheItem("mosin_nagant_mp");
     precacheItem("kar98k_mp");
 }
+
+// cvar(cvar, def, min, max, type)
+// {
+// 	if (getCvar(cvar) == "") {
+// 		return def;
+// 	}
+
+// 	switch (type) {
+// 	case "int":
+// 		v = getCvarInt(cvar);
+// 		break;
+// 	case "float":
+// 		v = getCvarFloat(cvar);
+// 		break;
+// 	case "array":
+// 		return maps\mp\gametypes\_wrs_admin::explode(" ", getCvar(cvar), 0);
+// 	case "string":
+// 	default:
+// 		return getCvar(cvar);
+// 	}
+
+// 	if (type == "int" || type == "float") {
+// 		if (v > max) {
+// 			v = max;
+// 		} else if (v < min) {
+// 			v = min;
+// 		}
+// 	}
+// 	return v;
+// }
+

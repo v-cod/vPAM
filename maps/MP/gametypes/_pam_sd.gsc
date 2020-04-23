@@ -583,7 +583,7 @@ Callback_PlayerDisconnect()
 	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
 	if(game["matchstarted"])
-		level thread updateTeamStatus();
+/**/	level thread updateTeamStatus();
 }
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
@@ -736,10 +736,10 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	obituary(self, attacker, sWeapon, sMeansOfDeath);
 
 	self.sessionstate = "dead";
+/**/// self.statusicon = "gfx/hud/hud@status_dead.tga";
 /**/if (!level.p_readying || !self.p_ready) {
 /**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
 /**/}
-/**/// self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
 	if (!isdefined (self.autobalance))
 	{
@@ -818,7 +818,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		body = self cloneplayer();
 	self.autobalance = undefined;
 
-	updateTeamStatus();
+/**/updateTeamStatus();
 
 	// TODO: Add additional checks that allow killcam when the last player killed wouldn't end the round (bomb is planted)
 	if((getCvarInt("scr_killcam") <= 0) || !level.exist[self.pers["team"]]) // If the last player on a team was just killed, don't do killcam
@@ -838,7 +838,8 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	{
 		currentorigin = self.origin;
 		currentangles = self.angles;
-		self thread spawnSpectator(currentorigin + (0, 0, 60), currentangles);
+
+/**/	self thread spawnSpectator(currentorigin + (0, 0, 60), currentangles);
 	}
 }
 
@@ -882,7 +883,7 @@ spawnPlayer()
 	self.maxhealth = 100;
 	self.health = self.maxhealth;
 	
-	updateTeamStatus();
+/**/updateTeamStatus();
 
 	if(!isDefined(self.pers["score"]))
 		self.pers["score"] = 0;
@@ -1263,7 +1264,6 @@ endRound(roundwinner)
 
 	wait 5;
 
-
 	winners = "";
 	losers = "";
 
@@ -1272,13 +1272,13 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-		if(game["halftimeflag"] == "1")
-		{
-			game["round2alliesscore"]++;
-			halftimeflag = game["halftimeflag"];
-		}
-		else if(game["matchstarted"])
-			game["round1alliesscore"]++;
+/**/	if(game["halftimeflag"] == "1")
+/**/	{
+/**/		game["round2alliesscore"]++;
+/**/		halftimeflag = game["halftimeflag"];
+/**/	}
+/**/	else if(game["matchstarted"])
+/**/		game["round1alliesscore"]++;
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1297,13 +1297,13 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-		if(game["halftimeflag"] == "1")
-		{
-			game["round2axisscore"]++;
-			halftimeflag = game["halftimeflag"];
-		}
-		else if(game["matchstarted"])
-			game["round1axisscore"]++;
+/**/	if(game["halftimeflag"] == "1")
+/**/	{
+/**/		game["round2axisscore"]++;
+/**/		halftimeflag = game["halftimeflag"];
+/**/	}
+/**/	else if(game["matchstarted"])
+/**/		game["round1axisscore"]++;
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1321,10 +1321,10 @@ endRound(roundwinner)
 	if(game["matchstarted"])
 	{
 		checkScoreLimit();
-		if (level.countdraws == 1)
-			game["roundsplayed"]++;
-		else if(roundwinner != "draw")
-			game["roundsplayed"]++;
+/**/	if (level.countdraws == 1)
+/**/		game["roundsplayed"]++;
+/**/	else if(roundwinner != "draw")
+/**/		game["roundsplayed"]++;
 		checkRoundLimit();
 	}
 
@@ -1339,8 +1339,8 @@ endRound(roundwinner)
 
 /**///checkTimeLimit();
 
-	if (level.hithalftime)
-		return;
+/**/if (level.hithalftime)
+/**/	return;
 
 	if(level.mapended)
 		return;
@@ -1363,14 +1363,14 @@ endRound(roundwinner)
 				// If a new weapon has since been picked up (this fails when a player picks up a weapon the same as his original)
 				if(player.oldweapon != primary && player.oldweapon != primaryb && primary != "none")
 				{
-					player.pers["weapon1"] = kar98k_mp;
-					player.pers["weapon2"] = mosin_nagant_mp;
+/**/				player.pers["weapon1"] = kar98k_mp;
+/**/				player.pers["weapon2"] = mosin_nagant_mp;
 					player.pers["spawnweapon"] = player getCurrentWeapon();
 				} // If the player's menu chosen weapon is the same as what is in the primaryb slot, swap the slots
 				else if(player.pers["weapon"] == primaryb)
 				{
-					player.pers["weapon1"] = kar98k_mp;
-					player.pers["weapon2"] = mosin_nagant_mp;
+/**/				player.pers["weapon1"] = kar98k_mp;
+/**/				player.pers["weapon2"] = mosin_nagant_mp;
 					player.pers["spawnweapon"] = player.pers["weapon1"];
 				} // Give them the weapon they chose from the menu
 				else
@@ -1392,7 +1392,7 @@ endRound(roundwinner)
 				spawnweapon = player getCurrentWeapon();
 				if ( (spawnweapon == "none") && (isdefined (primary)) ) 
 					spawnweapon = primary;
-
+				
 				if(!maps\mp\gametypes\_teams::isPistolOrGrenade(spawnweapon))
 					player.pers["spawnweapon"] = spawnweapon;
 				else
@@ -1409,24 +1409,24 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-	if((getcvar("g_roundwarmuptime") != "0") && (game["roundsplayed"] != "0" ) && level.hithalftime == 0)
-	{
-		//display scores
-		Create_HUD_Header();
-
-		Create_HUD_Scoreboard();
-
-		warmup = getcvarint("g_roundwarmuptime");
-		Create_HUD_NextRound(warmup);
-
-		/* Remove match countdown text */
-		
-		Destroy_HUD_Header();
-
-		Destroy_HUD_Scoreboard();
-
-		Destroy_HUD_NextRound();
-	}
+/**/if((getcvar("g_roundwarmuptime") != "0") && (game["roundsplayed"] != "0" ) && level.hithalftime == 0)
+/**/{
+/**/	//display scores
+/**/	Create_HUD_Header();
+/**/
+/**/	Create_HUD_Scoreboard();
+/**/
+/**/	warmup = getcvarint("g_roundwarmuptime");
+/**/	Create_HUD_NextRound(warmup);
+/**/
+/**/	/* Remove match countdown text */
+/**/	
+/**/	Destroy_HUD_Header();
+/**/
+/**/	Destroy_HUD_Scoreboard();
+/**/
+/**/	Destroy_HUD_NextRound();
+/**/}
 
 	map_restart(true);
 }
@@ -1489,58 +1489,6 @@ checkTimeLimit()
 	iprintln(&"MPSCRIPT_TIME_LIMIT_REACHED");
 	level thread endMap();
 }
-
-
-checkRoundLimit()
-{		
-	/*  Is it a round-base halftime? */
-	if (level.halfround != 0  && game["halftimeflag"] == "0")
-	{
-		if(game["roundsplayed"] >= level.halfround)
-		{ 
-			Do_Half_Time();
-			return;
-		}
-	}
-
-	/*  End of Map Roundlimit! */
-	if (level.matchround != 0)
-	{
-		if (game["roundsplayed"] >= level.matchround)
-		{
-			if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-				Prepare_map_Tie();
-			else
-				setCvar("g_ot_active", "0");
-
-			Create_HUD_Matchover();
-
-			Create_HUD_TeamWin();
-
-			Create_HUD_Header();
-				
-			Create_HUD_Scoreboard();
-
-			wait 10;
-
-			Destroy_HUD_Header();
-
-			Destroy_HUD_Scoreboard();
-
-			Destroy_HUD_TeamWin();
-
-			if(isdefined(level.matchover))
-				level.matchover destroy();
-
-			if(level.mapended)
-				return;
-			level.mapended = true;
-
-			endMap();
-		}
-	}
-}
-
 
 checkScoreLimit()
 {
@@ -1631,6 +1579,55 @@ checkScoreLimit()
 	}
 }
 
+checkRoundLimit()
+{
+	/*  Is it a round-base halftime? */
+	if (level.halfround != 0  && game["halftimeflag"] == "0")
+	{
+		if(game["roundsplayed"] >= level.halfround)
+		{ 
+			Do_Half_Time();
+			return;
+		}
+	}
+
+	/*  End of Map Roundlimit! */
+	if (level.matchround != 0)
+	{
+		if (game["roundsplayed"] >= level.matchround)
+		{
+			if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
+				Prepare_map_Tie();
+			else
+				setCvar("g_ot_active", "0");
+
+			Create_HUD_Matchover();
+
+			Create_HUD_TeamWin();
+
+			Create_HUD_Header();
+				
+			Create_HUD_Scoreboard();
+
+			wait 10;
+
+			Destroy_HUD_Header();
+
+			Destroy_HUD_Scoreboard();
+
+			Destroy_HUD_TeamWin();
+
+			if(isdefined(level.matchover))
+				level.matchover destroy();
+
+			if(level.mapended)
+				return;
+			level.mapended = true;
+
+			endMap();
+		}
+	}
+}
 
 updateGametypeCvars()
 {
@@ -1907,68 +1904,68 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-	if(getcvar("sv_playersleft") == "1")
-	{	
-		// destroy old huds so they can be refreshed
-		if(isdefined(level.alliesleft))
-			level.alliesleft destroy();
-		if(isdefined(level.axisleft))
-			level.axisleft destroy();
-		if(isdefined(level.alliesleftnum))
-			level.alliesleftnum destroy();
-		if(isdefined(level.axisleftnum))
-			level.axisleftnum destroy();
-			
-	
-		// display allies left axis left
-		level.alliesleft = newHudElem();
-		level.alliesleft.x = 380;
-		level.alliesleft.y = 460;
-		level.alliesleft.alignX = "left";
-		level.alliesleft.alignY = "bottom";
-		level.alliesleft.fontScale = .75;
-		level.alliesleft.color = (1, 1, 1);
-		level.alliesleft.alpha = 1;
-		level.alliesleft setText(game["dspalliesleft"]);
-		
-		level.alliesleftnum = newHudElem();
-		level.alliesleftnum.x = 450;
-		level.alliesleftnum.y = 460;
-		level.alliesleftnum.alignX = "left";
-		level.alliesleftnum.alignY = "bottom";
-		level.alliesleftnum.fontScale = .75;
-		level.alliesleftnum.color = (1, 1, 1);
-		level.alliesleftnum.alpha = 1;
-		level.alliesleftnum setValue(level.exist["allies"]);
-			
-		level.axisleft = newHudElem();
-		level.axisleft.x = 380;
-		level.axisleft.y = 470;
-		level.axisleft.alignX = "left";
-		level.axisleft.alignY = "bottom";
-		level.axisleft.fontScale = .75;
-		level.axisleft.color = (1, 1, 1);
-		level.axisleft.alpha = 1;
-		level.axisleft setText(game["dspaxisleft"]);
-		
-		level.axisleftnum = newHudElem();
-		level.axisleftnum.x = 450;
-		level.axisleftnum.y = 470;
-		level.axisleftnum.alignX = "left";
-		level.axisleftnum.alignY = "bottom";
-		level.axisleftnum.fontScale = .75;
-		level.axisleftnum.color = (1, 1, 1);
-		level.axisleftnum.alpha = 1;
-		level.axisleftnum setValue(level.exist["axis"]);
-	}
+/**/if(getcvar("sv_playersleft") == "1")
+/**/{	
+/**/	// destroy old huds so they can be refreshed
+/**/	if(isdefined(level.alliesleft))
+/**/		level.alliesleft destroy();
+/**/	if(isdefined(level.axisleft))
+/**/		level.axisleft destroy();
+/**/	if(isdefined(level.alliesleftnum))
+/**/		level.alliesleftnum destroy();
+/**/	if(isdefined(level.axisleftnum))
+/**/		level.axisleftnum destroy();
+/**/		
+/**/
+/**/	// display allies left axis left
+/**/	level.alliesleft = newHudElem();
+/**/	level.alliesleft.x = 380;
+/**/	level.alliesleft.y = 460;
+/**/	level.alliesleft.alignX = "left";
+/**/	level.alliesleft.alignY = "bottom";
+/**/	level.alliesleft.fontScale = .75;
+/**/	level.alliesleft.color = (1, 1, 1);
+/**/	level.alliesleft.alpha = 1;
+/**/	level.alliesleft setText(game["dspalliesleft"]);
+/**/	
+/**/	level.alliesleftnum = newHudElem();
+/**/	level.alliesleftnum.x = 450;
+/**/	level.alliesleftnum.y = 460;
+/**/	level.alliesleftnum.alignX = "left";
+/**/	level.alliesleftnum.alignY = "bottom";
+/**/	level.alliesleftnum.fontScale = .75;
+/**/	level.alliesleftnum.color = (1, 1, 1);
+/**/	level.alliesleftnum.alpha = 1;
+/**/	level.alliesleftnum setValue(level.exist["allies"]);
+/**/		
+/**/	level.axisleft = newHudElem();
+/**/	level.axisleft.x = 380;
+/**/	level.axisleft.y = 470;
+/**/	level.axisleft.alignX = "left";
+/**/	level.axisleft.alignY = "bottom";
+/**/	level.axisleft.fontScale = .75;
+/**/	level.axisleft.color = (1, 1, 1);
+/**/	level.axisleft.alpha = 1;
+/**/	level.axisleft setText(game["dspaxisleft"]);
+/**/	
+/**/	level.axisleftnum = newHudElem();
+/**/	level.axisleftnum.x = 450;
+/**/	level.axisleftnum.y = 470;
+/**/	level.axisleftnum.alignX = "left";
+/**/	level.axisleftnum.alignY = "bottom";
+/**/	level.axisleftnum.fontScale = .75;
+/**/	level.axisleftnum.color = (1, 1, 1);
+/**/	level.axisleftnum.alpha = 1;
+/**/	level.axisleftnum setValue(level.exist["axis"]);
+/**/}
 
 	if(level.exist["allies"])
 		level.didexist["allies"] = true;
 	if(level.exist["axis"])
 		level.didexist["axis"] = true;
 
-	if(level.p_readying)
-		return;
+/**/if(level.p_readying)
+/**/	return;
 
 	if(level.roundended)
 		return;
@@ -2012,20 +2009,20 @@ updateTeamStatus()
 		{
 			announcement(&"SD_ALLIESHAVEBEENELIMINATED");
 			level thread endRound("axis");
-			level.bombmodel stopLoopSound();
-			level.bombmodel delete();
-			if(isdefined(level.clock))
-				level.clock destroy();
+/**/		level.bombmodel stopLoopSound();
+/**/		level.bombmodel delete();
+/**/		if(isdefined(level.clock))
+/**/			level.clock destroy();
 			return;
 		}
 
 		announcement(&"SD_AXISMISSIONACCOMPLISHED");
-			level thread endRound("axis");
-			level.bombmodel stopLoopSound();
-			level.bombmodel delete();
-			if(isdefined(level.clock))
-				level.clock destroy();
-			return;
+		level thread endRound("axis");
+/**/	level.bombmodel stopLoopSound();
+/**/	level.bombmodel delete();
+/**/	if(isdefined(level.clock))
+/**/		level.clock destroy();
+		return;
 	}
 	
 	if(oldvalue["axis"] && !level.exist["axis"])
@@ -2046,10 +2043,10 @@ updateTeamStatus()
 		{
 			announcement(&"SD_AXISHAVEBEENELIMINATED");
 			level thread endRound("allies");
-			level.bombmodel stopLoopSound();
-			level.bombmodel delete();
-			if(isdefined(level.clock))
-				level.clock destroy();
+/**/		level.bombmodel stopLoopSound();
+/**/		level.bombmodel delete();
+/**/		if(isdefined(level.clock))
+/**/			level.clock destroy();
 			return;
 		}
 		
@@ -2071,8 +2068,8 @@ bombzones()
 	bombzone_A = getent("bombzone_A", "targetname");
 	bombzone_B = getent("bombzone_B", "targetname");
 /**/if (game["matchstarted"]) {
-		bombzone_A thread bombzone_think(bombzone_B);
-		bombzone_B thread bombzone_think(bombzone_A);
+/**/	bombzone_A thread bombzone_think(bombzone_B);
+/**/	bombzone_B thread bombzone_think(bombzone_A);
 /**/}
 	wait 1;	// TEMP: without this one of the objective icon is the default. Carl says we're overflowing something.
 	objective_add(0, "current", bombzone_A.origin, "gfx/hud/hud@objectiveA.tga");
@@ -2187,10 +2184,10 @@ bombzone_think(bombzone_other)
 					lpselfguid = other getGuid();
 					logPrint("A;" + lpselfguid + ";" + lpselfnum + ";" + game["attackers"] + ";" + other.name + ";" + "bomb_plant" + "\n");
 					
-					// WRS: hide announcement.
-					// announcement(&"SD_EXPLOSIVESPLANTED");
-					thread HUD_Bomb_Planted();
-															
+/**/				// hide announcement.
+/**/				// announcement(&"SD_EXPLOSIVESPLANTED");
+/**/				thread HUD_Bomb_Planted();
+										
 					players = getentarray("player", "classname");
 					for(i = 0; i < players.size; i++)
 						players[i] playLocalSound("MP_announcer_bomb_planted");
@@ -2226,7 +2223,6 @@ bombzone_think(bombzone_other)
 	}
 }
 
-
 check_bombzone(trigger)
 {
 	self notify("kill_check_bombzone");
@@ -2245,21 +2241,21 @@ bomb_countdown()
 	self endon("bomb_defused");
 	level endon("intermission");
 
-	level.bombmodel playLoopSound("bomb_tick");	
+	level.bombmodel playLoopSound("bomb_tick");
 	
-	// Fade from yellow to red
-	for(i = 0; i < 50; i++)
-	{
-		if(isdefined(level.clock))
-			level.clock.color = (1, 1 - i*0.02, 0);
-		wait 1;
-	}
-	
-	wait 10;
+/**/// Fade from yellow to red
+/**/for(i = 0; i < 50; i++)
+/**/{
+/**/	if(isdefined(level.clock))
+/**/		level.clock.color = (1, 1 - i*0.02, 0);
+/**/	wait 1;
+/**/}
+/**/
+/**/wait 10;
+/**/
+/**/if(isdefined(level.clock))
+/**/	level.clock destroy();
 
-	if(isdefined(level.clock))
-		level.clock destroy();
-		
 	// bomb timer is up
 	objective_delete(0);
 	
@@ -2286,13 +2282,12 @@ bomb_countdown()
 	level thread endRound(game["attackers"]);
 }
 
-
 bomb_think()
 {
 	self endon("bomb_exploded");
 	level.barincrement = (level.barsize / (20.0 * level.defusetime));
 
-	thread Destroy_HUD_Planted();
+/**/thread Destroy_HUD_Planted();
 
 	for(;;)
 	{
@@ -2363,8 +2358,8 @@ bomb_think()
 					self notify("bomb_defused");
 					level.bombmodel setmodel("xmodel/mp_bomb1");
 					level.bombmodel stopLoopSound();
-					if(isdefined(level.clock))
-					level.clock destroy();
+/**/				if(isdefined(level.clock))
+/**/					level.clock destroy();
 
 					announcement(&"SD_EXPLOSIVESDEFUSED");
 					
@@ -2374,8 +2369,9 @@ bomb_think()
 					
 					players = getentarray("player", "classname");
 					for(i = 0; i < players.size; i++)
+					{
 						players[i] playLocalSound("MP_announcer_bomb_defused");
-
+					}
 					level thread endRound(game["defenders"]);
 					return;	//TEMP, script should stop after the wait .05
 				}
@@ -2389,7 +2385,7 @@ bomb_think()
 			}
 
 			self.defusing = undefined;
-			other thread maps\mp\gametypes\sd::check_bomb(self);
+/**/		other thread maps\mp\gametypes\sd::check_bomb(self);
 		}
 	}
 }
