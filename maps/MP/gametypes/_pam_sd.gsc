@@ -2070,9 +2070,10 @@ bombzones()
 
 	bombzone_A = getent("bombzone_A", "targetname");
 	bombzone_B = getent("bombzone_B", "targetname");
-	bombzone_A thread bombzone_think(bombzone_B);
-	bombzone_B thread bombzone_think(bombzone_A);
-
+/**/if (game["matchstarted"]) {
+		bombzone_A thread bombzone_think(bombzone_B);
+		bombzone_B thread bombzone_think(bombzone_A);
+/**/}
 	wait 1;	// TEMP: without this one of the objective icon is the default. Carl says we're overflowing something.
 	objective_add(0, "current", bombzone_A.origin, "gfx/hud/hud@objectiveA.tga");
 	objective_add(1, "current", bombzone_B.origin, "gfx/hud/hud@objectiveB.tga");
@@ -2200,15 +2201,13 @@ bombzone_think(bombzone_other)
 					level notify("bomb_planted");
 					level.clock destroy();
 
-					// WRS {
-					level.clock = newHudElem();
-					level.clock.x = 320;
-					level.clock.y = 460;
-					level.clock.alignX = "center";
-					level.clock.alignY = "middle";
-					level.clock.font = "bigfixed";
-					level.clock setTimer(59);
-					// } END WRS
+/**/				level.clock = newHudElem();
+/**/				level.clock.x = 320;
+/**/				level.clock.y = 460;
+/**/				level.clock.alignX = "center";
+/**/				level.clock.alignY = "middle";
+/**/				level.clock.font = "bigfixed";
+/**/				level.clock setTimer(59);
 
 					return;	//TEMP, script should stop after the wait .05
 				}

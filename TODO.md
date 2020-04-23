@@ -4,13 +4,13 @@
 
 ## Should
 
-- No bomb planting during warm-up.
+- 
 
 ## Could
 
 - Fix strat time lag bind bug.
 - Overtime automatically after draw.
-- Weapon picking upgrade (single, secondary/picking from opposite team).
+- Weapon picking upgrade (secondary/picking from opposite team).
 - Keep score during warm-up.
 - No weapon menu if no choice.
 
