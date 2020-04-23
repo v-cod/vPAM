@@ -1,12 +1,12 @@
 ## Must
 
-- Code restructuring.
 - CVAR loop and good setup/rules infrastrcture.
 
 ## Should
 
 - Remove `weapons` files in favour of raising damage via script.
 - Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
+- No bomb planting during warm-up.
 
 ## Could
 
@@ -25,7 +25,7 @@
 - Vote/veto for map(s) pre-game.
 - Restart map/mod on empty server.
 - Anti fast shoot for weapons other than kar/mos.
-- Configurable: Allow killing during warmup.
+- Configurable: Clarify killing during warm-up (icon?).
 - Rebrand 'strat' as e.g. (grace period) freeze time.
 - Rebrand 'warmup' as e.g. round restart delay.
 - auto_change name during readying.

@@ -74,13 +74,11 @@ SetupCallbacks()
 {
 	SetDefaultCallbacks();
 
-	// WRS {
-	level.callbackStartGameType = maps\mp\gametypes\_pam_sd::Callback_StartGameType;
-	level.callbackPlayerConnect = maps\mp\gametypes\_pam_sd::Callback_PlayerConnect;
-	level.callbackPlayerDisconnect = maps\mp\gametypes\_pam_sd::Callback_PlayerDisconnect;
-	level.callbackPlayerDamage = maps\mp\gametypes\_pam_sd::Callback_PlayerDamage;
-	level.callbackPlayerKilled = maps\mp\gametypes\_pam_sd::Callback_PlayerKilled;
-	// } END WRS
+/**/level.callbackStartGameType = maps\mp\gametypes\_pam_sd::Callback_StartGameType;
+/**/level.callbackPlayerConnect = maps\mp\gametypes\_pam_sd::Callback_PlayerConnect;
+/**/level.callbackPlayerDisconnect = maps\mp\gametypes\_pam_sd::Callback_PlayerDisconnect;
+/**/level.callbackPlayerDamage = maps\mp\gametypes\_pam_sd::Callback_PlayerDamage;
+/**/level.callbackPlayerKilled = maps\mp\gametypes\_pam_sd::Callback_PlayerKilled;
 
 	// Set defined for damage flags used in the playerDamage callback
 	level.iDFLAGS_RADIUS			= 1;
