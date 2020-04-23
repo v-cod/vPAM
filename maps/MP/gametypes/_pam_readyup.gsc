@@ -1,7 +1,6 @@
 PAM_Ready_UP()
 {
 	level.p_readying = true;
-	level.p_warmingup = false;
 
 	// Ready-Up Mode HUD
 	level.waiting = newHudElem();
@@ -22,8 +21,6 @@ PAM_Ready_UP()
 
 	if(isdefined(level.waiting))
 		level.waiting destroy();
-
-	level.p_warmingup = true;
 }
 
 Waiting_On_Players()

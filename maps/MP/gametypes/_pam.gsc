@@ -92,9 +92,6 @@ main()
 	// Ready up phase before half start.
 	level.p_readying = false;
 
-	// Round restart delay time.
-	level.p_warmingup = false;
-
 	// WEAPON EXPLOIT FIX
 	if(!isDefined(game["dropsecondweap"]))
 		game["dropsecondweap"] = false;

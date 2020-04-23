@@ -590,13 +590,10 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/		return;
 /**/}
 /**/
-/**/if(level.p_warmingup)
-/**/	return;
-/**/
 /**/if (level.instrattime)
 /**/	return;
 /**/
-/**/if(level.roundended && !level.p_warmingup && !level.p_readying)
+/**/if(level.roundended && !level.p_readying)
 /**/	return;
 
 	if(self.sessionteam == "spectator")
@@ -714,10 +711,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 {
 	self endon("spawned");
 
-/**/if(level.p_warmingup)
-/**/	return;
-
-/**/if(level.roundended && !level.p_warmingup && !level.p_readying)
+/**/if(level.roundended && !level.p_readying)
 /**/	return;
 
 	if(self.sessionteam == "spectator")
@@ -745,7 +739,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.sessionstate = "dead";
 	self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
-/**/if (!level.p_warmingup && !isdefined (self.autobalance))
+	if (!isdefined (self.autobalance))
 	{
 		self.pers["deaths"]++;
 		self.deaths = self.pers["deaths"];
@@ -764,7 +758,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		if(attacker == self) // killed himself
 		{
 			doKillcam = false;
-/**/		if (!level.p_warmingup && !isdefined (self.autobalance))
+			if (!isdefined (self.autobalance))
 			{
 				attacker.pers["score"]--;
 				attacker.score = attacker.pers["score"];
@@ -778,7 +772,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			attackerNum = attacker getEntityNumber();
 			doKillcam = true;
 
-/**/		if(!level.p_warmingup) {
 			if(self.pers["team"] == attacker.pers["team"]) // killed by a friendly
 			{
 				attacker.pers["score"]--;
@@ -789,7 +782,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 				attacker.pers["score"]++;
 				attacker.score = attacker.pers["score"];
 			}
-/**/		}
 		}
 		
 		lpattacknum = attacker getEntityNumber();
@@ -800,17 +792,17 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	else // If you weren't killed by a player, you were in the wrong place at the wrong time
 	{
 		doKillcam = false;
-/**/	if(!level.p_warmingup) {
+
 		self.pers["score"]--;
 		self.score = self.pers["score"];
-/**/	}
+
 		lpattacknum = -1;
 		lpattackguid = "";
 		lpattackname = "";
 		lpattackerteam = "world";
 	}
 
-/**/if(!level.p_warmingup) logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
+	logPrint("K;" + lpselfguid + ";" + lpselfnum + ";" + lpselfteam + ";" + lpselfname + ";" + lpattackguid + ";" + lpattacknum + ";" + lpattackerteam + ";" + lpattackname + ";" + sWeapon + ";" + iDamage + ";" + sMeansOfDeath + ";" + sHitLoc + "\n");
 
 	// Make the player drop his weapon
 	if (!isdefined (self.autobalance))
@@ -1045,9 +1037,6 @@ startRound()
 	if(level.roundended)
 		return;
 
-	if (level.p_warmingup)
-		return;
-
 	if(!level.exist[game["attackers"]] || !level.exist[game["defenders"]])
 	{
 		announcement(&"SD_TIMEHASEXPIRED");
@@ -1063,8 +1052,6 @@ checkMatchStart()
 {
 	if (game["matchstarted"])
 		return;
-
-	level.p_warmingup = true;
 
 	if (game["checkingmatchstart"])
 		return;
@@ -1103,11 +1090,8 @@ checkMatchStart()
 
 		if( game["mode"] == "match")
 		{
-			level.p_warmingup = false;
 
 			Do_Ready_Up();
-
-			level.p_warmingup = true;
 
 			// get rid of warmup weapons
 			players = getentarray("player", "classname");
@@ -1382,8 +1366,6 @@ endRound(roundwinner)
 
 	if((getcvar("g_roundwarmuptime") != "0") && (game["roundsplayed"] != "0" ) && level.hithalftime == 0)
 	{
-		level.p_warmingup = true;
-
 		//display scores
 		Create_HUD_Header();
 
@@ -1465,10 +1447,7 @@ checkTimeLimit()
 
 
 checkRoundLimit()
-{
-	if(level.p_warmingup)
-		return;
-		
+{		
 	/*  Is it a round-base halftime? */
 	if (level.halfround != 0  && game["halftimeflag"] == "0")
 	{
@@ -1520,9 +1499,6 @@ checkRoundLimit()
 
 checkScoreLimit()
 {
-	if(level.p_warmingup)
-		return;
-
 	/* Is it a score-based Halftime? */
 	if(game["halftimeflag"] == "0" && level.halfscore != 0)
 	{
@@ -1946,7 +1922,7 @@ updateTeamStatus()
 	if(level.exist["axis"])
 		level.didexist["axis"] = true;
 
-	if(level.p_warmingup || level.p_readying)
+	if(level.p_readying)
 		return;
 
 	if(level.roundended)
@@ -2075,7 +2051,7 @@ bombzone_think(bombzone_other)
 			continue;
 		}
 		
-		if(isPlayer(other) && (other.pers["team"] == game["attackers"]) && other isOnGround()  && !level.p_warmingup)
+		if(isPlayer(other) && (other.pers["team"] == game["attackers"]) && other isOnGround())
 		{
 			if(!isDefined(other.planticon))
 			{
@@ -2845,8 +2821,6 @@ Destroy_HUD_NextRound()
 		level.roundnum destroy();
 	if(isdefined(level.startingin))
 		level.startingin destroy();
-	if(isdefined(level.p_warmingupclock))
-		level.p_warmingupclock destroy();
 }
 
 
@@ -3122,7 +3096,6 @@ Destroy_HUD_RoundStart()
 Do_Half_Time()
 {
 	level.hithalftime = 1;
-	level.p_warmingup = true;
 
 	// Play Halftime Sounds
 	players = getentarray("player", "classname");
@@ -3228,11 +3201,7 @@ Do_Half_Time()
 	/* READY UP */
 	if( game["mode"] == "match")
 	{
-		level.p_warmingup = false;
-
 		Do_Ready_Up();
-
-		level.p_warmingup = true;
 
 		// get rid of warmup weapons
 		players = getentarray("player", "classname");
