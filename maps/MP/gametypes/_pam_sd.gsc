@@ -1008,77 +1008,74 @@ startGame()
 
 startRound()
 {
-
 	level endon("bomb_planted");
 
-	if(game["matchstarted"])
+/**/// thread maps\mp\gametypes\_teams::sayMoveIn();
+
+	level.clock = newHudElem();
+	level.clock.x = 320;
+	level.clock.y = 460;
+	level.clock.alignX = "center";
+	level.clock.alignY = "middle";
+	level.clock.font = "bigfixed";
+	level.clock setTimer(level.roundlength * 60);
+	
+	if (getCvar("g_autodemo") == "1")
 	{
-		if (game["mode"] == "match")
-			level.lockteams = true;
-
-		// STRAT Time
-		level.clock = newHudElem();
-		level.clock.x = 320;
-		level.clock.y = 460;
-		level.clock.alignX = "center";
-		level.clock.alignY = "middle";
-		level.clock.font = "bigfixed";
-		level.clock setTimer(level.graceperiod);
-
-		if (getcvar("scr_strat_time") == "1")
-		{
-			level.clock setTimer(level.graceperiod);
-			thread Hold_All_Players();
-		}
-		else
-		{
-			level.clock setTimer(level.roundlength * 60);
-			thread maps\mp\gametypes\_teams::sayMoveIn();
-		}
-
-		level.clock.color = (0, 1, 0);
-
-		wait level.graceperiod;
-
-		// START MATCH ROUND HERE!
-		level notify("round_started");
-		level.roundstarted = true; //THIS stops players from being able to choose new weapons
-
-		level.clock.color = (1, 1, 1);
-		if (getcvar("scr_strat_time") == "1")
-			level.clock setTimer(level.roundlength * 60);
-
-		if(isdefined(level.livemsg))
-			level.livemsg destroy();
-
-		// Players on a team but without a weapon show as dead since they can not get in this round
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
 		{
 			player = players[i];
-
-			if(player.sessionteam != "spectator" && !isDefined(player.pers["weapon"]))
-				player.statusicon = "gfx/hud/hud@status_dead.tga";
+		
+			player autoDemoStart();
 		}
+	}
 
-		if (getcvar("scr_strat_time") == "1")
-			wait(level.roundlength * 60);
-		else
+	if(game["matchstarted"])
+	{
+		level.clock.color = (0, 1, 0);
+
+		if((level.roundlength * 60) > level.graceperiod)
+		{
+/**/		if (getcvar("scr_strat_time") == "1") {
+/**/			level.clock setTimer(level.graceperiod);
+/**/			thread Hold_All_Players();
+/**/		}
+
+			wait level.graceperiod;
+/**/		thread maps\mp\gametypes\_teams::sayMoveIn();
+
+			level notify("round_started");
+			level.roundstarted = true;
+			level.clock.color = (1, 1, 1);
+/**/		if (getcvar("scr_strat_time") == "1") {
+/**/			level.clock setTimer(level.roundlength * 60);
+/**/		}
+
+			// Players on a team but without a weapon show as dead since they can not get in this round
+			players = getentarray("player", "classname");
+			for(i = 0; i < players.size; i++)
+			{
+				player = players[i];
+
+				if(player.sessionteam != "spectator" && !isDefined(player.pers["weapon"]))
+					player.statusicon = "gfx/hud/hud@status_dead.tga";
+			}
+		
 			wait((level.roundlength * 60) - level.graceperiod);
+		}
+		else
+			wait(level.roundlength * 60);
 	}
 	else	
 	{
-		level.clock = newHudElem();
-		level.clock.x = 320;
-		level.clock.y = 460;
-		level.clock.alignX = "center";
-		level.clock.alignY = "middle";
-		level.clock.font = "bigfixed";
-		level.clock setTimer(1);
-
-		return;
+		level.clock.color = (1, 1, 1);
+/**/	// Pre-match
+/**/	// wait(level.roundlength * 60);
+/**/	level.clock destroy();
+/**/	return;
 	}
-
+	
 	if(level.roundended)
 		return;
 

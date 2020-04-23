@@ -178,8 +178,6 @@ precache()
     precacheString(game["start2ndhalf"]);
     game["start1sthalf"] = &"Starting the First Half!";
     precacheString(game["start1sthalf"]);
-    game["livemsg"] = &"LIVE!";
-    precacheString(game["livemsg"]);
 
     //Half Starting Display
     game["first"] = &"First";
