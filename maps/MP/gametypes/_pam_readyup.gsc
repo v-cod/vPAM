@@ -13,7 +13,7 @@ PAM_Ready_UP()
 	level.waiting setText(game["waiting"]);
 
 	players = getEntArray("player", "classname");
-	for(i = 0; i < players.size; i++) {
+	for (i = 0; i < players.size; i++) {
 		players[i] thread readyup();
 	}
 
@@ -148,9 +148,10 @@ readyup()
 
 is_level_ready()
 {
-	if (level.exist["allies"] == 0 || level.exist["axis"] == 0) {
-		return false;
-	}
+	// TODO: Figure whether players (1v1) should be alive for start.
+	// if (level.exist["allies"] == 0 || level.exist["axis"] == 0) {
+	// 	return false;
+	// }
 
 	players = getentarray("player", "classname");
 	for(i = 0; i < players.size; i++) {

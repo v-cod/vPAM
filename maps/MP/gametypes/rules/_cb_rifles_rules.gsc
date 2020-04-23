@@ -122,10 +122,6 @@ LeagueRules()
 	setcvar("g_disableClientConsole", "0");		// disable client console
 
 
-	// PAM Sounds	
-	setcvar("sv_pamsounds", "0");		// pamsounds
-
-
 	/* NOT Likely to ever change */
 	setcvar("scr_friendlyfire", "0");	// Friendly fire
 	setcvar("scr_drawfriend", "1");		// Draws a team icon over teammates

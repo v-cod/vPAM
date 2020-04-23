@@ -4,7 +4,7 @@
 
 ## Should
 
-- 
+- Get rid of picked-up weapons during warmup.
 
 ## Could
 
@@ -29,3 +29,4 @@
 - Rebrand 'warmup' as e.g. round restart delay.
 - auto_change name during readying.
 - Auto demo/screenshot mechanism (probably not optimal).
+- Test SD timelimit.

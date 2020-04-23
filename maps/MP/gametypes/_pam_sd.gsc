@@ -1070,9 +1070,12 @@ startRound()
 	else	
 	{
 		level.clock.color = (1, 1, 1);
-/**/	// Pre-match
 /**/	// wait(level.roundlength * 60);
+
+/**/	// Pre-match
 /**/	level.clock destroy();
+/**/	_hud_labels_create();
+/**/
 /**/	return;
 	}
 	
@@ -1092,91 +1095,38 @@ startRound()
 
 checkMatchStart()
 {
-/**/if (game["matchstarted"])
-/**/	return;
-/**/
-/**/if (game["checkingmatchstart"])
-/**/	return;
-/**/
-/**/game["checkingmatchstart"] = true;
-/**/
-/**///Check to see if we even have 2 teams to start
-/**/level.exist["teams"] = 0;
-/**/
-/**/while(!level.exist["teams"])
-/**/{
-/**/	level.exist["allies"] = 0;
-/**/	level.exist["axis"] = 0;
-/**/
-/**/	players = getentarray("player", "classname");
-/**/	for(i = 0; i < players.size; i++)
-/**/	{
-/**/		player = players[i];
-/**/		
-/**/		if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
-/**/			level.exist[player.pers["team"]]++;
-/**/	}
-/**/
-/**/	if (level.exist["allies"] && level.exist["axis"])
-/**/		level.exist["teams"] = 1;
-/**/
-/**/	wait 1;
-/**/}
-/**/
-/**/if(!level.roundended)
-/**/{
-/**/
-/**/	Create_HUD_Header();
-/**/
-/**/	if( game["mode"] == "match")
-/**/	{
-/**/
-/**/		Do_Ready_Up();
-/**/
-/**/		// get rid of warmup weapons
-/**/		players = getentarray("player", "classname");
-/**/		for(i = 0; i < players.size; i++)
-/**/		{ 
-/**/			//drop other weapons
-/**/			player = players[i];
-/**/
-/**/			// TODO: two-weapon system.
-/**/			player.pers["weapon1"] = undefined;
-/**/			player.pers["weapon2"] = undefined;
-/**/			player.pers["weapon"] = player.pers["selectedweapon"];
-/**/			player.pers["spawnweapon"] = player.pers["selectedweapon"];
-/**/
-/**/			player unlink();
-/**/		}
-/**/
-/**/		game["matchstarted"] = true;
-/**/
-/**/		resetScores();
-/**/
-/**/		map_restart(true);
-/**/
+	oldvalue["teams"] = level.exist["teams"];
+	level.exist["teams"] = false;
+
+	// If teams currently exist
+	if(level.exist["allies"] && level.exist["axis"])
+		level.exist["teams"] = true;
+
+	// If teams previously did not exist and now they do
+	if(!oldvalue["teams"] && level.exist["teams"])
+	{
+		if(!game["matchstarted"])
+		{
+/**/		thread _start_ready();
 /**/		return;
-/**/	}
-/**/
-/**/	else
-/**/		wait 3;
-/**/
-/**/	Destroy_HUD_Header();
-/**/
-/**/	level notify("kill_endround");
-/**/	level.roundended = false;
-/**/	level thread endRound("reset");
-/**/}
-/**/else
-/**/{
-/**/	announcement(&"SD_MATCHRESUMING");
-/**/
-/**/	level notify("kill_endround");
-/**/	level.roundended = false;
-/**/	level thread endRound("draw");
-/**/}
-/**/
-/**/return;
+
+			announcement(&"SD_MATCHSTARTING");
+
+			level notify("kill_endround");
+			level.roundended = false;
+			level thread endRound("reset");
+		}
+		else
+		{
+			announcement(&"SD_MATCHRESUMING");
+
+			level notify("kill_endround");
+			level.roundended = false;
+			level thread endRound("draw");
+		}
+
+		return;
+	}
 }
 
 resetScores()
@@ -1193,10 +1143,11 @@ resetScores()
 	setTeamScore("allies", game["alliedscore"]);
 	game["axisscore"] = 0;
 	setTeamScore("axis", game["axisscore"]);
-	game["round1alliesscore"] = 0;
-	game["round1axisscore"] = 0; 
-	game["round2alliesscore"] = 0;
-	game["round2axisscore"] = 0;
+
+/**/game["round1alliesscore"] = 0;
+/**/game["round1axisscore"] = 0; 
+/**/game["round2alliesscore"] = 0;
+/**/game["round2axisscore"] = 0;
 }
 
 endRound(roundwinner)
@@ -1217,7 +1168,7 @@ endRound(roundwinner)
 		
 		if (getCvar("g_autodemo") == "1")
 			player autoDemoStop();
-
+		
 		if(isDefined(player.planticon))
 			player.planticon destroy();
 
@@ -1266,13 +1217,11 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-/**/	if(game["halftimeflag"] == "1")
-/**/	{
+/**/	if (game["halftimeflag"] == "1") {
 /**/		game["round2alliesscore"]++;
-/**/		halftimeflag = game["halftimeflag"];
-/**/	}
-/**/	else if(game["matchstarted"])
+/**/	} else if(game["matchstarted"]) {
 /**/		game["round1alliesscore"]++;
+/**/	}
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1291,13 +1240,11 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-/**/	if(game["halftimeflag"] == "1")
-/**/	{
+/**/	if (game["halftimeflag"] == "1") {
 /**/		game["round2axisscore"]++;
-/**/		halftimeflag = game["halftimeflag"];
-/**/	}
-/**/	else if(game["matchstarted"])
+/**/	} else if(game["matchstarted"]) {
 /**/		game["round1axisscore"]++;
+/**/	}
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1315,10 +1262,11 @@ endRound(roundwinner)
 	if(game["matchstarted"])
 	{
 		checkScoreLimit();
-/**/	if (level.countdraws == 1)
+/**/	if (level.countdraws == 1) {
 /**/		game["roundsplayed"]++;
-/**/	else if(roundwinner != "draw")
+/**/	} else if(roundwinner != "draw"){
 /**/		game["roundsplayed"]++;
+/**/	}
 		checkRoundLimit();
 	}
 
@@ -1331,7 +1279,7 @@ endRound(roundwinner)
 
 	game["timepassed"] = game["timepassed"] + ((getTime() - level.starttime) / 1000) / 60.0;
 
-/**///checkTimeLimit();
+	checkTimeLimit();
 
 /**/if (level.hithalftime)
 /**/	return;
@@ -1357,14 +1305,14 @@ endRound(roundwinner)
 				// If a new weapon has since been picked up (this fails when a player picks up a weapon the same as his original)
 				if(player.oldweapon != primary && player.oldweapon != primaryb && primary != "none")
 				{
-/**/				player.pers["weapon1"] = kar98k_mp;
-/**/				player.pers["weapon2"] = mosin_nagant_mp;
+					player.pers["weapon1"] = primary;
+					player.pers["weapon2"] = primaryb;
 					player.pers["spawnweapon"] = player getCurrentWeapon();
 				} // If the player's menu chosen weapon is the same as what is in the primaryb slot, swap the slots
 				else if(player.pers["weapon"] == primaryb)
 				{
-/**/				player.pers["weapon1"] = kar98k_mp;
-/**/				player.pers["weapon2"] = mosin_nagant_mp;
+					player.pers["weapon1"] = primaryb;
+					player.pers["weapon2"] = primary;
 					player.pers["spawnweapon"] = player.pers["weapon1"];
 				} // Give them the weapon they chose from the menu
 				else
@@ -1386,7 +1334,7 @@ endRound(roundwinner)
 				spawnweapon = player getCurrentWeapon();
 				if ( (spawnweapon == "none") && (isdefined (primary)) ) 
 					spawnweapon = primary;
-
+				
 				if(!maps\mp\gametypes\_teams::isPistolOrGrenade(spawnweapon))
 					player.pers["spawnweapon"] = spawnweapon;
 				else
@@ -1403,10 +1351,9 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if((getcvar("g_roundwarmuptime") != "0") && (game["roundsplayed"] != "0" ) && level.hithalftime == 0)
-/**/{
+/**/if (getcvar("g_roundwarmuptime") != "0" && game["roundsplayed"] != "0"  && level.hithalftime == 0) {
 /**/	//display scores
-/**/	Create_HUD_Header();
+/**/	_hud_labels_create();
 /**/
 /**/	Create_HUD_Scoreboard();
 /**/
@@ -1415,7 +1362,7 @@ endRound(roundwinner)
 /**/
 /**/	/* Remove match countdown text */
 /**/	
-/**/	Destroy_HUD_Header();
+/**/	_hud_labels_destroy();
 /**/
 /**/	Destroy_HUD_Scoreboard();
 /**/
@@ -1487,8 +1434,7 @@ checkTimeLimit()
 checkScoreLimit()
 {
 	/* Is it a score-based Halftime? */
-	if(game["halftimeflag"] == "0" && level.halfscore != 0)
-	{
+	if (game["halftimeflag"] == "0" && level.halfscore != 0) {
 		if(game["alliedscore"] >= level.halfscore || game["axisscore"] >= level.halfscore)
 		{ 
 			Do_Half_Time();
@@ -1511,13 +1457,13 @@ checkScoreLimit()
 
 			Create_HUD_TeamWin();
 
-			Create_HUD_Header();
+			_hud_labels_create();
 				
 			Create_HUD_Scoreboard();
 
 			wait 10;
 
-			Destroy_HUD_Header();
+			_hud_labels_destroy();
 
 			Destroy_HUD_Scoreboard();
 
@@ -1549,13 +1495,13 @@ checkScoreLimit()
 
 		Create_HUD_TeamWin();
 
-		Create_HUD_Header();
+		_hud_labels_create();
 			
 		Create_HUD_Scoreboard();
 
 		wait 10;
 
-		Destroy_HUD_Header();
+		_hud_labels_destroy();
 
 		Destroy_HUD_Scoreboard();
 
@@ -1599,13 +1545,13 @@ checkRoundLimit()
 
 			Create_HUD_TeamWin();
 
-			Create_HUD_Header();
+			_hud_labels_create();
 				
 			Create_HUD_Scoreboard();
 
 			wait 10;
 
-			Destroy_HUD_Header();
+			_hud_labels_destroy();
 
 			Destroy_HUD_Scoreboard();
 
@@ -1898,59 +1844,8 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(getcvar("sv_playersleft") == "1")
-/**/{	
-/**/	// destroy old huds so they can be refreshed
-/**/	if(isdefined(level.alliesleft))
-/**/		level.alliesleft destroy();
-/**/	if(isdefined(level.axisleft))
-/**/		level.axisleft destroy();
-/**/	if(isdefined(level.alliesleftnum))
-/**/		level.alliesleftnum destroy();
-/**/	if(isdefined(level.axisleftnum))
-/**/		level.axisleftnum destroy();
-/**/		
-/**/
-/**/	// display allies left axis left
-/**/	level.alliesleft = newHudElem();
-/**/	level.alliesleft.x = 380;
-/**/	level.alliesleft.y = 460;
-/**/	level.alliesleft.alignX = "left";
-/**/	level.alliesleft.alignY = "bottom";
-/**/	level.alliesleft.fontScale = .75;
-/**/	level.alliesleft.color = (1, 1, 1);
-/**/	level.alliesleft.alpha = 1;
-/**/	level.alliesleft setText(game["dspalliesleft"]);
-/**/	
-/**/	level.alliesleftnum = newHudElem();
-/**/	level.alliesleftnum.x = 450;
-/**/	level.alliesleftnum.y = 460;
-/**/	level.alliesleftnum.alignX = "left";
-/**/	level.alliesleftnum.alignY = "bottom";
-/**/	level.alliesleftnum.fontScale = .75;
-/**/	level.alliesleftnum.color = (1, 1, 1);
-/**/	level.alliesleftnum.alpha = 1;
-/**/	level.alliesleftnum setValue(level.exist["allies"]);
-/**/		
-/**/	level.axisleft = newHudElem();
-/**/	level.axisleft.x = 380;
-/**/	level.axisleft.y = 470;
-/**/	level.axisleft.alignX = "left";
-/**/	level.axisleft.alignY = "bottom";
-/**/	level.axisleft.fontScale = .75;
-/**/	level.axisleft.color = (1, 1, 1);
-/**/	level.axisleft.alpha = 1;
-/**/	level.axisleft setText(game["dspaxisleft"]);
-/**/	
-/**/	level.axisleftnum = newHudElem();
-/**/	level.axisleftnum.x = 450;
-/**/	level.axisleftnum.y = 470;
-/**/	level.axisleftnum.alignX = "left";
-/**/	level.axisleftnum.alignY = "bottom";
-/**/	level.axisleftnum.fontScale = .75;
-/**/	level.axisleftnum.color = (1, 1, 1);
-/**/	level.axisleftnum.alpha = 1;
-/**/	level.axisleftnum setValue(level.exist["axis"]);
+/**/if(getcvar("sv_playersleft") == "1") {	
+_/**/	_hud_alive_update();
 /**/}
 
 	if(level.exist["allies"])
@@ -2180,7 +2075,6 @@ bombzone_think(bombzone_other)
 					
 /**/				// hide announcement.
 /**/				// announcement(&"SD_EXPLOSIVESPLANTED");
-/**/				thread HUD_Bomb_Planted();
 										
 					players = getentarray("player", "classname");
 					for(i = 0; i < players.size; i++)
@@ -2385,236 +2279,57 @@ bomb_think()
 }
 
 
-Create_HUD_Header()
+_hud_labels_create()
 {
-	level.pamlogo = newHudElem();
-	level.pamlogo.x = 575;
-	level.pamlogo.y = 10;
-	level.pamlogo.alignX = "center";
-	level.pamlogo.alignY = "middle";
-	level.pamlogo.fontScale = 1;
-	level.pamlogo.color = (1, 1, 1);
-	level.pamlogo setText(game["pamstring"]);
+	if (isDefined(level.p_hud_labels_right)) {
+		return;
+	}
 
-	level.pammode = newHudElem();
-	level.pammode.x = 10;
-	level.pammode.y = 10;
-	level.pammode.alignX = "left";
-	level.pammode.alignY = "middle";
-	level.pammode.fontScale = 1;
-	level.pammode.color = (1, 1, 1);
-	level.pammode setText(game["leaguestring"]);
+	level.p_hud_labels_right = newHudElem();
+	level.p_hud_labels_right.x = 575;
+	level.p_hud_labels_right.y = 10;
+	level.p_hud_labels_right.alignX = "center";
+	level.p_hud_labels_right.alignY = "middle";
+	level.p_hud_labels_right.fontScale = 1;
+	level.p_hud_labels_right.color = (1, 1, 1);
+	level.p_hud_labels_right setText(game["pamstring"]);
 
-	if(getcvarint("g_ot_active") > 0)
-	{
-		level.overtimemode = newHudElem();
-		level.overtimemode.x = 10;
-		level.overtimemode.y = 30;
-		level.overtimemode.alignX = "left";
-		level.overtimemode.alignY = "middle";
-		level.overtimemode.fontScale = 1;
-		level.overtimemode.color = (1, 1, 0);
-		level.overtimemode setText(game["overtimemode"]);
+	level.p_hud_labels_left = newHudElem();
+	level.p_hud_labels_left.x = 10;
+	level.p_hud_labels_left.y = 10;
+	level.p_hud_labels_left.alignX = "left";
+	level.p_hud_labels_left.alignY = "middle";
+	level.p_hud_labels_left.fontScale = 1;
+	level.p_hud_labels_left.color = (1, 1, 1);
+	level.p_hud_labels_left setText(game["leaguestring"]);
+
+	if (getCvarInt("g_ot_active") > 0) {
+		level.p_hud_labels_overtime_mode = newHudElem();
+		level.p_hud_labels_overtime_mode.x = 10;
+		level.p_hud_labels_overtime_mode.y = 30;
+		level.p_hud_labels_overtime_mode.alignX = "left";
+		level.p_hud_labels_overtime_mode.alignY = "middle";
+		level.p_hud_labels_overtime_mode.fontScale = 1;
+		level.p_hud_labels_overtime_mode.color = (1, 1, 0);
+		level.p_hud_labels_overtime_mode setText(game["overtimemode"]);
 	}
 }
 
-Destroy_HUD_Header()
+_hud_labels_destroy()
 {
-	if(isdefined(level.pammode))
-		level.pammode destroy();
-	if(isdefined(level.site))
-		level.site destroy();
-	if(isdefined(level.pammodeestring))
-		level.pammodeestring destroy();
-	if(isdefined(level.pamlogo))
-		level.pamlogo destroy();
-	if(isdefined(level.pammodee))
-		level.pammodee destroy();
-	if(isdefined(level.overtimemode))
-		level.overtimemode destroy();
+	if (isDefined(level.p_hud_labels_left)) {
+		level.p_hud_labels_left destroy();
+	}
+	if (isDefined(level.p_hud_labels_right)) {
+		level.p_hud_labels_right destroy();
+	}
+	if (isDefined(level.p_hud_labels_overtime_mode)) {
+		level.p_hud_labels_overtime_mode destroy();
+	}
 }
 
 Create_HUD_Scoreboard()
-{
-	/*
-	if (getcvar("sv_scoreboard") == "big")
-	{
-
-		// First Half Score Display
-		level.firhalfscore = newHudElem();
-		level.firhalfscore.x = 320;
-		level.firhalfscore.y = 230;
-		level.firhalfscore.alignX = "center";
-		level.firhalfscore.alignY = "middle";
-		level.firhalfscore.fontScale = 1;
-		level.firhalfscore.color = (1, 1, 1);
-		level.firhalfscore setText(game["1sthalfscore"]);
-
-		level.firhalfaxisscore = newHudElem();
-		level.firhalfaxisscore.x = 200;
-		level.firhalfaxisscore.y = 230;
-		level.firhalfaxisscore.alignX = "center";
-		level.firhalfaxisscore.alignY = "middle";
-		level.firhalfaxisscore.fontScale = 1;
-		level.firhalfaxisscore.color = (1, 1, 1);
-		level.firhalfaxisscore setText(game["dspaxisscore"]);
-			
-		level.firhalfaxisscorenum = newHudElem();
-		level.firhalfaxisscorenum.x = 200;
-		level.firhalfaxisscorenum.y = 245;
-		level.firhalfaxisscorenum.alignX = "center";
-		level.firhalfaxisscorenum.alignY = "middle";
-		level.firhalfaxisscorenum.fontScale = 1;
-		level.firhalfaxisscorenum.color = (1, 1, 1);
-		level.firhalfaxisscorenum setValue(game["round1axisscore"]);
-
-		level.firhalfalliesscore = newHudElem();
-		level.firhalfalliesscore.x = 440;
-		level.firhalfalliesscore.y = 230;
-		level.firhalfalliesscore.alignX = "center";
-		level.firhalfalliesscore.alignY = "middle";
-		level.firhalfalliesscore.fontScale = 1;
-		level.firhalfalliesscore.color = (1, 1, 1);
-		level.firhalfalliesscore setText(game["dspalliesscore"]);
-			
-		level.firhalfalliesscorenum = newHudElem();
-		level.firhalfalliesscorenum.x = 440;
-		level.firhalfalliesscorenum.y = 245;
-		level.firhalfalliesscorenum.alignX = "center";
-		level.firhalfalliesscorenum.alignY = "middle";
-		level.firhalfalliesscorenum.fontScale = 1;
-		level.firhalfalliesscorenum.color = (1, 1, 1);
-		level.firhalfalliesscorenum setValue(game["round1alliesscore"]);
-
-		// Second Half Score Display
-		level.sechalfscore = newHudElem();
-		level.sechalfscore.x = 320;
-		level.sechalfscore.y = 275;
-		level.sechalfscore.alignX = "center";
-		level.sechalfscore.alignY = "middle";
-		level.sechalfscore.fontScale = 1.1;
-		level.sechalfscore.color = (1, 1, 1);
-		level.sechalfscore setText(game["2ndhalfscore"]);
-				
-		level.sechalfaxisscore = newHudElem();
-		level.sechalfaxisscore.x = 440;
-		level.sechalfaxisscore.y = 275;
-		level.sechalfaxisscore.alignX = "center";
-		level.sechalfaxisscore.alignY = "middle";
-		level.sechalfaxisscore.fontScale = 1;
-		level.sechalfaxisscore.color = (1, 1, 1);
-		level.sechalfaxisscore setText(game["dspaxisscore"]);
-			
-		level.sechalfaxisscorenum = newHudElem();
-		level.sechalfaxisscorenum.x = 440;
-		level.sechalfaxisscorenum.y = 290;
-		level.sechalfaxisscorenum.alignX = "center";
-		level.sechalfaxisscorenum.alignY = "middle";
-		level.sechalfaxisscorenum.fontScale = 1;
-		level.sechalfaxisscorenum.color = (1, 1, 1);
-		level.sechalfaxisscorenum setValue(game["round2axisscore"]);
-
-		level.sechalfalliesscore = newHudElem();
-		level.sechalfalliesscore.x = 200;
-		level.sechalfalliesscore.y = 275;
-		level.sechalfalliesscore.alignX = "center";
-		level.sechalfalliesscore.alignY = "middle";
-		level.sechalfalliesscore.fontScale = 1;
-		level.sechalfalliesscore.color = (1, 1, 1);
-		level.sechalfalliesscore setText(game["dspalliesscore"]);
-			
-		level.sechalfalliesscorenum = newHudElem();
-		level.sechalfalliesscorenum.x = 200;
-		level.sechalfalliesscorenum.y = 290;
-		level.sechalfalliesscorenum.alignX = "center";
-		level.sechalfalliesscorenum.alignY = "middle";
-		level.sechalfalliesscorenum.fontScale = 1;
-		level.sechalfalliesscorenum.color = (1, 1, 1);
-		level.sechalfalliesscorenum setValue(game["round2alliesscore"]);
-	}
-			
-	// Display TEAMS
-	level.team1 = newHudElem();
-	level.team1.x = 200;
-	//level.team1.y = 200;
-	if (getcvar("sv_scoreboard") == "big")
-		level.team1.y = 200;
-	else
-		level.team1.y = 120;
-	level.team1.alignX = "center";
-	level.team1.alignY = "middle";
-	level.team1.fontScale = 1;
-	level.team1.color = (1, 1, 1);
-	level.team1 setText(game["dspteam1"]);
-
-	level.team2 = newHudElem();
-	level.team2.x = 440;
-	//level.team2.y = 200;
-	if (getcvar("sv_scoreboard") == "big")
-		level.team2.y = 200;
-	else
-		level.team2.y = 120;
-	level.team2.alignX = "center";
-	level.team2.alignY = "middle";
-	level.team2.fontScale = 1;
-	level.team2.color = (1, 1, 1);
-	level.team2 setText(game["dspteam2"]);
-
-	// Match Score Display
-	level.matchscore = newHudElem();
-	level.matchscore.x = 320;
-	if (getcvar("sv_scoreboard") == "big")
-		level.matchscore.y = 320;
-	else
-		level.matchscore.y = 135;
-	level.matchscore.alignX = "center";
-	level.matchscore.alignY = "middle";
-	level.matchscore.fontScale = 1;
-	level.matchscore.color = (1, 1, 1);
-	level.matchscore setText(game["matchscore"]);
-
-	level.matchaxisscorenum = newHudElem();
-	if(game["halftimeflag"] == "1")
-	{
-		level.matchaxisscorenum.x = 440;
-		level.matchaxisscorenum.color = (1, 1, 1);
-	}
-	else
-	{
-		level.matchaxisscorenum.x = 200;
-		level.matchaxisscorenum.color = (1, 1, 1);
-	}
-	if (getcvar("sv_scoreboard") == "big")
-		level.matchaxisscorenum.y = 320;
-	else
-		level.matchaxisscorenum.y = 135;
-	level.matchaxisscorenum.alignX = "center";
-	level.matchaxisscorenum.alignY = "middle";
-	level.matchaxisscorenum.fontScale = 1;
-	level.matchaxisscorenum setValue(game["axisscore"]);
-
-	level.matchalliesscorenum = newHudElem();
-	if(game["halftimeflag"] == "1")
-	{
-		level.matchalliesscorenum.x = 200;
-		level.matchalliesscorenum.color = (1, 1, 1);
-	}
-	else
-	{
-		level.matchalliesscorenum.x = 440;
-		level.matchalliesscorenum.color = (1, 1, 1);
-	}
-	if (getcvar("sv_scoreboard") == "big")
-		level.matchalliesscorenum.y = 320;
-	else
-		level.matchalliesscorenum.y = 135;
-	level.matchalliesscorenum.alignX = "center";
-	level.matchalliesscorenum.alignY = "middle";
-	level.matchalliesscorenum.fontScale = 1;
-	level.matchalliesscorenum setValue(game["alliedscore"]);
-	*/
-
-	// Set up Scorboard Vertical Positioning
+{	// Set up Scorboard Vertical Positioning
 	// CHANGE ONLY SCOREBOARDY
 	scoreboardy = 197;
 	teamsy = scoreboardy + 15;
@@ -2827,14 +2542,13 @@ Create_HUD_NextRound(time)
 
 	// Give all players a count-down stopwatch
 	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
+	for (i = 0; i < players.size; i++) {
 		player = players[i];
 		
 		if ( isDefined(player.pers["team"]) && player.pers["team"] == "spectator")
 			continue;
 			
-		player thread stopwatch_start("match_start", time);
+		player thread stopwatch_start(time);
 	}
 	
 	wait (time);
@@ -2860,60 +2574,6 @@ Destroy_HUD_NextRound()
 
 Create_HUD_TeamWin()
 {
-	/* ORIGNINAL SCOREBOARD
- if (game["axisscore"] > game["alliedscore"])
- {
-  level.teamwin = newHudElem();
-  level.teamwin.x = 320;
-  level.teamwin.y = 300;
-  level.teamwin.alignX = "center";
-  level.teamwin.alignY = "middle";
-  level.teamwin.fontScale = 1;
-  if (game["halftimeflag"] == 1)
-  {
-   level.teamwin.color = (1, 1, 1);
-   level.teamwin setText(game["team2win"]);
-  }
-  else
-  {
-   level.teamwin.color = (1, 1, 1);
-   level.teamwin setText(game["team1win"]);
-  }
- }
- else if (game["axisscore"] < game["alliedscore"])
- {
-  level.teamwin = newHudElem();
-  level.teamwin.x = 320;
-  level.teamwin.y = 300;
-  level.teamwin.alignX = "center";
-  level.teamwin.alignY = "middle";
-  level.teamwin.fontScale = 1;
- 
-  if (game["halftimeflag"] == 1)
-  {
-   level.teamwin.color = (1, 1, 1);
-   level.teamwin setText(game["team1win"]);
-  }
-  else
-  {
-   level.teamwin.color = (1, 1, 1);
-   level.teamwin setText(game["team2win"]);
-  }
- }
- else
- {
-  level.teamwin = newHudElem();
-  level.teamwin.x = 320;
-  level.teamwin.y = 300;
-  level.teamwin.alignX = "center";
-  level.teamwin.alignY = "middle";
-  level.teamwin.fontScale = 1;
-  level.teamwin.color = (1, 1, 1);
-  level.teamwin setText(game["dsptie"]);
- }
- */
-
- // My Scoreboard
 	level.teamwin = newHudElem();
 	level.teamwin.x = 575;
 	level.teamwin.y = 155;
@@ -2956,42 +2616,24 @@ Prepare_map_Tie()
 	setcvar("g_ot_active", otcount);
 }
 
-deletePlacedEntity(entity)
+_start_ready()
 {
-	entities = getentarray(entity, "classname");
-	for(i = 0; i < entities.size; i++)
-	{
-		//println("DELETED: ", entities[i].classname);
-		entities[i] delete();
+	if (level.p_readying) {
+		return;
 	}
-}
-
-Do_Ready_Up()
-{
-	//Create_HUD_Header();
 
 	maps\mp\gametypes\_pam_readyup::PAM_Ready_UP();
 
-	if (game["halftimeflag"] == 0)
-		Create_HUD_PlayersReady("1");
-	else
-		Create_HUD_PlayersReady("2");
+	if (game["halftimeflag"] == 0) {
+		_hud_ready_create(1);
+	} else {
+		_hud_ready_create(2);
+	}
 
 	wait 5;
 
-	Destroy_HUD_Header();
-
-	if(isdefined(level.allready))
-		level.allready destroy();
-	if(isdefined(level.halfstart))
-		level.halfstart destroy();
-	//end readyup
-
-	//Starting Round 1 Clock
-	time = getCvarInt("g_roundwarmuptime");
-	
-	if ( time < 1 )
-		time = 1;
+	_hud_labels_destroy();
+	_hud_ready_destroy();
 
 	// give all of the players clocks to count down until the half starts
 	if (game["halftimeflag"] == 0)
@@ -2999,23 +2641,30 @@ Do_Ready_Up()
 	else
 		Create_HUD_RoundStart(2);
 
+	//Starting Round 1 Clock
+	time = getCvarInt("g_roundwarmuptime");
+	if (time < 1) {
+		time = 1;
+	}
+
 	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-		
-		if ( isDefined(player.pers["team"]) && player.pers["team"] == "spectator")
+	for (i = 0; i < players.size; i++) {
+		if ( isDefined(players[i].pers["team"]) && players[i].pers["team"] == "spectator")
 			continue;
-			
-		player thread stopwatch_start("match_start", time);
+
+		players[i] thread stopwatch_start(time);
 	}
 	
-	wait (time);
+	wait time;
 
 	Destroy_HUD_RoundStart();
+
+	level notify("kill_endround");
+	level.roundended = false;
+	level thread endRound("reset");
 }
 
-stopwatch_start(reason, time)
+stopwatch_start(time)
 {
 	if(isDefined(self.stopwatch))
 		self.stopwatch destroy();
@@ -3030,39 +2679,39 @@ stopwatch_start(reason, time)
 		self.stopwatch destroy();
 }
 
-Create_HUD_PlayersReady(startinghalf)
+_hud_ready_create(next_half)
 {
+	level.p_hud_ready = newHudElem();
+	level.p_hud_ready.x = 320;
+	level.p_hud_ready.y = 390;
+	level.p_hud_ready.alignX = "center";
+	level.p_hud_ready.alignY = "middle";
+	level.p_hud_ready.fontScale = 1.5;
+	level.p_hud_ready.color = (0, 1, 0);
+	level.p_hud_ready setText(game["allready"]);
+		
+	level.p_hud_ready_next_half = newHudElem();
+	level.p_hud_ready_next_half.x = 320;
+	level.p_hud_ready_next_half.y = 370;
+	level.p_hud_ready_next_half.alignX = "center";
+	level.p_hud_ready_next_half.alignY = "middle";
+	level.p_hud_ready_next_half.fontScale = 1.5;
+	level.p_hud_ready_next_half.color = (0, 1, 0);
 
-	level.allready = newHudElem();
-	level.allready.x = 320;
-	level.allready.y = 390;
-	level.allready.alignX = "center";
-	level.allready.alignY = "middle";
-	level.allready.fontScale = 1.5;
-	level.allready.color = (0, 1, 0);
-	level.allready setText(game["allready"]);
-
-	if (startinghalf == "1")
-	{
-		level.halfstart = newHudElem();
-		level.halfstart.x = 320;
-		level.halfstart.y = 370;
-		level.halfstart.alignX = "center";
-		level.halfstart.alignY = "middle";
-		level.halfstart.fontScale = 1.5;
-		level.halfstart.color = (0, 1, 0);
-		level.halfstart setText(game["start1sthalf"]);
+	if (next_half == 1) {
+		level.p_hud_ready_next_half setText(game["start1sthalf"]);
+	} else {
+		level.p_hud_ready_next_half setText(game["start2ndhalf"]);
 	}
-	else
-	{
-		level.halfstart = newHudElem();
-		level.halfstart.x = 320;
-		level.halfstart.y = 370;
-		level.halfstart.alignX = "center";
-		level.halfstart.alignY = "middle";
-		level.halfstart.fontScale = 1.5;
-		level.halfstart.color = (0, 1, 0);
-		level.halfstart setText(game["start2ndhalf"]);
+}
+
+_hud_ready_destroy()
+{
+	if (isDefined(level.p_hud_ready)) {
+		level.p_hud_ready destroy();
+	}
+	if (isDefined(level.p_hud_ready_next_half)) {
+		level.p_hud_ready_next_half destroy();
 	}
 }
 
@@ -3113,19 +2762,8 @@ Do_Half_Time()
 {
 	level.hithalftime = 1;
 
-	// Play Halftime Sounds
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{ 
-		player = players[i];
-		if(!isDefined(player.pers["pamsounds"]))
-			player.pers["pamsounds"] = 1;
-		if (player.pers["pamsounds"] == "1")
-			player playsound("halftime");
-	}
-
 	//display scores
-	Create_HUD_Header();
+	_hud_labels_create();
 
 	level.halftime = newHudElem();
 	level.halftime.x = 575;
@@ -3214,31 +2852,24 @@ Do_Half_Time()
 
 	}  // end for loop
 
-	/* READY UP */
-	if( game["mode"] == "match")
-	{
-		Do_Ready_Up();
+	_start_ready();
 
-		// get rid of warmup weapons
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{ 
-			player = players[i];
+	// Get rid of warmup weapons.
+	players = getentarray("player", "classname");
+	for (i = 0; i < players.size; i++) { 
+		player = players[i];
 
-			if (!isdefined(player.pers["selectedweapon"]) )
-				player.pers["selectedweapon"] = undefined;
-			player.pers["weapon1"] = undefined;
-			player.pers["weapon2"] = undefined;
-			player.pers["weapon"] = player.pers["selectedweapon"];
-			player.pers["spawnweapon"] = player.pers["selectedweapon"];
+		if (!isDefined(player.pers["selectedweapon"]) )
+			player.pers["selectedweapon"] = undefined;
+		player.pers["weapon1"] = undefined;
+		player.pers["weapon2"] = undefined;
+		player.pers["weapon"] = player.pers["selectedweapon"];
+		player.pers["spawnweapon"] = player.pers["selectedweapon"];
 
-			player unlink();
-		} //end for
+		player unlink();
 	}
-	else
-		wait 3;
 
-	Destroy_HUD_Header();
+	_hud_labels_destroy();
 
 	map_restart(true);
 
@@ -3293,18 +2924,6 @@ HalftimeSpawn()
 
 	if (isdefined(self.pers["weapon"]) )
 		spawnPlayer();
-}
-
-HUD_Bomb_Planted()
-{
-	level.hudplanted = newHudElem();
-	level.hudplanted.x = 320;
-	level.hudplanted.y = 460; //390
-	level.hudplanted.alignX = "center";
-	level.hudplanted.alignY = "middle";
-	level.hudplanted.fontScale = 1;
-	level.hudplanted.color = (1, 1, 0);
-	level.hudplanted setText(game["planted"]);
 }
 
 Destroy_HUD_Planted()
@@ -3525,4 +3144,53 @@ menu_weapon(menu, response) {
 	self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
 	if (isDefined(self.autobalance_notify))
 		self.autobalance_notify destroy();
+}
+
+_hud_alive_create()
+{
+	if (isDefined(level.p_hud_alive_allies)) {
+		return;
+	}
+
+	level.p_hud_alive_allies = newHudElem();
+	level.p_hud_alive_allies.x = 384;
+	level.p_hud_alive_allies.y = 454;
+	level.p_hud_alive_allies.fontScale = .75;
+	level.p_hud_alive_allies setText(game["dspalliesleft"]);
+
+	level.p_hud_alive_allies_val = newHudElem();
+	level.p_hud_alive_allies_val.x = 456;
+	level.p_hud_alive_allies_val.y = 454;
+	level.p_hud_alive_allies_val.alignX = "right";
+	level.p_hud_alive_allies_val.fontScale = .75;
+
+	level.p_hud_alive_axis = newHudElem();
+	level.p_hud_alive_axis.x = 384;
+	level.p_hud_alive_axis.y = 464;
+	level.p_hud_alive_axis.fontScale = .75;
+	level.p_hud_alive_axis setText(game["dspaxisleft"]);
+		
+	level.p_hud_alive_axis_val = newHudElem();
+	level.p_hud_alive_axis_val.x = 456;
+	level.p_hud_alive_axis_val.y = 464;
+	level.p_hud_alive_axis_val.alignX = "right";
+	level.p_hud_alive_axis_val.fontScale = .75;
+}
+
+_hud_alive_destroy()
+{
+	if (isDefined(level.p_hud_alive_allies)) {
+		level.p_hud_alive_allies destroy();
+	}
+	if (isDefined(level.p_hud_alive_axis)) {
+		level.p_hud_alive_axis destroy();
+	}
+}
+
+_hud_alive_update()
+{
+	_hud_alive_create();
+
+	level.p_hud_alive_allies_val setValue(level.exist["allies"]);
+	level.p_hud_alive_axis_val setValue(level.exist["axis"]);
 }

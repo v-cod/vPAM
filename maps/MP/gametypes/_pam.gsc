@@ -148,10 +148,6 @@ precache()
     game["starting"] = &"Starting";
     precacheString(game["starting"]);
 
-    //Bomb Plant Announcement
-    game["planted"] = &"";
-    precacheString(game["planted"]);
-
     // Time Expired Announcement
     game["timeexp"] = &"Time Expired";
     precacheString(game["timeexp"]);

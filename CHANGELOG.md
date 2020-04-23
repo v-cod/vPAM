@@ -31,3 +31,4 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Removed ready up disconnected logic.
 - Removed scr_force_bolt_rifles (in favour of more advanced weapon picking).
 - Removed nade count settings.
+- Removed unused PAM sounds.
