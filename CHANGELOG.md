@@ -9,11 +9,15 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
     - Changelog, todo and Makefile.
 - Allow spawning during grace (strat).
 - Ready up immediately from map start.
+- No bomb plant pre-match.
+- Rifle damage upped through script instead of weapon file.
 
 ### Added
 - wrs rules.
 - Anti fast shoot monitoring.
 - scr_allow_nades to control nades equipment.
+- Death icon (like stock) on death pre-match.
+- Secondary weapon choice from other team.
 
 ### Removed
 - Removed 'ClanBase warning' (pre-match message).
