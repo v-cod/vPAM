@@ -607,6 +607,11 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/	eAttacker thread showhit();
 /**/}
 
+/**/// TODO: Configurable damage.
+/**/if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE") {
+/**/	iDamage = 100;
+/**/}
+
 	// check for completely getting out of the damage
 	if(!(iDFlags & level.iDFLAGS_NO_PROTECTION))
 	{

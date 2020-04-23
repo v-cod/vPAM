@@ -4,7 +4,6 @@
 
 ## Should
 
-- Remove `weapons` files in favour of raising damage via script.
 - Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
 - No bomb planting during warm-up.
 
