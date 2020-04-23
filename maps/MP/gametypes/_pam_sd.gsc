@@ -3433,6 +3433,7 @@ menu_weapon(menu, response) {
 	// If this is the first weapon picked, or if it is and second weapon is picked too
 	if (menu == menu_1) {
 		self.pers["weapon"] = weapon;
+		self.pers["selectedweapon"] = weapon;
 
 		self openMenu(menu_2);
 		return;
