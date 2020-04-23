@@ -4,7 +4,6 @@
 
 ## Should
 
-- Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
 - No bomb planting during warm-up.
 
 ## Could
@@ -17,6 +16,7 @@
 
 ## Would
 
+- Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
 - Warmup with deathmatch spawns.
 - Detect disallowed jumps.
 - Bash for side/map.

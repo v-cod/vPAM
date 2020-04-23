@@ -113,8 +113,6 @@ readyup()
 			wait .05;
 		}
 
-		iPrintLn(self.p_ready);
-
 		// Toggle ready boolean.
 		self.p_ready = !self.p_ready;
 

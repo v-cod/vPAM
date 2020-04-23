@@ -1,4 +1,4 @@
-// Lines changed compared to original routines prepended with /**/
+// Lines changed compared to original routines prepended with '/**/'
 
 Callback_StartGameType()
 {
@@ -158,7 +158,7 @@ Callback_PlayerConnect()
 		{
 			self.sessionteam = "spectator";
 
-			maps\mp\gametypes\sd::spawnSpectator();
+			spawnSpectator();
 
 			if(self.pers["team"] == "allies")
 				self openMenu(game["menu_weapon_allies"]);
@@ -177,7 +177,7 @@ Callback_PlayerConnect()
 		self.pers["team"] = "spectator";
 		self.sessionteam = "spectator";
 
-		maps\mp\gametypes\sd::spawnSpectator();
+		spawnSpectator();
 	}
 
 	for(;;)
@@ -202,6 +202,12 @@ Callback_PlayerConnect()
 			case "autoassign":
 				if (level.lockteams)
 					break;
+/**/			// TODO: Add variable to prevent switch.
+/**/			// Prevent players from switching during match.
+/**/			if (game["matchstarted"] && true && self.sessionteam != "spectator") {
+/**/				// self iPrintLn("Not allowed to switch during match.");
+/**/				break;
+/**/			}
 				if(response == "autoassign")
 				{
 					numonteam["allies"] = 0;
@@ -347,7 +353,7 @@ Callback_PlayerConnect()
 					self.sessionteam = "spectator";
 					self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 					self setClientCvar("ui_weapontab", "0");
-					maps\mp\gametypes\sd::spawnSpectator();
+					spawnSpectator();
 				}
 				break;
 
@@ -729,20 +735,11 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	// send out an obituary message to all clients about the kill
 	obituary(self, attacker, sWeapon, sMeansOfDeath);
 
-/**/if(level.p_readying)
-/**/{
-/**/	self.sessionstate = "dead";
-/**/	self.headicon = "";
-/**/
-/**/	updateTeamStatus();
-/**/	wait 6;
-/**/
-/**/	self thread spawnPlayer();
-/**/	return;
-/**/}
-
 	self.sessionstate = "dead";
-	self.statusicon = "gfx/hud/hud@status_dead.tga";
+/**/if (!level.p_readying || !self.p_ready) {
+/**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
+/**/}
+/**/// self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
 	if (!isdefined (self.autobalance))
 	{
@@ -830,13 +827,18 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
 
+/**/if (level.p_readying) {
+/**/	self thread spawnPlayer();
+/**/	return;
+/**/}
+
 	if(doKillcam && !level.roundended)
 		self thread maps\mp\gametypes\sd::killcam(attackerNum, delay);
 	else
 	{
 		currentorigin = self.origin;
 		currentangles = self.angles;
-		self thread maps\mp\gametypes\sd::spawnSpectator(currentorigin + (0, 0, 60), currentangles);
+		self thread spawnSpectator(currentorigin + (0, 0, 60), currentangles);
 	}
 }
 
@@ -874,7 +876,7 @@ spawnPlayer()
 		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
 	
 	self.spawned = true;
-/**/if(!level.p_readying || !self.pers["killer"])
+/**/if(!level.p_readying || !self.p_ready)
 /**/	self.statusicon = "";
 /**/// self.statusicon = "";
 	self.maxhealth = 100;
@@ -952,6 +954,46 @@ spawnPlayer()
 			self.headiconteam = "axis";
 		}
 	}
+}
+
+spawnSpectator(origin, angles)
+{
+	self notify("spawned");
+
+	resettimeout();
+
+	self.sessionstate = "spectator";
+	self.spectatorclient = -1;
+	self.archivetime = 0;
+	self.friendlydamage = undefined;
+
+	if(self.pers["team"] == "spectator")
+		self.statusicon = "";
+		
+	maps\mp\gametypes\_teams::SetSpectatePermissions();
+
+	if(isDefined(origin) && isDefined(angles))
+		self spawn(origin, angles);
+	else
+	{
+ 		spawnpointname = "mp_searchanddestroy_intermission";
+		spawnpoints = getentarray(spawnpointname, "classname");
+		spawnpoint = maps\mp\gametypes\_spawnlogic::getSpawnpoint_Random(spawnpoints);
+
+		if(isDefined(spawnpoint))
+			self spawn(spawnpoint.origin, spawnpoint.angles);
+		else
+			maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+	}
+
+/**/updateTeamStatus();
+
+	self.usedweapons = false;
+
+	if(game["attackers"] == "allies")
+		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
+	else if(game["attackers"] == "axis")
+		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
 }
 
 startGame()
@@ -1090,8 +1132,6 @@ checkMatchStart()
 	{
 
 		Create_HUD_Header();
-
-		iPrintLn("modoes:" + game["mode"]);
 
 		if( game["mode"] == "match")
 		{
@@ -3252,7 +3292,7 @@ HalftimeSpawn()
 	{
 		//self.sessionteam = "spectator";
 
-		maps\mp\gametypes\sd::spawnSpectator();
+		spawnSpectator();
 
 		if(self.pers["team"] == "allies")
 		{
