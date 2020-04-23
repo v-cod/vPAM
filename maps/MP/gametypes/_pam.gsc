@@ -92,10 +92,6 @@ main()
 	// Ready up phase before half start.
 	level.p_readying = false;
 
-	// WEAPON EXPLOIT FIX
-	if(!isDefined(game["dropsecondweap"]))
-		game["dropsecondweap"] = false;
-
 	level.allow_mg42 = getCvar("scr_allow_mg42");
 	if(level.allow_mg42 == "")
 		level.allow_mg42 = "1";

@@ -1008,9 +1008,6 @@ startGame()
 
 startRound()
 {
-	// WEAPON EXPLOIT FIX
-	if (game["dropsecondweap"])
-		DropSecWeapon();
 
 	level endon("bomb_planted");
 
@@ -1098,91 +1095,91 @@ startRound()
 
 checkMatchStart()
 {
-	if (game["matchstarted"])
-		return;
-
-	if (game["checkingmatchstart"])
-		return;
-
-	game["checkingmatchstart"] = true;
-
-	//Check to see if we even have 2 teams to start
-	level.exist["teams"] = 0;
-
-	while(!level.exist["teams"])
-	{
-		level.exist["allies"] = 0;
-		level.exist["axis"] = 0;
-
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{
-			player = players[i];
-			
-			if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
-				level.exist[player.pers["team"]]++;
-		}
-
-		if (level.exist["allies"] && level.exist["axis"])
-			level.exist["teams"] = 1;
-
-		wait 1;
-	}
-
-	if(!level.roundended)
-	{
-
-		Create_HUD_Header();
-
-		if( game["mode"] == "match")
-		{
-
-			Do_Ready_Up();
-
-			// get rid of warmup weapons
-			players = getentarray("player", "classname");
-			for(i = 0; i < players.size; i++)
-			{ 
-				//drop other weapons
-				player = players[i];
-
-				// TODO: two-weapon system.
-				player.pers["weapon1"] = undefined;
-				player.pers["weapon2"] = undefined;
-				player.pers["weapon"] = player.pers["selectedweapon"];
-				player.pers["spawnweapon"] = player.pers["selectedweapon"];
-
-				player unlink();
-			}
-
-			game["matchstarted"] = true;
-
-			resetScores();
-
-			map_restart(true);
-
-			return;
-		}
-
-		else
-			wait 3;
-
-		Destroy_HUD_Header();
-
-		level notify("kill_endround");
-		level.roundended = false;
-		level thread endRound("reset");
-	}
-	else
-	{
-		announcement(&"SD_MATCHRESUMING");
-
-		level notify("kill_endround");
-		level.roundended = false;
-		level thread endRound("draw");
-	}
-
-	return;
+/**/if (game["matchstarted"])
+/**/	return;
+/**/
+/**/if (game["checkingmatchstart"])
+/**/	return;
+/**/
+/**/game["checkingmatchstart"] = true;
+/**/
+/**///Check to see if we even have 2 teams to start
+/**/level.exist["teams"] = 0;
+/**/
+/**/while(!level.exist["teams"])
+/**/{
+/**/	level.exist["allies"] = 0;
+/**/	level.exist["axis"] = 0;
+/**/
+/**/	players = getentarray("player", "classname");
+/**/	for(i = 0; i < players.size; i++)
+/**/	{
+/**/		player = players[i];
+/**/		
+/**/		if(isDefined(player.pers["team"]) && player.pers["team"] != "spectator" && player.sessionstate == "playing")
+/**/			level.exist[player.pers["team"]]++;
+/**/	}
+/**/
+/**/	if (level.exist["allies"] && level.exist["axis"])
+/**/		level.exist["teams"] = 1;
+/**/
+/**/	wait 1;
+/**/}
+/**/
+/**/if(!level.roundended)
+/**/{
+/**/
+/**/	Create_HUD_Header();
+/**/
+/**/	if( game["mode"] == "match")
+/**/	{
+/**/
+/**/		Do_Ready_Up();
+/**/
+/**/		// get rid of warmup weapons
+/**/		players = getentarray("player", "classname");
+/**/		for(i = 0; i < players.size; i++)
+/**/		{ 
+/**/			//drop other weapons
+/**/			player = players[i];
+/**/
+/**/			// TODO: two-weapon system.
+/**/			player.pers["weapon1"] = undefined;
+/**/			player.pers["weapon2"] = undefined;
+/**/			player.pers["weapon"] = player.pers["selectedweapon"];
+/**/			player.pers["spawnweapon"] = player.pers["selectedweapon"];
+/**/
+/**/			player unlink();
+/**/		}
+/**/
+/**/		game["matchstarted"] = true;
+/**/
+/**/		resetScores();
+/**/
+/**/		map_restart(true);
+/**/
+/**/		return;
+/**/	}
+/**/
+/**/	else
+/**/		wait 3;
+/**/
+/**/	Destroy_HUD_Header();
+/**/
+/**/	level notify("kill_endround");
+/**/	level.roundended = false;
+/**/	level thread endRound("reset");
+/**/}
+/**/else
+/**/{
+/**/	announcement(&"SD_MATCHRESUMING");
+/**/
+/**/	level notify("kill_endround");
+/**/	level.roundended = false;
+/**/	level thread endRound("draw");
+/**/}
+/**/
+/**/return;
 }
 
 resetScores()
@@ -1392,7 +1389,7 @@ endRound(roundwinner)
 				spawnweapon = player getCurrentWeapon();
 				if ( (spawnweapon == "none") && (isdefined (primary)) ) 
 					spawnweapon = primary;
-				
+
 				if(!maps\mp\gametypes\_teams::isPistolOrGrenade(spawnweapon))
 					player.pers["spawnweapon"] = spawnweapon;
 				else
@@ -2955,24 +2952,6 @@ Destroy_HUD_TeamWin()
 		level.teamwin destroy();
 }
 
-// WEAPON EXPLOIT FIX
-DropSecWeapon()
-{
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{ 
-
-		//drop weapons and make spec
-		player = players[i];
-		//players[i].pers["weapon"] = undefined;
-		players[i].pers["weapon1"] = undefined;
-		//players[i].pers["weapon2"] = undefined;
-		//players[i].pers["spawnweapon"] = undefined;
-	}
-
-	game["dropsecondweap"] = false;
-}
-
 Prepare_map_Tie()
 {
 	otcount = getcvarint("g_ot_active");
@@ -3261,9 +3240,6 @@ Do_Half_Time()
 	}
 	else
 		wait 3;
-
-	// WEAPON EXPLOIT FIX
-	game["dropsecondweap"] = true;
 
 	Destroy_HUD_Header();
 
