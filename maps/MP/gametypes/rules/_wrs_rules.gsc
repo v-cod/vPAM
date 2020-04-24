@@ -7,7 +7,6 @@ LeagueRules()
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
 	/*========================================================*/
-	setcvar("scr_half_round" , "1");		// Switch AFTER this round.
 	setcvar("scr_half_score" , "0");		// Switch AFTER this score.
 	setcvar("scr_end_round" , "2");		// End Map AFTER this round.
 	setcvar("scr_end_score" , "0");		// End Map AFTER this total score.

@@ -76,9 +76,9 @@ main()
 	level.fg42gun = getcvarint("scr_allow_fg42");
 	level.league = getcvar("pam_mode");
 	level.playersleft = getcvarint("sv_playersleft");
-	level.halfround = getcvarint("scr_half_round");
-	level.halfscore = getcvarint("scr_half_score");
 	level.matchround = getcvarint("scr_end_round");
+	level.halfround = level.matchround / 2;
+	level.halfscore = getcvarint("scr_half_score");
 	level.matchscore1 = getcvarint("scr_end_score");
 	level.matchscore2 = getcvarint("scr_end_half2score");
 	level.countdraws = getcvarint("scr_count_draws");

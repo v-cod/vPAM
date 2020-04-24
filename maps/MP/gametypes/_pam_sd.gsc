@@ -1350,12 +1350,12 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (getcvar("g_roundwarmuptime") != "0" && game["roundsplayed"] != "0"  && level.hithalftime == 0) {
+/**/if (getCvarInt("g_roundwarmuptime") != 0 && game["roundsplayed"] != "0"  && level.hithalftime == 0) {
 /**/	_hud_labels_create();
 /**/
 /**/	Create_HUD_Scoreboard();
 /**/
-/**/	warmup = getcvarint("g_roundwarmuptime");
+/**/	warmup = getCvarInt("g_roundwarmuptime");
 /**/	Create_HUD_NextRound(warmup);
 /**/
 /**/	/* Remove match countdown text */
@@ -1426,7 +1426,7 @@ checkTimeLimit()
 	level.mapended = true;
 
 	iprintln(&"MPSCRIPT_TIME_LIMIT_REACHED");
-	level thread endMap();
+/**/level thread endMap();
 }
 
 checkScoreLimit()
@@ -1602,14 +1602,6 @@ updateGametypeCvars()
 			else
 				iprintln("^3Players Left Display Turned ^1OFF");
 		}
-				
-
-		halfround = getCvarInt("scr_half_round");
-		if (halfround != level.halfround)
-		{
-			level.halfround = halfround;
-			iprintln("^3scr_half_round ^7has been changed to ^3" + halfround);
-		}
 
 		halfscore = getCvarInt("scr_half_score");
 		if (halfscore != level.halfscore)
@@ -1622,6 +1614,7 @@ updateGametypeCvars()
 		if (matchround != level.matchround)
 		{
 			level.matchround = matchround;
+			level.halfscore = matchround / 2;
 			iprintln("^3scr_end_round ^7has been changed to ^3" + matchround);
 		}
 
@@ -2129,6 +2122,9 @@ bomb_countdown()
 	
 	level.bombmodel playLoopSound("bomb_tick");
 	
+/**/// countdowntime = 60;
+
+/**/// wait countdowntime;
 /**/// Fade from yellow to red
 /**/for(i = 0; i < 50; i++)
 /**/{
@@ -2138,9 +2134,6 @@ bomb_countdown()
 /**/}
 /**/
 /**/wait 10;
-/**/
-/**/if(isdefined(level.clock))
-/**/	level.clock destroy();
 
 	// bomb timer is up
 	objective_delete(0);
