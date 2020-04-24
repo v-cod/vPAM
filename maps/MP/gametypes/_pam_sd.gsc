@@ -434,7 +434,7 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 /**/				spawnPlayer();
 					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-/**/				level thread checkMatchStart();
+/**/				level checkMatchStart();
 				}
 			}
 			else if(!level.roundstarted && !self.usedweapons)
@@ -462,7 +462,7 @@ Callback_PlayerConnect()
 						self.spawned = undefined;
 						spawnPlayer();
 						self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-/**/					level thread checkMatchStart();
+/**/					level checkMatchStart();
 					}
 					else
 					{
@@ -499,7 +499,7 @@ Callback_PlayerConnect()
 					self.spawned = undefined;
 /**/				spawnPlayer();
 					self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-/**/				level thread checkMatchStart();
+/**/				level checkMatchStart();
 				}
 				else
 				{
@@ -1262,9 +1262,8 @@ endRound(roundwinner)
 	if(game["matchstarted"])
 	{
 		checkScoreLimit();
-/**/	if (level.countdraws == 1) {
-/**/		game["roundsplayed"]++;
-/**/	} else if(roundwinner != "draw"){
+/**/	// game["roundsplayed"]++;
+/**/	if (roundwinner != "draw" || level.countdraws == 1) {
 /**/		game["roundsplayed"]++;
 /**/	}
 		checkRoundLimit();
@@ -1834,7 +1833,7 @@ updateTeamStatus()
 	oldvalue["axis"] = level.exist["axis"];
 	level.exist["allies"] = 0;
 	level.exist["axis"] = 0;
-	
+
 	players = getentarray("player", "classname");
 	for(i = 0; i < players.size; i++)
 	{
@@ -1845,7 +1844,7 @@ updateTeamStatus()
 	}
 
 /**/if(getcvar("sv_playersleft") == "1") {	
-_/**/	_hud_alive_update();
+/**/	_hud_alive_update();
 /**/}
 
 	if(level.exist["allies"])
@@ -2174,8 +2173,6 @@ bomb_think()
 {
 	self endon("bomb_exploded");
 	level.barincrement = (level.barsize / (20.0 * level.defusetime));
-
-/**/thread Destroy_HUD_Planted();
 
 	for(;;)
 	{
@@ -2762,9 +2759,9 @@ Do_Half_Time()
 {
 	level.hithalftime = 1;
 
-	//display scores
 	_hud_labels_create();
 
+	// Display scores.
 	level.halftime = newHudElem();
 	level.halftime.x = 575;
 	level.halftime.y = 175;
@@ -2788,69 +2785,42 @@ Do_Half_Time()
 
 	game["halftimeflag"] = 1;
 
-	//switch scores
-	axistempscore = game["axisscore"];
-	game["axisscore"] = game["alliedscore"];
-	setTeamScore("axis", game["alliedscore"]);
-	game["alliedscore"] = axistempscore;
+	// Switch team scores.
+	axisscore = game["axisscore"];
+	alliedscore = game["alliedscore"];
+	game["axisscore"] = alliedscore;
+	setTeamScore("axis", game["axisscore"]);
+	game["alliedscore"] = axisscore;
 	setTeamScore("allies", game["alliedscore"]);
 
 	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{ 
+	for (i = 0; i < players.size; i++) { 
 		player = players[i];
 
-		// Switch Teams
-		if ( (isdefined (player.pers["team"])) && (player.pers["team"] == "axis") )
-		{
-			player.pers["team"] = "allies";
-			axissavedmodel = player.pers["savedmodel"];
-		}
-		else if ( (isdefined (player.pers["team"])) && (player.pers["team"] == "allies") )
-		{
-			player.pers["team"] = "axis";
-			alliedsavedmodel = player.pers["savedmodel"];
+		if (isDefined(player.pers["team"])) {
+			if (player.pers["team"] == "axis") {
+				player.pers["team"] = "allies";
+			} else if (player.pers["team"] == "allies") {
+				player.pers["team"] = "axis";
+			}
 		}
 
-		//Swap Models
-		if ( (isdefined(player.pers["team"]) ) && (player.pers["team"] == "axis") )
-			 player.pers["savedmodel"] = axissavedmodel;
-		else if ( (isdefined(player.pers["team"])) && (player.pers["team"] == "allies") )
-			player.pers["savedmodel"] = alliedsavedmodel;
-
-		//drop weapons and make spec
 		player.pers["weapon"] = undefined;
 		player.pers["weapon1"] = undefined;
 		player.pers["weapon2"] = undefined;
 		player.pers["spawnweapon"] = undefined;
+		player.pers["savedmodel"] = undefined;
 		player.pers["selectedweapon"] = undefined;
 		player.sessionstate = "spectator";
 		player.spectatorclient = -1;
 		player.archivetime = 0;
-		player.reflectdamage = undefined;
 
 		player unlink();
 		player enableWeapon();
-
-		//change headicons
-		if(level.drawfriend)
-		{
-			if(player.pers["team"] == "allies")
-			{
-				player.headicon = game["headicon_allies"];
-				player.headiconteam = "allies";
-			}
-			else
-			{
-				player.headicon = game["headicon_axis"];
-				player.headiconteam = "axis";
-			}
-		}
 		
 		//Respawn with new weapons
 		player thread Halftimespawn();
-
-	}  // end for loop
+	}
 
 	_start_ready();
 
@@ -2924,12 +2894,6 @@ HalftimeSpawn()
 
 	if (isdefined(self.pers["weapon"]) )
 		spawnPlayer();
-}
-
-Destroy_HUD_Planted()
-{
-	wait 6;
-	level.hudplanted destroy();
 }
 
 Create_HUD_TeamSwap()
@@ -3087,7 +3051,7 @@ menu_weapon(menu, response) {
 		} else {
 			spawnPlayer();
 			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-			level thread checkMatchStart();
+			level checkMatchStart();
 		}
 	} else {
 		self.sessionteam = self.pers["team"];
@@ -3110,7 +3074,7 @@ menu_weapon(menu, response) {
 			self.spawned = undefined;
 			spawnPlayer();
 			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
-			level thread checkMatchStart();
+			level checkMatchStart();
 		} else {
 			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
 			weaponname2 = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon_secondary"]);

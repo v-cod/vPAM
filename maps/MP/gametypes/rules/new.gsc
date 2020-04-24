@@ -10,6 +10,7 @@ main()
     // rounds: <max number of rounds>. (Or use scr_sd_roundlimit?)
     // overtime: off, <mode>
 	// readyup: off, on.
+	// count draws: off, on.
 
     // start/freeze: <seconds>.
     // round start delay: <seconds>
