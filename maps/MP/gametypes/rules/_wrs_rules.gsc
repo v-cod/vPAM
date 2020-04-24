@@ -7,18 +7,14 @@ LeagueRules()
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
 	/*========================================================*/
-	setcvar("scr_half_score" , "0");		// Switch AFTER this score.
-	setcvar("scr_end_round" , "2");		// End Map AFTER this round.
-	setcvar("scr_end_score" , "0");		// End Map AFTER this total score.
 	setcvar("scr_count_draws", "0");		// Re-play rounds that end in a draw
 	setcvar("scr_afs_time", "1.2");			// Anti fast shoot interval time (s)
 
 
-	/* S&D STOCK Settings */
-	setcvar("scr_sd_scorelimit", "0");			// Score limit per map
-	setcvar("scr_sd_roundlimit", "0");			// Round limit per map
-	setcvar("scr_sd_roundlength", "2.5");			// Time length of each round
-	setcvar("scr_sd_timelimit", "0");			// Time limit per map
+	setcvar("scr_sd_roundlimit", "2");    // End map after this round.
+	setcvar("scr_sd_roundlength", "2.5"); // Time length per round.
+	setcvar("scr_sd_scorelimit", "0");    // Score limit per map.
+	setcvar("scr_sd_timelimit", "0");     // Time limit per map.
 
 	
 	// Grace/Strat Period

@@ -596,6 +596,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/		return;
 /**/}
 /**/
+/**/// TODO: Necessary for damage?:
 /**/if (level.instrattime)
 /**/	return;
 /**/
@@ -925,12 +926,14 @@ spawnPlayer()
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
 
+	maps\mp\gametypes\_teams::givePistol();
+	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 
-/**/if (getcvarint("scr_allow_pistol") > 0) {
-/**/	maps\mp\gametypes\_teams::givePistol();
+/**/if (getcvarint("scr_allow_pistol") == 0) {
+/**/	self takeWeapon(self getWeaponSlotWeapon("pistol"));
 /**/}
-/**/if (getcvarint("scr_allow_nades") > 0) {
-/**/	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
+/**/if (getcvarint("scr_allow_nades") ==0) {
+/**/	self takeWeapon(self getWeaponSlotWeapon("grenade"));
 /**/}
 
 	self.usedweapons = false;
@@ -1218,7 +1221,7 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-/**/	if (game["halftimeflag"] == "1") {
+/**/	if (game["halftimeflag"] == 1) {
 /**/		game["round2alliesscore"]++;
 /**/	} else if(game["matchstarted"]) {
 /**/		game["round1alliesscore"]++;
@@ -1241,7 +1244,7 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-/**/	if (game["halftimeflag"] == "1") {
+/**/	if (game["halftimeflag"] == 1) {
 /**/		game["round2axisscore"]++;
 /**/	} else if(game["matchstarted"]) {
 /**/		game["round1axisscore"]++;
@@ -1439,19 +1442,14 @@ checkScoreLimit()
 		return;
 
 /**/Create_HUD_Matchover();
-/**/
 /**/Create_HUD_TeamWin();
-/**/
 /**/_hud_labels_create();
-/**/		
 /**/Create_HUD_Scoreboard();
 /**/
 /**/wait 10;
 /**/
 /**/_hud_labels_destroy();
-/**/
 /**/Destroy_HUD_Scoreboard();
-/**/
 /**/Destroy_HUD_TeamWin();
 /**/
 /**/if(isdefined(level.matchover))
@@ -1467,119 +1465,80 @@ checkScoreLimit()
 
 checkRoundLimit()
 {
-/**//*  Is it a round-base halftime? */
-/**/if (level.halfround != 0  && game["halftimeflag"] == "0")
-/**/{
-/**/	if(game["roundsplayed"] >= level.halfround)
-/**/	{ 
-/**/		_half_time();
-/**/		return;
-/**/	}
+	if(level.roundlimit <= 0)
+		return;
+
+/**/// Half time check.
+/**/if (level.roundlimit / 2 > 0 && game["halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
+/**/	_half_time();
+/**/	return;
 /**/}
+	
+	if(game["roundsplayed"] < level.roundlimit)
+		return;
+	
+/**/Create_HUD_Matchover();
+/**/Create_HUD_TeamWin();
+/**/_hud_labels_create();
+/**/Create_HUD_Scoreboard();
 /**/
-/**//*  End of Map Roundlimit! */
-/**/if (level.matchround != 0)
-/**/{
-/**/	if (game["roundsplayed"] >= level.matchround)
-/**/	{
-/**/		Create_HUD_Matchover();
+/**/wait 10;
 /**/
-/**/		Create_HUD_TeamWin();
+/**/_hud_labels_destroy();
+/**/Destroy_HUD_Scoreboard();
+/**/Destroy_HUD_TeamWin();
 /**/
-/**/		_hud_labels_create();
-/**/			
-/**/		Create_HUD_Scoreboard();
-/**/
-/**/		wait 10;
-/**/
-/**/		_hud_labels_destroy();
-/**/
-/**/		Destroy_HUD_Scoreboard();
-/**/
-/**/		Destroy_HUD_TeamWin();
-/**/
-/**/		if(isdefined(level.matchover))
-/**/			level.matchover destroy();
-/**/
-/**/		if(level.mapended)
-/**/			return;
-/**/		level.mapended = true;
-/**/
-/**/		endMap();
-/**/	}
-/**/}
+/**/if(isdefined(level.matchover))
+/**/	level.matchover destroy();
+	
+	if(level.mapended)
+		return;
+	level.mapended = true;
+
+	iprintln(&"MPSCRIPT_ROUND_LIMIT_REACHED");
+	level thread endMap();
 }
 
 updateGametypeCvars()
 {
-/**/level endon("PAMRestart");
-/**/enabling = 0;
-
 	for(;;)
 	{
-		league = getCvar("pam_mode");
-		if(league != level.league && !enabling)
+		timelimit = getCvarFloat("scr_sd_timelimit");
+		if(level.timelimit != timelimit)
 		{
-			ValidPamMode = maps\mp\gametypes\_pam_utilities::Check_PAM_Modes(league);
-			if (ValidPamMode)
+			if(timelimit > 1440)
 			{
-				wait .1;
-				thread maps\mp\gametypes\_pam_utilities::PAMRestartMap();
-				level notify("PAMRestart");
+				timelimit = 1440;
+				setCvar("scr_sd_timelimit", "1440");
 			}
-			else
-			{
-				iprintln("^3PAM Mode has been changed to ^1" + league);
-				iprintln("^1" + league + " ^3mode is not valid!");
-				iprintln("^3map_restart will return you to pub mode");
-			}
-			level.league = league;
+
+			level.timelimit = timelimit;
+			setCvar("ui_sd_timelimit", level.timelimit);
 		}
 
-		playersleft = getcvarint("sv_playersleft");
-		if (playersleft != level.playersleft)
+		scorelimit = getCvarInt("scr_sd_scorelimit");
+		if(level.scorelimit != scorelimit)
 		{
-			level.playersleft = playersleft;
-			if (playersleft == 1)
-				iprintln("^3Players Left Display Turned ^2ON");
-			else
-				iprintln("^3Players Left Display Turned ^1OFF");
+			level.scorelimit = scorelimit;
+			setCvar("ui_sd_scorelimit", level.scorelimit);
+
+			if(game["matchstarted"])
+				checkScoreLimit();
 		}
 
-		matchround = getCvarInt("scr_end_round");
-		if (matchround != level.matchround)
+		roundlimit = getCvarInt("scr_sd_roundlimit");
+		if(level.roundlimit != roundlimit)
 		{
-			level.matchround = matchround;
-			level.halfround = matchround / 2;
-			iprintln("^3scr_end_round ^7has been changed to ^3" + matchround);
-		}
+			level.roundlimit = roundlimit;
+			setCvar("ui_sd_roundlimit", level.roundlimit);
 
-		matchscore = getCvarInt("scr_end_score");
-		if (matchscore != level.matchscore1)
-		{
-			level.matchscore1 = matchscore;
-			iprintln("^3scr_end_score ^7has been changed to ^3" + matchscore);
-		}
-
-		countdraws = getCvarInt("scr_count_draws");
-		if (countdraws != level.countdraws)
-		{
-			level.countdraws = countdraws;
-			iprintln("^3scr_count_draws ^7has been changed to ^3" + countdraws);
-			if (countdraws == 1)
-				iprintln("Round Draws will not be replayed");
-			else
-				iprintln("Round Draws will be replayed");
+			if(game["matchstarted"])
+				checkRoundLimit();
 		}
 
 		roundlength = getCvarFloat("scr_sd_roundlength");
 		if(roundlength > 10)
 			setCvar("scr_sd_roundlength", "10");
-		if (roundlength != level.roundlength)
-		{
-			level.roundlength = getCvarFloat("scr_sd_roundlength");
-			iprintln("ROUNDLENGTH has been changed to ^5" + roundlength);
-		}
 
 		graceperiod = getCvarFloat("scr_sd_graceperiod");
 		if(graceperiod > 60)
@@ -1592,7 +1551,6 @@ updateGametypeCvars()
 			
 			if(level.drawfriend)
 			{
-				iprintln("^3Draw Friend has been turned ^2ON!");
 				// for all living players, show the appropriate headicon
 				players = getentarray("player", "classname");
 				for(i = 0; i < players.size; i++)
@@ -1616,7 +1574,6 @@ updateGametypeCvars()
 			}
 			else
 			{
-				iprintln("^3Draw Friend has been turned ^1OFF!");
 				players = getentarray("player", "classname");
 				for(i = 0; i < players.size; i++)
 				{
@@ -1633,15 +1590,9 @@ updateGametypeCvars()
 		{
 			level.killcam = getCvarInt("scr_killcam");
 			if(level.killcam >= 1)
-			{
 				setarchive(true);
-				iprintln("^3Kill Cam ^2ON!");
-			}
 			else
-			{
 				setarchive(false);
-				iprintln("^3Kill Cam ^1OFF!");
-			}
 		}
 		
 		freelook = getCvarInt("scr_freelook");
@@ -1649,10 +1600,6 @@ updateGametypeCvars()
 		{
 			level.allowfreelook = getCvarInt("scr_freelook");
 			level maps\mp\gametypes\_teams::UpdateSpectatePermissions();
-			if (freelook == 0)
-				iprintln("^3FREELOOK has been turned ^1OFF!");
-			else
-				iprintln("^3FREELOOK has been turned ^2ON!");
 		}
 		
 		enemyspectate = getCvarInt("scr_spectateenemy");
@@ -1660,10 +1607,6 @@ updateGametypeCvars()
 		{
 			level.allowenemyspectate = getCvarInt("scr_spectateenemy");
 			level maps\mp\gametypes\_teams::UpdateSpectatePermissions();
-			if (enemyspectate == 0)
-				iprintln("^3Spectate Enemies has been turned ^1OFF!");
-			else
-				iprintln("^3Spectate Enemies has been turned ^2ON!");
 		}
 		
 		teambalance = getCvarInt("scr_teambalance");
@@ -1671,19 +1614,7 @@ updateGametypeCvars()
 		{
 			level.teambalance = getCvarInt("scr_teambalance");
 			if (level.teambalance > 0)
-			{
-				iprintln("^3TEAMBALANCE has been turned ^2ON!");
 				level thread maps\mp\gametypes\_teams::TeamBalance_Check_Roundbased();
-			}
-			else
-				iprintln("^3TEAMBALANCE has been turned ^1OFF!");
-		}
-
-		afs_time = getcvarFloat("scr_afs_time");
-		if (afs_time != level.afs_time)
-		{
-			level.afs_time = afs_time;
-			iprintln("^3scr_afs_time ^7has been changed to ^3" + afs_time);
 		}
 
 		wait 1;
@@ -1700,7 +1631,7 @@ updateTeamStatus()
 	oldvalue["axis"] = level.exist["axis"];
 	level.exist["allies"] = 0;
 	level.exist["axis"] = 0;
-
+	
 	players = getentarray("player", "classname");
 	for(i = 0; i < players.size; i++)
 	{
@@ -2286,7 +2217,7 @@ Create_HUD_Scoreboard()
 	level.matchscore setText(game["matchscore2"]);
 
 	level.matchaxisscorenum = newHudElem();
-	if(game["halftimeflag"] == "1")
+	if(game["halftimeflag"] == 1)
 	{
 		level.matchaxisscorenum.x = 618;
 		level.matchaxisscorenum.color = (.85, .99, .99);
@@ -2303,7 +2234,7 @@ Create_HUD_Scoreboard()
 	level.matchaxisscorenum setValue(game["axisscore"]);
 
 	level.matchalliesscorenum = newHudElem();
-	if(game["halftimeflag"] == "1")
+	if(game["halftimeflag"] == 1)
 	{
 		level.matchalliesscorenum.x = 535;
 		level.matchalliesscorenum.color = (.73, .99, .75);
@@ -2440,12 +2371,12 @@ Create_HUD_TeamWin()
 		level.teamwin.color = (1, 1, 0);
 		level.teamwin setText(game["dsptie"]);
 	}
-	else if (game["axisscore"] > game["alliedscore"] && game["halftimeflag"] == "1")
+	else if (game["axisscore"] > game["alliedscore"] && game["halftimeflag"] == 1)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);
 	}
-	else if (game["axisscore"] < game["alliedscore"] && game["halftimeflag"] == "0")
+	else if (game["axisscore"] < game["alliedscore"] && game["halftimeflag"] == 0)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);

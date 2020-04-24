@@ -41,7 +41,7 @@ main()
     level.gametype = getCvar("g_gametype");
 
 	if(!isDefined(game["halftimeflag"])) {
-		game["halftimeflag"] = "0";
+		game["halftimeflag"] = 0;
 		game["round1alliesscore"] = 0;
 		game["round1axisscore"] = 0; 
 		game["round2alliesscore"] = 0;
@@ -62,9 +62,6 @@ main()
 	/* Set up Level variables */
 	level.league = getcvar("pam_mode");
 	level.playersleft = getcvarint("sv_playersleft");
-	level.matchround = getcvarint("scr_end_round");
-	level.halfround = level.matchround / 2;
-	level.matchscore1 = getcvarint("scr_end_score");
 	level.countdraws = getcvarint("scr_count_draws");
 	level.hithalftime = 0;
 	level.afs_time = getcvarFloat("scr_afs_time");

@@ -12,6 +12,7 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - No bomb plant pre-match.
 - Rifle damage upped through script instead of weapon file.
 - Halftime always at middle of rounds. (rounds / 2)
+- Replaced scr_end_score and scr_end_round with stock equivalents (scr_sd).
 
 ### Added
 - wrs rules.
