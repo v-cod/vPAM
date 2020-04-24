@@ -1207,6 +1207,7 @@ endRound(roundwinner)
 			players[i] playLocalSound("MP_announcer_round_draw");
 	}
 
+	iPrintLn("end round, wait 5 seconds...");
 	wait 5;
 
 	winners = "";
@@ -1350,7 +1351,7 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (getCvarInt("g_roundwarmuptime") != 0 && game["roundsplayed"] != "0"  && level.hithalftime == 0) {
+/**/if (getCvarInt("g_roundwarmuptime") != 0 && level.hithalftime == 0) {
 /**/	_hud_labels_create();
 /**/
 /**/	Create_HUD_Scoreboard();
@@ -1431,90 +1432,37 @@ checkTimeLimit()
 
 checkScoreLimit()
 {
-/**//* Is it a score-based Halftime? */
-/**/if (game["halftimeflag"] == "0" && level.halfscore != 0) {
-/**/	if(game["alliedscore"] >= level.halfscore || game["axisscore"] >= level.halfscore)
-/**/	{ 
-/**/		Do_Half_Time();
-/**/		return;
-/**/	}
-/**/}
+	if(level.scorelimit <= 0)
+		return;
+	
+	if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
+		return;
+
+/**/Create_HUD_Matchover();
 /**/
-/**//* 2nd-Half Score Limit Check */
-/**/if (level.matchscore2 != 0)
-/**/{
-/**/	if ( game["round2axisscore"] >= level.matchscore2 || game["round2alliesscore"] >= level.matchscore2)
-/**/	{
+/**/Create_HUD_TeamWin();
 /**/
-/**/		if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-/**/			Prepare_map_Tie();
-/**/		else
-/**/			setCvar("g_ot_active", "0");
-/**/
-/**/		Create_HUD_Matchover();
-/**/
-/**/		Create_HUD_TeamWin();
-/**/
-/**/		_hud_labels_create();
-/**/			
-/**/		Create_HUD_Scoreboard();
-/**/
-/**/		wait 10;
-/**/
-/**/		_hud_labels_destroy();
-/**/
-/**/		Destroy_HUD_Scoreboard();
-/**/
-/**/		Destroy_HUD_TeamWin();
-/**/
-/**/		if(isdefined(level.matchover))
-/**/			level.matchover destroy();
-/**/
-/**/		if(level.mapended)
-/**/		return;
-/**/		level.mapended = true;
-/**/
-/**/		endMap();
-/**/	}
-/**/}
-/**/
-/**//* Match Score Check */
-/**/if (level.matchscore1 != 0)
-/**/{
-/**/	if(game["alliedscore"] < level.matchscore1 && game["axisscore"] < level.matchscore1)
-/**/		return;
-/**/
-/**/	if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-/**/			Prepare_map_Tie();
-/**/		else
-/**/			setCvar("g_ot_active", "0");
-/**/
-/**/	Create_HUD_Matchover();
-/**/
-/**/	Create_HUD_TeamWin();
-/**/
-/**/	_hud_labels_create();
+/**/_hud_labels_create();
 /**/		
-/**/	Create_HUD_Scoreboard();
+/**/Create_HUD_Scoreboard();
 /**/
-/**/	wait 10;
+/**/wait 10;
 /**/
-/**/	_hud_labels_destroy();
+/**/_hud_labels_destroy();
 /**/
-/**/	Destroy_HUD_Scoreboard();
+/**/Destroy_HUD_Scoreboard();
 /**/
-/**/	Destroy_HUD_TeamWin();
+/**/Destroy_HUD_TeamWin();
 /**/
-/**/	if(isdefined(level.matchover))
-/**/		level.matchover destroy();
-/**/
-/**/	if(level.mapended)
-/**/	return;
-/**/	level.mapended = true;
-/**/
-/**/	endMap();
-/**/
-/**/}
+/**/if(isdefined(level.matchover))
+/**/	level.matchover destroy();
+
+	if(level.mapended)
+		return;
+	level.mapended = true;
+
+	iprintln(&"MPSCRIPT_SCORE_LIMIT_REACHED");
+	level thread endMap();
 }
 
 checkRoundLimit()
@@ -1524,7 +1472,7 @@ checkRoundLimit()
 /**/{
 /**/	if(game["roundsplayed"] >= level.halfround)
 /**/	{ 
-/**/		Do_Half_Time();
+/**/		_half_time();
 /**/		return;
 /**/	}
 /**/}
@@ -1534,11 +1482,6 @@ checkRoundLimit()
 /**/{
 /**/	if (game["roundsplayed"] >= level.matchround)
 /**/	{
-/**/		if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-/**/			Prepare_map_Tie();
-/**/		else
-/**/			setCvar("g_ot_active", "0");
-/**/
 /**/		Create_HUD_Matchover();
 /**/
 /**/		Create_HUD_TeamWin();
@@ -1603,18 +1546,11 @@ updateGametypeCvars()
 				iprintln("^3Players Left Display Turned ^1OFF");
 		}
 
-		halfscore = getCvarInt("scr_half_score");
-		if (halfscore != level.halfscore)
-		{
-			level.halfscore = halfscore;
-			iprintln("^3scr_half_score ^7has been changed to ^3" + halfscore);
-		}
-
 		matchround = getCvarInt("scr_end_round");
 		if (matchround != level.matchround)
 		{
 			level.matchround = matchround;
-			level.halfscore = matchround / 2;
+			level.halfround = matchround / 2;
 			iprintln("^3scr_end_round ^7has been changed to ^3" + matchround);
 		}
 
@@ -1623,13 +1559,6 @@ updateGametypeCvars()
 		{
 			level.matchscore1 = matchscore;
 			iprintln("^3scr_end_score ^7has been changed to ^3" + matchscore);
-		}
-
-		matchscore2 = getCvarInt("scr_end_half2score");
-		if (matchscore2 != level.matchscore2)
-		{
-			level.matchscore2 = matchscore2;
-			iprintln("^3scr_end_half2score ^7has been changed to ^3" + matchscore2);
 		}
 
 		countdraws = getCvarInt("scr_count_draws");
@@ -1748,60 +1677,6 @@ updateGametypeCvars()
 			}
 			else
 				iprintln("^3TEAMBALANCE has been turned ^1OFF!");
-		}
-
-		ffire = getCvarInt("scr_friendlyfire");
-		if (level.ffire != ffire)
-		{
-			level.ffire = getCvarInt("scr_friendlyfire");
-			if (level.ffire == 0)
-				iprintln("^3Friendly Fire has been turned ^1OFF!");
-			else if (level.ffire == 1 || level.ffire > 3)
-				iprintln("^3Friendly Fire has been turned ^1ON!");
-			else if (level.ffire == 2)
-				iprintln("^3Friendly Fire has been switched to ^1REFLECTION!");
-			else if (level.ffire == 3)
-				iprintln("^3Friendly Fire has been turned ^1ON with REFLECTION!");
-		}
-
-		pure = getCvarInt("sv_pure");
-		if (pure != level.pure)
-		{
-			level.pure = getCvarInt("sv_pure");
-			if (level.pure == 1)
-				iprintln("^3SV_PURE has been turned ^2ON!");
-			else
-				iprintln("^3SV_PURE has been turned ^1OFF");
-		}
-
-		vote = getCvarInt("g_allowVote");
-		if(vote != level.vote)
-		{
-			level.vote = getCvarInt("g_allowVote");
-			if(level.vote == 0)
-				iprintln("^3Voting has been turned ^1OFF!");
-			else
-				iprintln("^3Voting has been turned ^2ON!");
-		}
-		
-		faust = getcvarint("scr_allow_panzerfaust");
-		if (faust != level.faust)
-		{
-			level.faust = faust;
-			if (faust == 0)
-				iprintln("^3Rockets have been turned ^1OFF!");
-			else
-				iprintln("^3Rockets have been turned ^2ON!");
-		}
-
-		fg42gun = getcvarint("scr_allow_fg42");
-		if (fg42gun != level.fg42gun)
-		{
-			level.fg42gun = fg42gun;
-			if (fg42gun == 0)
-				iprintln("^3The FG42 has been turned ^1OFF!");
-			else
-				iprintln("^3The FG42 has been turned ^2ON!");
 		}
 
 		afs_time = getcvarFloat("scr_afs_time");
@@ -2291,17 +2166,6 @@ _hud_labels_create()
 	level.p_hud_labels_left.fontScale = 1;
 	level.p_hud_labels_left.color = (1, 1, 1);
 	level.p_hud_labels_left setText(game["leaguestring"]);
-
-	if (getCvarInt("g_ot_active") > 0) {
-		level.p_hud_labels_overtime_mode = newHudElem();
-		level.p_hud_labels_overtime_mode.x = 10;
-		level.p_hud_labels_overtime_mode.y = 30;
-		level.p_hud_labels_overtime_mode.alignX = "left";
-		level.p_hud_labels_overtime_mode.alignY = "middle";
-		level.p_hud_labels_overtime_mode.fontScale = 1;
-		level.p_hud_labels_overtime_mode.color = (1, 1, 0);
-		level.p_hud_labels_overtime_mode setText(game["overtimemode"]);
-	}
 }
 
 _hud_labels_destroy()
@@ -2540,6 +2404,7 @@ Create_HUD_NextRound(time)
 		player thread stopwatch_start(time);
 	}
 	
+	iPrintLn("next round HUD, wait " + time + " seconds...");
 	wait (time);
 
 	if(isdefined(level.round))
@@ -2596,13 +2461,6 @@ Destroy_HUD_TeamWin()
 {
 	if(isdefined(level.teamwin))
 		level.teamwin destroy();
-}
-
-Prepare_map_Tie()
-{
-	otcount = getcvarint("g_ot_active");
-	otcount = otcount + 1;
-	setcvar("g_ot_active", otcount);
 }
 
 _start_ready()
@@ -2739,7 +2597,7 @@ _hud_roundstart_destroy()
 		level.p_hud_stopwatch destroy();
 }
 
-Do_Half_Time()
+_half_time()
 {
 	level.hithalftime = 1;
 
@@ -2918,10 +2776,7 @@ Create_HUD_Matchover()
 	level.matchover.alignY = "middle";
 	level.matchover.fontScale = 1;
 	level.matchover.color = (1, 1, 0);
-	if(getcvarint("g_ot_active") > 0)
-		level.matchover setText(game["overtime"]);
-	else
-		level.matchover setText(game["matchover"]);
+	level.matchover setText(game["matchover"]);
 }
 
 Hold_All_Players()

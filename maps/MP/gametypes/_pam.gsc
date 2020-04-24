@@ -49,15 +49,6 @@ main()
 		game["checkingmatchstart"] = false;
 	}
 
-	if(getcvar("g_ot") == "")
-		setcvar("g_ot", "0");
-
-	if(getcvar("g_ot_active") == "")
-		setcvar("g_ot_active", "0");
-
-	if (getcvar( "g_allowtie" ) == "")
-		setcvar("g_allowtie", "1");
-
 	if(getCvar("pam_mode") == "")
 		setCvar("pam_mode", "pub");
 
@@ -69,21 +60,12 @@ main()
 
 
 	/* Set up Level variables */
-	level.ffire = getCvarInt("scr_friendlyfire");
-	level.pure = getCvarInt("sv_pure");
-	level.vote = getCvarInt("g_allowVote");
-	level.faust = getcvarint("scr_allow_panzerfaust");
-	level.fg42gun = getcvarint("scr_allow_fg42");
 	level.league = getcvar("pam_mode");
 	level.playersleft = getcvarint("sv_playersleft");
 	level.matchround = getcvarint("scr_end_round");
 	level.halfround = level.matchround / 2;
-	level.halfscore = getcvarint("scr_half_score");
 	level.matchscore1 = getcvarint("scr_end_score");
-	level.matchscore2 = getcvarint("scr_end_half2score");
 	level.countdraws = getcvarint("scr_count_draws");
-	level.overtime = 0;	//Makes sure OT settings get loaded after defaults loaded
-	level.ot_count = getcvarint("g_ot_count");
 	level.hithalftime = 0;
 	level.afs_time = getcvarFloat("scr_afs_time");
 
@@ -124,8 +106,6 @@ precache()
     if (!isdefined(game["leaguestring"]))
         game["leaguestring"] = &"Unknown Pam_Mode Error";
     precacheString(game["leaguestring"]);
-    game["overtimemode"] = &"Overtime";
-    precacheString(game["overtimemode"]);
 
     // Team Win Hud Elements
     game["team1win"] = &"Team 1 Wins!";
@@ -136,8 +116,6 @@ precache()
     precacheString(game["dsptie"]);
     game["matchover"] = &"Match Over";
     precacheString(game["matchover"]);
-    game["overtime"] = &"Going to OverTime";
-    precacheString(game["overtime"]);
 
     game["halftime"] = &"Halftime";
     precacheString(game["halftime"]);

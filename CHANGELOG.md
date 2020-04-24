@@ -11,6 +11,7 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Ready up immediately from map start.
 - No bomb plant pre-match.
 - Rifle damage upped through script instead of weapon file.
+- Halftime always at middle of rounds. (rounds / 2)
 
 ### Added
 - wrs rules.
@@ -32,3 +33,6 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Removed scr_force_bolt_rifles (in favour of more advanced weapon picking).
 - Removed nade count settings.
 - Removed unused PAM sounds.
+- Removed score-based halftime and second half score limit.
+- Printing sv_pure switch.
+- Overtime (merely sugar coating with HUD elements).

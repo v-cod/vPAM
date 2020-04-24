@@ -13,11 +13,8 @@ LeagueRules()
 	setcvar("scr_end_score" , "0");		// End Map AFTER this total score.
 	setcvar("scr_end_half2score" , "0");	// End Map AFTER this 2nd-half score.
 	setcvar("scr_count_draws", "0");		// Re-play rounds that end in a draw
-	setcvar("g_ot", "0");					// overtime off/on
 	setcvar("scr_afs_time", "1.2");			// Anti fast shoot interval time (s)
 
-	//OT Settings
-	setcvar("g_ot_active", "0");			// NEVER OT in this mode
 
 
 	/* S&D STOCK Settings */

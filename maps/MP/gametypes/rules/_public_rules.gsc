@@ -52,10 +52,6 @@ LeagueRules()
 	setcvar("scr_strat_time", "0");			// Changes Grace Period to Hold players still
 
 
-	//no overtimes in pub mode - so changing to pub mode will get you out of ot mode from a match
-	setcvar("g_ot", "0"); 			// no overtime in pub mode
-	setcvar("g_allowtie" , "0");	// allow tie after 1st overtime, 0 no ties, 1 allow tie after 1 ot
-	setcvar("g_ot_active", "0");	// Make sure we get out of any OT mode we were in when we go to PUB
 
 	/* Do NOT Touch These */
 	game["leaguestring"] = &"Pub Mode";
