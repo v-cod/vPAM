@@ -1351,7 +1351,6 @@ endRound(roundwinner)
 	}
 
 /**/if (getcvar("g_roundwarmuptime") != "0" && game["roundsplayed"] != "0"  && level.hithalftime == 0) {
-/**/	//display scores
 /**/	_hud_labels_create();
 /**/
 /**/	Create_HUD_Scoreboard();
@@ -1432,146 +1431,146 @@ checkTimeLimit()
 
 checkScoreLimit()
 {
-	/* Is it a score-based Halftime? */
-	if (game["halftimeflag"] == "0" && level.halfscore != 0) {
-		if(game["alliedscore"] >= level.halfscore || game["axisscore"] >= level.halfscore)
-		{ 
-			Do_Half_Time();
-			return;
-		}
-	}
-
-	/* 2nd-Half Score Limit Check */
-	if (level.matchscore2 != 0)
-	{
-		if ( game["round2axisscore"] >= level.matchscore2 || game["round2alliesscore"] >= level.matchscore2)
-		{
-
-			if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-				Prepare_map_Tie();
-			else
-				setCvar("g_ot_active", "0");
-
-			Create_HUD_Matchover();
-
-			Create_HUD_TeamWin();
-
-			_hud_labels_create();
-				
-			Create_HUD_Scoreboard();
-
-			wait 10;
-
-			_hud_labels_destroy();
-
-			Destroy_HUD_Scoreboard();
-
-			Destroy_HUD_TeamWin();
-
-			if(isdefined(level.matchover))
-				level.matchover destroy();
-
-			if(level.mapended)
-			return;
-			level.mapended = true;
-
-			endMap();
-		}
-	}
-
-	/* Match Score Check */
-	if (level.matchscore1 != 0)
-	{
-		if(game["alliedscore"] < level.matchscore1 && game["axisscore"] < level.matchscore1)
-			return;
-
-		if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-				Prepare_map_Tie();
-			else
-				setCvar("g_ot_active", "0");
-
-		Create_HUD_Matchover();
-
-		Create_HUD_TeamWin();
-
-		_hud_labels_create();
-			
-		Create_HUD_Scoreboard();
-
-		wait 10;
-
-		_hud_labels_destroy();
-
-		Destroy_HUD_Scoreboard();
-
-		Destroy_HUD_TeamWin();
-
-		if(isdefined(level.matchover))
-			level.matchover destroy();
-
-		if(level.mapended)
-		return;
-		level.mapended = true;
-
-		endMap();
-
-	}
+/**//* Is it a score-based Halftime? */
+/**/if (game["halftimeflag"] == "0" && level.halfscore != 0) {
+/**/	if(game["alliedscore"] >= level.halfscore || game["axisscore"] >= level.halfscore)
+/**/	{ 
+/**/		Do_Half_Time();
+/**/		return;
+/**/	}
+/**/}
+/**/
+/**//* 2nd-Half Score Limit Check */
+/**/if (level.matchscore2 != 0)
+/**/{
+/**/	if ( game["round2axisscore"] >= level.matchscore2 || game["round2alliesscore"] >= level.matchscore2)
+/**/	{
+/**/
+/**/		if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
+/**/			Prepare_map_Tie();
+/**/		else
+/**/			setCvar("g_ot_active", "0");
+/**/
+/**/		Create_HUD_Matchover();
+/**/
+/**/		Create_HUD_TeamWin();
+/**/
+/**/		_hud_labels_create();
+/**/			
+/**/		Create_HUD_Scoreboard();
+/**/
+/**/		wait 10;
+/**/
+/**/		_hud_labels_destroy();
+/**/
+/**/		Destroy_HUD_Scoreboard();
+/**/
+/**/		Destroy_HUD_TeamWin();
+/**/
+/**/		if(isdefined(level.matchover))
+/**/			level.matchover destroy();
+/**/
+/**/		if(level.mapended)
+/**/		return;
+/**/		level.mapended = true;
+/**/
+/**/		endMap();
+/**/	}
+/**/}
+/**/
+/**//* Match Score Check */
+/**/if (level.matchscore1 != 0)
+/**/{
+/**/	if(game["alliedscore"] < level.matchscore1 && game["axisscore"] < level.matchscore1)
+/**/		return;
+/**/
+/**/	if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
+/**/			Prepare_map_Tie();
+/**/		else
+/**/			setCvar("g_ot_active", "0");
+/**/
+/**/	Create_HUD_Matchover();
+/**/
+/**/	Create_HUD_TeamWin();
+/**/
+/**/	_hud_labels_create();
+/**/		
+/**/	Create_HUD_Scoreboard();
+/**/
+/**/	wait 10;
+/**/
+/**/	_hud_labels_destroy();
+/**/
+/**/	Destroy_HUD_Scoreboard();
+/**/
+/**/	Destroy_HUD_TeamWin();
+/**/
+/**/	if(isdefined(level.matchover))
+/**/		level.matchover destroy();
+/**/
+/**/	if(level.mapended)
+/**/	return;
+/**/	level.mapended = true;
+/**/
+/**/	endMap();
+/**/
+/**/}
 }
 
 checkRoundLimit()
 {
-	/*  Is it a round-base halftime? */
-	if (level.halfround != 0  && game["halftimeflag"] == "0")
-	{
-		if(game["roundsplayed"] >= level.halfround)
-		{ 
-			Do_Half_Time();
-			return;
-		}
-	}
-
-	/*  End of Map Roundlimit! */
-	if (level.matchround != 0)
-	{
-		if (game["roundsplayed"] >= level.matchround)
-		{
-			if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
-				Prepare_map_Tie();
-			else
-				setCvar("g_ot_active", "0");
-
-			Create_HUD_Matchover();
-
-			Create_HUD_TeamWin();
-
-			_hud_labels_create();
-				
-			Create_HUD_Scoreboard();
-
-			wait 10;
-
-			_hud_labels_destroy();
-
-			Destroy_HUD_Scoreboard();
-
-			Destroy_HUD_TeamWin();
-
-			if(isdefined(level.matchover))
-				level.matchover destroy();
-
-			if(level.mapended)
-				return;
-			level.mapended = true;
-
-			endMap();
-		}
-	}
+/**//*  Is it a round-base halftime? */
+/**/if (level.halfround != 0  && game["halftimeflag"] == "0")
+/**/{
+/**/	if(game["roundsplayed"] >= level.halfround)
+/**/	{ 
+/**/		Do_Half_Time();
+/**/		return;
+/**/	}
+/**/}
+/**/
+/**//*  End of Map Roundlimit! */
+/**/if (level.matchround != 0)
+/**/{
+/**/	if (game["roundsplayed"] >= level.matchround)
+/**/	{
+/**/		if(game["alliedscore"] == game["axisscore"] && getcvar("g_ot") == "1")  // have a tie and overtime mode is on
+/**/			Prepare_map_Tie();
+/**/		else
+/**/			setCvar("g_ot_active", "0");
+/**/
+/**/		Create_HUD_Matchover();
+/**/
+/**/		Create_HUD_TeamWin();
+/**/
+/**/		_hud_labels_create();
+/**/			
+/**/		Create_HUD_Scoreboard();
+/**/
+/**/		wait 10;
+/**/
+/**/		_hud_labels_destroy();
+/**/
+/**/		Destroy_HUD_Scoreboard();
+/**/
+/**/		Destroy_HUD_TeamWin();
+/**/
+/**/		if(isdefined(level.matchover))
+/**/			level.matchover destroy();
+/**/
+/**/		if(level.mapended)
+/**/			return;
+/**/		level.mapended = true;
+/**/
+/**/		endMap();
+/**/	}
+/**/}
 }
 
 updateGametypeCvars()
 {
-	level endon("PAMRestart");
-	enabling = 0;
+/**/level endon("PAMRestart");
+/**/enabling = 0;
 
 	for(;;)
 	{
@@ -1826,7 +1825,7 @@ updateGametypeCvars()
 updateTeamStatus()
 {
 	wait 0;	// Required for Callback_PlayerDisconnect to complete before updateTeamStatus can execute
-
+	
 	resettimeout();
 	
 	oldvalue["allies"] = level.exist["allies"];
@@ -2127,7 +2126,7 @@ bomb_countdown()
 {
 	self endon("bomb_defused");
 	level endon("intermission");
-
+	
 	level.bombmodel playLoopSound("bomb_tick");
 	
 /**/// Fade from yellow to red
@@ -2525,7 +2524,7 @@ Create_HUD_NextRound(time)
 	level.roundnum.alignY = "middle";
 	level.roundnum.fontScale = 1;
 	level.roundnum.color = (1, 1, 0);
-	round = game["roundsplayed"] +1;
+	round = game["roundsplayed"] + 1;
 	level.roundnum setValue(round);
 
 	level.starting = newHudElem();
@@ -2621,22 +2620,9 @@ _start_ready()
 
 	maps\mp\gametypes\_pam_readyup::PAM_Ready_UP();
 
-	if (game["halftimeflag"] == 0) {
-		_hud_ready_create(1);
-	} else {
-		_hud_ready_create(2);
-	}
-
+	_hud_ready_create(game["halftimeflag"] + 1);
 	wait 5;
-
-	_hud_labels_destroy();
 	_hud_ready_destroy();
-
-	// give all of the players clocks to count down until the half starts
-	if (game["halftimeflag"] == 0)
-		Create_HUD_RoundStart(1);
-	else
-		Create_HUD_RoundStart(2);
 
 	//Starting Round 1 Clock
 	time = getCvarInt("g_roundwarmuptime");
@@ -2644,17 +2630,11 @@ _start_ready()
 		time = 1;
 	}
 
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		if ( isDefined(players[i].pers["team"]) && players[i].pers["team"] == "spectator")
-			continue;
+	_hud_roundstart_create(game["halftimeflag"] + 1, time);
 
-		players[i] thread stopwatch_start(time);
-	}
-	
 	wait time;
 
-	Destroy_HUD_RoundStart();
+	_hud_roundstart_destroy();
 
 	level notify("kill_endround");
 	level.roundended = false;
@@ -2712,19 +2692,19 @@ _hud_ready_destroy()
 	}
 }
 
-Create_HUD_RoundStart(half)
+_hud_roundstart_create(half, time)
 {
-	level.round = newHudElem();
-	level.round.x = 540;
-	level.round.y = 295;
-	level.round.alignX = "center";
-	level.round.alignY = "middle";
-	level.round.fontScale = 1;
-	level.round.color = (1, 1, 0);
+	level.hud_round = newHudElem();
+	level.hud_round.x = 540;
+	level.hud_round.y = 295;
+	level.hud_round.alignX = "center";
+	level.hud_round.alignY = "middle";
+	level.hud_round.fontScale = 1;
+	level.hud_round.color = (1, 1, 0);
 	if (half == 1)
-		level.round setText(game["first"]);	
+		level.hud_round setText(game["first"]);	
 	else
-		level.round setText(game["second"]);	
+		level.hud_round setText(game["second"]);	
 		
 	level.roundnum = newHudElem();
 	level.roundnum.x = 540;
@@ -2743,16 +2723,27 @@ Create_HUD_RoundStart(half)
 	level.starting.fontScale = 1;
 	level.starting.color = (1, 1, 0);
 	level.starting setText(game["starting"]);
+
+	level.p_hud_stopwatch = newHudElem();
+	level.p_hud_stopwatch.x = 590;
+	level.p_hud_stopwatch.y = 315;
+	level.p_hud_stopwatch.alignX = "center";
+	level.p_hud_stopwatch.alignY = "middle";
+	level.p_hud_stopwatch.sort = 9999;
+	level.p_hud_stopwatch.archived = false;
+	level.p_hud_stopwatch setClock(time, 60, "hudStopwatch", 64, 64);
 }
 
-Destroy_HUD_RoundStart()
+_hud_roundstart_destroy()
 {
-	if(isdefined(level.round))
-		level.round destroy();
+	if(isdefined(level.hud_round))
+		level.hud_round destroy();
 	if(isdefined(level.roundnum))
 		level.roundnum destroy();
 	if(isdefined(level.starting))
 		level.starting destroy();
+	if(isdefined(level.p_hud_stopwatch))
+		level.p_hud_stopwatch destroy();
 }
 
 Do_Half_Time()

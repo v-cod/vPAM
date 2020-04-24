@@ -107,10 +107,14 @@ readyup()
 	readyhud.color = (1, .66, .66);
 	readyhud setText(game["notready"]);
 
-	while (level.p_readying) {
+	for (;;) {
 		// Wait for use button press.
-		while (self useButtonPressed() == false) {
+		while (self useButtonPressed() == false && level.p_readying) {
 			wait .05;
+		}
+
+		if (!level.p_readying) {
+			break;
 		}
 
 		// Toggle ready boolean.
@@ -135,7 +139,7 @@ readyup()
 		}
 
 		// Wait for use button release.
-		while (self useButtonPressed() == true) {
+		while (self useButtonPressed() == true && level.p_readying) {
 			wait .05;
 		}
 	}
