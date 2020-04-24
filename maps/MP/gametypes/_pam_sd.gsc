@@ -932,7 +932,7 @@ spawnPlayer()
 /**/if (getcvarint("scr_allow_pistol") == 0) {
 /**/	self takeWeapon(self getWeaponSlotWeapon("pistol"));
 /**/}
-/**/if (getcvarint("scr_allow_nades") ==0) {
+/**/if (getcvarint("scr_allow_nades") == 0) {
 /**/	self takeWeapon(self getWeaponSlotWeapon("grenade"));
 /**/}
 
@@ -1354,21 +1354,16 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (getCvarInt("g_roundwarmuptime") != 0 && level.hithalftime == 0) {
+/**/if (getCvarInt("p_round_restart_delay") != 0 && level.hithalftime == 0) {
+/**/	warmup = getCvarInt("p_round_restart_delay");
+/**/
 /**/	_hud_labels_create();
-/**/
-/**/	Create_HUD_Scoreboard();
-/**/
-/**/	warmup = getCvarInt("g_roundwarmuptime");
-/**/	Create_HUD_NextRound(warmup);
-/**/
-/**/	/* Remove match countdown text */
+/**/	_hud_scoreboard_create();
+/**/	_hud_round_next_create(warmup);
 /**/	
 /**/	_hud_labels_destroy();
-/**/
-/**/	Destroy_HUD_Scoreboard();
-/**/
-/**/	Destroy_HUD_NextRound();
+/**/	_hud_scoreboard_destroy();
+/**/	_hud_round_next_destroy();
 /**/}
 
 	map_restart(true);
@@ -1441,19 +1436,19 @@ checkScoreLimit()
 	if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
 		return;
 
-/**/Create_HUD_Matchover();
-/**/Create_HUD_TeamWin();
+/**/_hud_matchover_create();
 /**/_hud_labels_create();
-/**/Create_HUD_Scoreboard();
+/**/_hud_scoreboard_create();
+/**/_hud_teamwin_create();
 /**/
 /**/wait 10;
 /**/
 /**/_hud_labels_destroy();
-/**/Destroy_HUD_Scoreboard();
-/**/Destroy_HUD_TeamWin();
+/**/_hud_scoreboard_destroy();
+/**/_hud_teamwin_destroy();
 /**/
-/**/if(isdefined(level.matchover))
-/**/	level.matchover destroy();
+/**/if (isdefined(level.p_hud_matchover))
+/**/	level.p_hud_matchover destroy();
 
 	if(level.mapended)
 		return;
@@ -1477,19 +1472,19 @@ checkRoundLimit()
 	if(game["roundsplayed"] < level.roundlimit)
 		return;
 	
-/**/Create_HUD_Matchover();
-/**/Create_HUD_TeamWin();
+/**/_hud_matchover_create();
+/**/_hud_teamwin_create();
 /**/_hud_labels_create();
-/**/Create_HUD_Scoreboard();
+/**/_hud_scoreboard_create();
 /**/
 /**/wait 10;
 /**/
 /**/_hud_labels_destroy();
-/**/Destroy_HUD_Scoreboard();
-/**/Destroy_HUD_TeamWin();
+/**/_hud_scoreboard_destroy();
+/**/_hud_teamwin_destroy();
 /**/
-/**/if(isdefined(level.matchover))
-/**/	level.matchover destroy();
+/**/if(isdefined(level.p_hud_matchover))
+/**/	level.p_hud_matchover destroy();
 	
 	if(level.mapended)
 		return;
@@ -1882,7 +1877,7 @@ bombzone_think(bombzone_other)
 					
 					level notify("bomb_planted");
 					level.clock destroy();
-
+					
 /**/				level.clock = newHudElem();
 /**/				level.clock.x = 320;
 /**/				level.clock.y = 460;
@@ -2112,7 +2107,7 @@ _hud_labels_destroy()
 	}
 }
 
-Create_HUD_Scoreboard()
+_hud_scoreboard_create()
 {	// Set up Scorboard Vertical Positioning
 	// CHANGE ONLY SCOREBOARDY
 	scoreboardy = 197;
@@ -2251,7 +2246,7 @@ Create_HUD_Scoreboard()
 	level.matchalliesscorenum setValue(game["alliedscore"]);
 }
 
-Destroy_HUD_Scoreboard()
+_hud_scoreboard_destroy()
 {
 	if(isdefined(level.scorebd))
 		level.scorebd destroy();
@@ -2291,7 +2286,7 @@ Destroy_HUD_Scoreboard()
 
 }
 
-Create_HUD_NextRound(time)
+_hud_round_next_create(time)
 {
 	if ( time < 3 )
 		time = 3;
@@ -2346,7 +2341,7 @@ Create_HUD_NextRound(time)
 		level.starting destroy();
 }
 
-Destroy_HUD_NextRound()
+_hud_round_next_destroy()
 {
 	if(isdefined(level.round))
 		level.round destroy();
@@ -2357,7 +2352,7 @@ Destroy_HUD_NextRound()
 }
 
 
-Create_HUD_TeamWin()
+_hud_teamwin_create()
 {
 	level.teamwin = newHudElem();
 	level.teamwin.x = 575;
@@ -2388,7 +2383,7 @@ Create_HUD_TeamWin()
 	}
 }
 
-Destroy_HUD_TeamWin()
+_hud_teamwin_destroy()
 {
 	if(isdefined(level.teamwin))
 		level.teamwin destroy();
@@ -2407,7 +2402,7 @@ _start_ready()
 	_hud_ready_destroy();
 
 	//Starting Round 1 Clock
-	time = getCvarInt("g_roundwarmuptime");
+	time = getCvarInt("p_round_restart_delay");
 	if (time < 1) {
 		time = 1;
 	}
@@ -2544,7 +2539,7 @@ _half_time()
 	level.halftime.color = (1, 1, 0);
 	level.halftime setText(game["halftime"]);
 	
-	Create_HUD_Scoreboard();
+	_hud_scoreboard_create();
 	
 	wait 1;
 
@@ -2698,16 +2693,16 @@ Destroy_HUD_TeamSwap()
 		level.switching2 destroy();
 }
 
-Create_HUD_Matchover()
+_hud_matchover_create()
 {
-	level.matchover = newHudElem();
-	level.matchover.x = 575;
-	level.matchover.y = 175;
-	level.matchover.alignX = "center";
-	level.matchover.alignY = "middle";
-	level.matchover.fontScale = 1;
-	level.matchover.color = (1, 1, 0);
-	level.matchover setText(game["matchover"]);
+	level.p_hud_matchover = newHudElem();
+	level.p_hud_matchover.x = 575;
+	level.p_hud_matchover.y = 175;
+	level.p_hud_matchover.alignX = "center";
+	level.p_hud_matchover.alignY = "middle";
+	level.p_hud_matchover.fontScale = 1;
+	level.p_hud_matchover.color = (1, 1, 0);
+	level.p_hud_matchover setText(game["matchover"]);
 }
 
 Hold_All_Players()

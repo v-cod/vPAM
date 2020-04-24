@@ -52,8 +52,8 @@ main()
 	if(getCvar("pam_mode") == "")
 		setCvar("pam_mode", "pub");
 
-	if(getcvar("g_roundwarmuptime") == "")
-		setcvar("g_roundwarmuptime", "5");
+	if(getcvar("p_round_restart_delay") == "")
+		setcvar("p_round_restart_delay", "5");
 
 	if(getcvar("sv_playersleft") == "")
 		setcvar("sv_playersleft", "1");

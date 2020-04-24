@@ -87,24 +87,8 @@ LeagueRules()
 	setcvar("scr_allow_pistol", "0");
 
 
-
-	/*========================================================*/
-	/* ================== PAM Options ========================*/
-	/*========================================================*/
-
-	/* HUD Items */
-	setcvar("sv_scoreboard", "big");			// Use BIG Scoreboard
 	setcvar("sv_playersleft", "1");				// players left
-
-
-	// Timers
-	setcvar("g_roundwarmuptime", "5");			// round warmup time
-
-	// Warm-up Mines
-	setcvar("sv_warmupmines", "0"); //Leave this on for now. Mines need to be re-worked.
-
-	//Auto Screenshots / Console
-	setcvar("g_autoscreenshot", "1");			// turns on autoscreenshot
+	setcvar("p_round_restart_delay", "5");			// round warmup time
 	setcvar("g_disableClientConsole", "0");		// disable client console
 
 
@@ -122,8 +106,6 @@ LeagueRules()
 	setcvar("g_speed", "190");			// Player Speed
 	setcvar("g_gravity", "800");		// Cheats? Oh no!
 	setcvar("g_deadchat", "1");			// Dead Speak to Living
-	setcvar("g_maxDroppedWeapons", "16");	// Max weapons allowed laying around
-	setcvar("g_weaponrespawn", "5");	// How long before spawned weapons respawn
 
 
 	/* Do NOT Touch These */
