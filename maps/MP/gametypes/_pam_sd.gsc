@@ -183,7 +183,7 @@ Callback_PlayerConnect()
 	for(;;)
 	{
 		self waittill("menuresponse", menu, response);
-
+		
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
 			self.pers["skipserverinfo"] = true;
@@ -766,7 +766,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 				attacker.pers["score"]--;
 				attacker.score = attacker.pers["score"];
 			}
-
+			
 			if(isDefined(attacker.friendlydamage))
 				clientAnnouncement(attacker, &"MPSCRIPT_FRIENDLY_FIRE_WILL_NOT"); 
 		}
@@ -2331,7 +2331,7 @@ _hud_round_next_create(time)
 	}
 	
 	iPrintLn("next round HUD, wait " + time + " seconds...");
-	wait (time);
+	wait time;
 
 	if(isdefined(level.round))
 		level.round destroy();
@@ -2347,8 +2347,6 @@ _hud_round_next_destroy()
 		level.round destroy();
 	if(isdefined(level.roundnum))
 		level.roundnum destroy();
-	if(isdefined(level.startingin))
-		level.startingin destroy();
 }
 
 
@@ -2398,6 +2396,7 @@ _start_ready()
 	maps\mp\gametypes\_pam_readyup::PAM_Ready_UP();
 
 	_hud_ready_create(game["halftimeflag"] + 1);
+	iPrintLn("players ready, wait 5 seconds...");
 	wait 5;
 	_hud_ready_destroy();
 

@@ -1,8 +1,8 @@
-LeagueRules()
+cvars()
 {
-	// Logo
+	// Labels
 	game["leaguestring"] = &"walRus";
-
+	game["pamstring"] = &"^7d^4`^9logics^4.";
 	
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
@@ -87,9 +87,9 @@ LeagueRules()
 	setcvar("scr_allow_pistol", "0");
 
 
-	setcvar("sv_playersleft", "1");				// players left
-	setcvar("p_round_restart_delay", "5");			// round warmup time
-	setcvar("g_disableClientConsole", "0");		// disable client console
+	setcvar("sv_playersleft", "1");          // players left
+	setcvar("p_round_restart_delay", "5");   // round warmup time
+	setcvar("g_disableClientConsole", "0");  // disable client console
 
 
 	/* NOT Likely to ever change */
@@ -106,8 +106,4 @@ LeagueRules()
 	setcvar("g_speed", "190");			// Player Speed
 	setcvar("g_gravity", "800");		// Cheats? Oh no!
 	setcvar("g_deadchat", "1");			// Dead Speak to Living
-
-
-	/* Do NOT Touch These */
-	game["mode"] = "match";
 }
