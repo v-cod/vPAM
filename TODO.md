@@ -1,6 +1,7 @@
 ## Must
 
 - CVAR loop and good setup/rules infrastrcture.
+- Help command to show variables available.
 
 ## Should
 

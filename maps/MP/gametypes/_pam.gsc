@@ -25,6 +25,15 @@ main()
 		game["checkingmatchstart"] = false;
 	}
 
+	level.p_mode = "pam_mode";
+	level.p_alive = "sv_playersleft";
+	level.p_draw_rounds = "scr_count_draws";
+	level.p_antifs = "scr_afs_time";
+	level.p_allow_mg42 = "scr_allow_mg42";
+	level.p_allow_pistol = "scr_allow_pistol";
+	level.p_allow_nades = "scr_allow_nades";
+	
+
 	if(getCvar("pam_mode") == "")
 		setCvar("pam_mode", "pub");
 
