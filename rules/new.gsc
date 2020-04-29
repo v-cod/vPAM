@@ -1,7 +1,7 @@
 main()
 {
     // mode: off, <ruleset>.
-    // second weapon: off (default), on (opponent team), <team>, "karmos".
+    // second weapon: off (default), on (opponent team), <team>, "<primary> <secondary>".
     // pistol: off, on.
     // nades: off, on.
     // afs: off, on.

@@ -25,13 +25,17 @@ main()
 		game["checkingmatchstart"] = false;
 	}
 
-	level.p_mode = "pam_mode";
-	level.p_alive = "sv_playersleft";
-	level.p_draw_rounds = "scr_count_draws";
-	level.p_antifs = "scr_afs_time";
-	level.p_allow_mg42 = "scr_allow_mg42";
-	level.p_allow_pistol = "scr_allow_pistol";
-	level.p_allow_nades = "scr_allow_nades";
+	// level.p_mode = "pam_mode";
+	
+	// // Show amount of alive players per team.
+	// level.p_alive = "sv_playersleft";
+	// level _register_cvar("alive", "bool", true, "sv_playersleft");
+	
+	// level.p_draw_rounds = "scr_count_draws";
+	// level.p_antifs = "scr_afs_time";
+	// level.p_allow_mg42 = "scr_allow_mg42";
+	// level.p_allow_pistol = "scr_allow_pistol";
+	// level.p_allow_nades = "scr_allow_nades";
 	
 
 	if(getCvar("pam_mode") == "")
@@ -51,7 +55,7 @@ main()
 	level.hithalftime = 0;
 	level.afs_time = getcvarFloat("scr_afs_time");
 
-	level.instrattime = false;
+	level.p_stratting = false;
 
 	// Ready up phase before half start.
 	level.p_readying = false;
@@ -188,38 +192,25 @@ _precache()
 	precacheItem("kar98k_mp");
 }
 
-// cvar(cvar, def, min, max, type)
+// _cvar(cvar, type, def)
 // {
 // 	if (getCvar(cvar) == "") {
 // 		return def;
 // 	}
 
 // 	switch (type) {
+// 	case "bool":
+// 		return !!getCvarInt(cvar);
 // 	case "int":
-// 		v = getCvarInt(cvar);
-// 		break;
+// 		return getCvarInt(cvar);
 // 	case "float":
-// 		v = getCvarFloat(cvar);
-// 		break;
-// 	case "array":
-// 		return maps\mp\gametypes\_wrs_admin::explode(" ", getCvar(cvar), 0);
-// 	case "string":
+// 		return getCvarFloat(cvar);
 // 	default:
 // 		return getCvar(cvar);
 // 	}
-
-// 	if (type == "int" || type == "float") {
-// 		if (v > max) {
-// 			v = max;
-// 		} else if (v < min) {
-// 			v = min;
-// 		}
-// 	}
-// 	return v;
 // }
 
-_register_cvar()
-{
-	// cvar
-	// typ
-}
+// _register_cvar(id, type, cvar)
+// {
+// 	level.p[id] = _cvar();
+// }

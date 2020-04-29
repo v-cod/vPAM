@@ -588,7 +588,7 @@ Callback_PlayerDisconnect()
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-/**/if(level.p_readying) {
+/**/if (level.p_readying) {
 /**/	if (isPlayer(eAttacker) && self != eAttacker)
 /**/		eAttacker.pers["killer"] = true;
 /**/	
@@ -597,7 +597,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/}
 /**/
 /**/// TODO: Necessary for damage?:
-/**/if (level.instrattime)
+/**/if (level.p_stratting)
 /**/	return;
 /**/
 /**/if(level.roundended && !level.p_readying)
@@ -859,7 +859,7 @@ spawnPlayer()
 /**/// if(isDefined(self.spawned))
 /**///	return;
 
-/**/if (level.instrattime)
+/**/if (level.p_stratting)
 /**/	self.maxspeed = 0;
 
 	self.sessionstate = "playing";
@@ -876,6 +876,9 @@ spawnPlayer()
 		self spawn(spawnpoint.origin, spawnpoint.angles);
 	else
 		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
+
+/**/// To check later if player didn't false start during strat.
+/**/self.p_spawn_origin = spawnpoint.origin;
 	
 	self.spawned = true;
 /**/if(!level.p_readying || !self.p_ready)
@@ -1040,18 +1043,17 @@ startRound()
 
 		if((level.roundlength * 60) > level.graceperiod)
 		{
-/**/		if (getcvar("scr_strat_time") == "1") {
+/**/		if (getCvar("scr_strat_time") == "1" && level.graceperiod > 0) {
 /**/			level.clock setTimer(level.graceperiod);
 /**/			thread Hold_All_Players();
 /**/		}
 
 			wait level.graceperiod;
-/**/		thread maps\mp\gametypes\_teams::sayMoveIn();
 
 			level notify("round_started");
 			level.roundstarted = true;
 			level.clock.color = (1, 1, 1);
-/**/		if (getcvar("scr_strat_time") == "1") {
+/**/		if (getCvar("scr_strat_time") == "1" && level.graceperiod > 0) {
 /**/			level.clock setTimer(level.roundlength * 60);
 /**/		}
 
@@ -1065,7 +1067,8 @@ startRound()
 					player.statusicon = "gfx/hud/hud@status_dead.tga";
 			}
 		
-			wait((level.roundlength * 60) - level.graceperiod);
+/**/		// wait((level.roundlength * 60) - level.graceperiod);
+/**/		wait(level.roundlength * 60);
 		}
 		else
 			wait(level.roundlength * 60);
@@ -1356,14 +1359,23 @@ endRound(roundwinner)
 
 /**/if (getCvarInt("p_round_restart_delay") != 0 && level.hithalftime == 0) {
 /**/	warmup = getCvarInt("p_round_restart_delay");
-/**/
 /**/	_hud_labels_create();
-/**/	_hud_scoreboard_create();
-/**/	_hud_round_next_create(warmup);
-/**/	
+		
+		if (game["roundsplayed"] == 0) {
+			_hud_roundstart_create(game["halftimeflag"] + 1, warmup);
+
+			wait warmup;
+
+			_hud_roundstart_destroy();
+		} else {
+/**/		_hud_scoreboard_create();
+/**/		_hud_round_next_create(warmup);
+/**/
+/**/		_hud_scoreboard_destroy();
+/**/		_hud_round_next_destroy();
+		}
+
 /**/	_hud_labels_destroy();
-/**/	_hud_scoreboard_destroy();
-/**/	_hud_round_next_destroy();
 /**/}
 
 	map_restart(true);
@@ -1645,7 +1657,7 @@ updateTeamStatus()
 	if(level.exist["axis"])
 		level.didexist["axis"] = true;
 
-/**/if(level.p_readying)
+/**/if (level.p_readying || !game["matchstarted"])
 /**/	return;
 
 	if(level.roundended)
@@ -2400,18 +2412,6 @@ _start_ready()
 	wait 5;
 	_hud_ready_destroy();
 
-	//Starting Round 1 Clock
-	time = getCvarInt("p_round_restart_delay");
-	if (time < 1) {
-		time = 1;
-	}
-
-	_hud_roundstart_create(game["halftimeflag"] + 1, time);
-
-	wait time;
-
-	_hud_roundstart_destroy();
-
 	level notify("kill_endround");
 	level.roundended = false;
 	level thread endRound("reset");
@@ -2596,8 +2596,6 @@ _half_time()
 	for (i = 0; i < players.size; i++) { 
 		player = players[i];
 
-		if (!isDefined(player.pers["selectedweapon"]) )
-			player.pers["selectedweapon"] = undefined;
 		player.pers["weapon1"] = undefined;
 		player.pers["weapon2"] = undefined;
 		player.pers["weapon"] = player.pers["selectedweapon"];
@@ -2707,9 +2705,7 @@ _hud_matchover_create()
 Hold_All_Players()
 {
 	// Allow damage or death yet
-	level.instrattime = true;
-
-	wait .5;
+	level.p_stratting = true;
 
 	// Strat Time HUD
 	level.strattime = newHudElem();
@@ -2722,31 +2718,44 @@ Hold_All_Players()
 	level.strattime setText(game["strattime"]);
 
 	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{
-		player = players[i];
-
-		player.maxspeed = 0;
+	for (i = 0; i < players.size; i++) {
+		players[i].maxspeed = 0;
 	}
 
-	while (!level.roundstarted)
-	{
-		wait .2;
-	}
+	level waittill("round_started");
 
-	if(isdefined(level.strattime))
+	level.p_stratting = false;
+
+	if (isDefined(level.strattime)) {
 		level.strattime destroy();
+	}
 
-	level.instrattime = false;
+
+	players = getentarray("player", "classname");
+	for (i = 0; i < players.size; i++) { 
+		players[i].maxspeed = getCvar("g_speed");
+	}
 
 	thread maps\mp\gametypes\_teams::sayMoveIn();
 
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++)
-	{ 
-		player = players[i];
+	// Attempt to detect false start (e.g. lagbinding).
+	dist_max = getCvarInt("g_speed") * 1.2; // Fastest possible speed (pistol).
+	dist_max = dist_max * dist_max; // squared
 
-		player.maxspeed = getcvar("g_speed");
+	// Wait for players to cover distance.
+	wait 1;
+
+	players = getentarray("player", "classname");
+	for (i = 0; i < players.size; i++) {
+		if (players[i].sessionstate != "playing") {
+			continue;
+		}
+
+		dist = distancesquared(players[i].p_spawn_origin, players[i].origin);		
+		if (dist > dist_max) {
+			iPrintLn("False start: " + player.name);
+			players[i] setOrigin(players[i].p_spawn_origin);
+		}
 	}
 }
 

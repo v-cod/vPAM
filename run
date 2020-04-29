@@ -1,0 +1,17 @@
+#!/bin/sh
+
+HOMEPATH="${HOMEPATH:-$HOME/.callofduty}"
+BINDIR="${BINDIR:-../cod/out}"
+basepath="$BINDIR"
+
+mkdir --parents "$HOMEPATH/main"
+touch "$HOMEPATH/main/console_mp_server.log" "$HOMEPATH/main/games_mp.log"
+
+# Mix output of logs with server output. Console log outputs extra errors.
+tail --follow "$HOMEPATH/main/console_mp_server.log" | sed -n '/\*\*\*\*\*/,/\*\*\*\*\*/p' &
+tail --follow "$HOMEPATH/main/games_mp.log" &
+
+"$BINDIR/cod_lnxded" +set fs_basepath "$basepath" "$@"
+
+# Echo breaks sometimes after server segfault.
+stty echo

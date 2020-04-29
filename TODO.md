@@ -31,3 +31,4 @@
 - auto_change name during readying.
 - Auto demo/screenshot mechanism (probably not optimal).
 - Test SD timelimit.
+- Check if Punkbuster can detect client cvar changes faster. (To prevent quick toggling.)

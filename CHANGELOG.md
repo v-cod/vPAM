@@ -15,11 +15,11 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Replaced scr_end_score and scr_end_round with stock equivalents (scr_sd).
 
 ### Added
-- wrs rules.
 - Anti fast shoot monitoring.
 - scr_allow_nades to control nades equipment.
 - Death icon (like stock) on death pre-match.
 - Secondary weapon choice from other team.
+- Strat time lagbinding detection.
 
 ### Removed
 - Removed 'ClanBase warning' (pre-match message).
