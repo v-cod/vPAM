@@ -9,7 +9,6 @@
 
 ## Could
 
-- Fix strat time lag bind bug.
 - Overtime automatically after draw.
 - Weapon picking upgrade (secondary/picking from opposite team).
 - Keep score during warm-up.

@@ -1476,7 +1476,7 @@ checkRoundLimit()
 		return;
 
 /**/// Half time check.
-/**/if (level.roundlimit / 2 > 0 && game["halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
+/**/if (level.roundlimit > 0 && game["halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
 /**/	_half_time();
 /**/	return;
 /**/}
