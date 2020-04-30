@@ -40,26 +40,41 @@ Additional:
 
 ## Random resources
 
-
 https://web.archive.org/web/20041229081422/http://www.callofduty.com/patch/readme_patch_1.5.txt
 https://web.archive.org/web/20150731231429/http://www.evenbalance.com:80/publications/cod-ad/index.htm
 
+### Punkbuster
+
 Get user values: `/rcon pb_sv_cvarval fs_homepath`
 
-takeallweapons
+### Cvars
 
-set - set cvar
-seta - set cvar and flag as archive (saves to default config)
-sets - set cvar and flag as serverinfo (shows up in server details for clients)
-setu - flag as userinfo (sent to server on connect or change)
-reset - unset cvar
+`arch`: architecture (?)
+`fs_homepath`/`fs_basepath`: paths to game files.
+`version`: show build information.
+`username`: computer user
 
-level - round duration; resets on map_restart (e.g. round end in SD)
-game - map duration; resets on exitLevel (map change)
+`g_logSync`: 1 to flush game log after print.
+`logfile`: 1 to console log, 2 to flush after print. // 1 = buffer log, 2 = flush after each print
+`dedicated`: "dedicated 1" is for lan play, "dedicated 2" is for inet public play
+`developer`: 1 to print developer stuff.
+
+### Commands
+
+`set`: set cvar
+`seta`: set cvar and flag as archive (saves to default config)
+`sets`: set cvar and flag as serverinfo (shows up in server details for clients)
+`setu`: flag as userinfo (sent to server on connect or change)
+`reset`: unset cvar
+
+`dumpuser`: show rate and snaps
+
+
+### GSC
+
+`takeallweapons`
+
+`level` - round duration; resets on map_restart (e.g. round end in SD)
+`game` - map duration; resets on exitLevel (map change)
 
 fonts: bigfixed smallfixed default(?)
-
-g_logSync: 1 to flush after print.
-logfile: 1 to log, 2 to flush after print. // 1 = buffer log, 2 = flush after each print
-dedicated: "dedicated 1" is for lan play, "dedicated 2" is for inet public play
-developer: 1 to print developer stuff.
