@@ -1,5 +1,12 @@
 main()
 {
+	// Require prematch ready-up phase.
+	level.p_ready = true;
+	// Currently in ready-up phase.
+	level.p_readying = false;
+	// Ready-up phase succeeded.
+	level.p_readied = false;
+
 	if (!isDefined(game["gamestarted"])) {
 		level.p_rules = [];
 		rules\_rules::rules();
@@ -16,8 +23,13 @@ main()
 		_precache();
 	}
 
-	if (!isDefined(game["halftimeflag"])) {
-		game["halftimeflag"] = 0;
+	// Ready up phase before match start.
+	if (!game["matchstarted"] && level.p_ready) {
+		maps\mp\gametypes\_pam_readyup::start_readying();
+	}
+
+	if (!isDefined(game["p_halftimeflag"])) {
+		game["p_halftimeflag"] = 0;
 		game["round1alliesscore"] = 0;
 		game["round1axisscore"] = 0; 
 		game["round2alliesscore"] = 0;
@@ -56,9 +68,6 @@ main()
 	level.afs_time = getcvarFloat("scr_afs_time");
 
 	level.p_stratting = false;
-
-	// Ready up phase before half start.
-	level.p_readying = false;
 
 	level.allow_mg42 = getCvar("scr_allow_mg42");
 	if(level.allow_mg42 == "")

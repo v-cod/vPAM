@@ -121,13 +121,12 @@ Callback_PlayerConnect()
 	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
 /**/self.pers["killer"] = false;
-
 /**/self.p_name = self.name;
 /**/self.p_ready = false;
 /**/self.p_readying = false;
 
 /**/if (level.p_readying == true) {
-/**/    self thread maps\mp\gametypes\_pam_readyup::readyup(lpselfnum);
+/**/    self thread maps\mp\gametypes\_pam_readyup::monitor_player(lpselfnum);
 /**/}
 
 	if(game["state"] == "intermission")
@@ -1078,7 +1077,7 @@ startRound()
 		level.clock.color = (1, 1, 1);
 /**/	// wait(level.roundlength * 60);
 
-/**/	// Pre-match
+/**/	// Prematch takes forever.
 /**/	level.clock destroy();
 /**/	_hud_labels_create();
 /**/
@@ -1101,6 +1100,11 @@ startRound()
 
 checkMatchStart()
 {
+/**/// With ready-up phase enabled, start will be decided by that logic only.
+/**/if (level.p_ready) {
+/**/	return;
+/**/}
+
 	oldvalue["teams"] = level.exist["teams"];
 	level.exist["teams"] = false;
 
@@ -1113,9 +1117,6 @@ checkMatchStart()
 	{
 		if(!game["matchstarted"])
 		{
-/**/		thread _start_ready();
-/**/		return;
-
 			announcement(&"SD_MATCHSTARTING");
 
 			level notify("kill_endround");
@@ -1213,8 +1214,7 @@ endRound(roundwinner)
 			players[i] playLocalSound("MP_announcer_round_draw");
 	}
 
-	iPrintLn("end round, wait 5 seconds...");
-	wait 5;
+/**///wait 5;
 
 	winners = "";
 	losers = "";
@@ -1224,7 +1224,7 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-/**/	if (game["halftimeflag"] == 1) {
+/**/	if (game["p_halftimeflag"] == 1) {
 /**/		game["round2alliesscore"]++;
 /**/	} else if(game["matchstarted"]) {
 /**/		game["round1alliesscore"]++;
@@ -1247,7 +1247,7 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-/**/	if (game["halftimeflag"] == 1) {
+/**/	if (game["p_halftimeflag"] == 1) {
 /**/		game["round2axisscore"]++;
 /**/	} else if(game["matchstarted"]) {
 /**/		game["round1axisscore"]++;
@@ -1266,6 +1266,9 @@ endRound(roundwinner)
 		logPrint("L;allies" + losers + "\n");
 	}
 
+/**/iPrintLn("endRound: wait 5 (scores set)");
+/**/wait 5;
+
 	if(game["matchstarted"])
 	{
 		checkScoreLimit();
@@ -1279,16 +1282,17 @@ endRound(roundwinner)
 	if(!game["matchstarted"] && roundwinner == "reset")
 	{
 		game["matchstarted"] = true;
-		thread resetScores();
-		game["roundsplayed"] = 0;
+/**/	// Only reset scores if no rounds played yet. (Might be halftime.)
+/**/	// thread resetScores();
+/**/	// game["roundsplayed"] = 0;
+/**/	if (game["roundsplayed"] == 0) {
+/**/		thread resetScores();
+/**/	}
 	}
 
 	game["timepassed"] = game["timepassed"] + ((getTime() - level.starttime) / 1000) / 60.0;
 
 	checkTimeLimit();
-
-/**/if (level.hithalftime)
-/**/	return;
 
 	if(level.mapended)
 		return;
@@ -1357,12 +1361,12 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (getCvarInt("p_round_restart_delay") != 0 && level.hithalftime == 0) {
+/**/if (getCvarInt("p_round_restart_delay") != 0) {
 /**/	warmup = getCvarInt("p_round_restart_delay");
 /**/	_hud_labels_create();
-		
+
 		if (game["roundsplayed"] == 0) {
-			_hud_roundstart_create(game["halftimeflag"] + 1, warmup);
+			_hud_roundstart_create(game["p_halftimeflag"] + 1, warmup);
 
 			wait warmup;
 
@@ -1476,7 +1480,7 @@ checkRoundLimit()
 		return;
 
 /**/// Half time check.
-/**/if (level.roundlimit > 0 && game["halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
+/**/if (level.roundlimit > 0 && game["p_halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
 /**/	_half_time();
 /**/	return;
 /**/}
@@ -2224,7 +2228,7 @@ _hud_scoreboard_create()
 	level.matchscore setText(game["matchscore2"]);
 
 	level.matchaxisscorenum = newHudElem();
-	if(game["halftimeflag"] == 1)
+	if(game["p_halftimeflag"] == 1)
 	{
 		level.matchaxisscorenum.x = 618;
 		level.matchaxisscorenum.color = (.85, .99, .99);
@@ -2241,7 +2245,7 @@ _hud_scoreboard_create()
 	level.matchaxisscorenum setValue(game["axisscore"]);
 
 	level.matchalliesscorenum = newHudElem();
-	if(game["halftimeflag"] == 1)
+	if(game["p_halftimeflag"] == 1)
 	{
 		level.matchalliesscorenum.x = 535;
 		level.matchalliesscorenum.color = (.73, .99, .75);
@@ -2376,12 +2380,12 @@ _hud_teamwin_create()
 		level.teamwin.color = (1, 1, 0);
 		level.teamwin setText(game["dsptie"]);
 	}
-	else if (game["axisscore"] > game["alliedscore"] && game["halftimeflag"] == 1)
+	else if (game["axisscore"] > game["alliedscore"] && game["p_halftimeflag"] == 1)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);
 	}
-	else if (game["axisscore"] < game["alliedscore"] && game["halftimeflag"] == 0)
+	else if (game["axisscore"] < game["alliedscore"] && game["p_halftimeflag"] == 0)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);
@@ -2399,24 +2403,6 @@ _hud_teamwin_destroy()
 		level.teamwin destroy();
 }
 
-_start_ready()
-{
-	if (level.p_readying) {
-		return;
-	}
-
-	maps\mp\gametypes\_pam_readyup::PAM_Ready_UP();
-
-	_hud_ready_create(game["halftimeflag"] + 1);
-	iPrintLn("players ready, wait 5 seconds...");
-	wait 5;
-	_hud_ready_destroy();
-
-	level notify("kill_endround");
-	level.roundended = false;
-	level thread endRound("reset");
-}
-
 stopwatch_start(time)
 {
 	if(isDefined(self.stopwatch))
@@ -2430,42 +2416,6 @@ stopwatch_start(time)
 
 	if(isDefined(self.stopwatch)) 
 		self.stopwatch destroy();
-}
-
-_hud_ready_create(next_half)
-{
-	level.p_hud_ready = newHudElem();
-	level.p_hud_ready.x = 320;
-	level.p_hud_ready.y = 390;
-	level.p_hud_ready.alignX = "center";
-	level.p_hud_ready.alignY = "middle";
-	level.p_hud_ready.fontScale = 1.5;
-	level.p_hud_ready.color = (0, 1, 0);
-	level.p_hud_ready setText(game["allready"]);
-		
-	level.p_hud_ready_next_half = newHudElem();
-	level.p_hud_ready_next_half.x = 320;
-	level.p_hud_ready_next_half.y = 370;
-	level.p_hud_ready_next_half.alignX = "center";
-	level.p_hud_ready_next_half.alignY = "middle";
-	level.p_hud_ready_next_half.fontScale = 1.5;
-	level.p_hud_ready_next_half.color = (0, 1, 0);
-
-	if (next_half == 1) {
-		level.p_hud_ready_next_half setText(game["start1sthalf"]);
-	} else {
-		level.p_hud_ready_next_half setText(game["start2ndhalf"]);
-	}
-}
-
-_hud_ready_destroy()
-{
-	if (isDefined(level.p_hud_ready)) {
-		level.p_hud_ready destroy();
-	}
-	if (isDefined(level.p_hud_ready_next_half)) {
-		level.p_hud_ready_next_half destroy();
-	}
 }
 
 _hud_roundstart_create(half, time)
@@ -2524,9 +2474,8 @@ _hud_roundstart_destroy()
 
 _half_time()
 {
-	level.hithalftime = 1;
-
-	_hud_labels_create();
+	game["matchstarted"] = false;
+	game["p_halftimeflag"] = 1;
 
 	// Display scores.
 	level.halftime = newHudElem();
@@ -2538,19 +2487,14 @@ _half_time()
 	level.halftime.color = (1, 1, 0);
 	level.halftime setText(game["halftime"]);
 	
+	_hud_labels_create();
 	_hud_scoreboard_create();
-	
-	wait 1;
-
 	Create_HUD_TeamSwap();
 
-	/* Remove match countdown text */
-
-	wait 7;
+	iPrintLn("_half_time: wait 5");
+	wait 5;
 		
 	Destroy_HUD_TeamSwap();
-
-	game["halftimeflag"] = 1;
 
 	// Switch team scores.
 	axisscore = game["axisscore"];
@@ -2564,101 +2508,52 @@ _half_time()
 	for (i = 0; i < players.size; i++) { 
 		player = players[i];
 
+		player.pers["weapon"] = undefined;
+		player.pers["weapon1"] = undefined;
+		player.pers["weapon2"] = undefined;
+		player.pers["spawnweapon"] = undefined;
+		player.pers["selectedweapon"] = undefined;
+		player.pers["savedmodel"] = undefined;
+
 		if (isDefined(player.pers["team"])) {
 			if (player.pers["team"] == "axis") {
 				player.pers["team"] = "allies";
 			} else if (player.pers["team"] == "allies") {
 				player.pers["team"] = "axis";
 			}
-		}
 
-		player.pers["weapon"] = undefined;
-		player.pers["weapon1"] = undefined;
-		player.pers["weapon2"] = undefined;
-		player.pers["spawnweapon"] = undefined;
-		player.pers["savedmodel"] = undefined;
-		player.pers["selectedweapon"] = undefined;
-		player.sessionstate = "spectator";
-		player.spectatorclient = -1;
-		player.archivetime = 0;
+			player.sessionteam = player.pers["team"];
+			// player spawnSpectator();
 
-		player unlink();
-		player enableWeapon();
-		
-		//Respawn with new weapons
-		player thread Halftimespawn();
-	}
-
-	_start_ready();
-
-	// Get rid of warmup weapons.
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) { 
-		player = players[i];
-
-		player.pers["weapon1"] = undefined;
-		player.pers["weapon2"] = undefined;
-		player.pers["weapon"] = player.pers["selectedweapon"];
-		player.pers["spawnweapon"] = player.pers["selectedweapon"];
-
-		player unlink();
-	}
-
-	_hud_labels_destroy();
-
-	map_restart(true);
-
-	return;
-}
-
-HalftimeSpawn()
-{
-	if (self.pers["team"] == "spectator")
-		return;
-
-	myteam = self.pers["team"];
-
-	self closeMenu();
-
-	if(isDefined(self.pers["weapon"]))
-		spawnPlayer();
-	else
-	{
-		//self.sessionteam = "spectator";
-
-		spawnSpectator();
-
-		if(self.pers["team"] == "allies")
-		{
-			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-			self openMenu(game["menu_weapon_allies"]);
-		}
-		else
-		{
-			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-			self openMenu(game["menu_weapon_axis"]);
+			// player closeMenu();
+			// // player notify("menuresponse", game["menu_team"], player.pers["team"]);
+			// if (player.pers["team"] == "allies") {
+			// 	player setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
+			// 	player openMenu(game["menu_weapon_allies"]);
+			// } else {
+			// 	player setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+			// 	player openMenu(game["menu_weapon_axis"]);
+			// }
 		}
 	}
+	
+	// maps\mp\gametypes\_pam_readyup::start_readying();
 
-	while (!isdefined(self.pers["weapon"]) )
-	{
-		if(self.pers["team"] != myteam && self.pers["team"] != "spectator")
-		{
-			self.pers["team"] = myteam;
-			if(self.pers["team"] == "allies")
-				self openMenu(game["menu_weapon_allies"]);
-			else
-				self openMenu(game["menu_weapon_axis"]);
-		}
+	// // Get rid of warmup weapons.
+	// players = getentarray("player", "classname");
+	// for (i = 0; i < players.size; i++) { 
+	// 	player = players[i];
 
-		if (self.pers["team"] == "spectator")
-			return;
+	// 	player.pers["weapon1"] = undefined;
+	// 	player.pers["weapon2"] = undefined;
+	// 	player.pers["spawnweapon"] = player.pers["weapon"];
+	// }
 
-		wait .1;
-	}
+	// _hud_labels_destroy();
 
-	if (isdefined(self.pers["weapon"]) )
-		spawnPlayer();
+	// map_restart(true);
+
+	// return;
 }
 
 Create_HUD_TeamSwap()

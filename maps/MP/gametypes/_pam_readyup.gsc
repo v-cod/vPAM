@@ -1,93 +1,73 @@
-PAM_Ready_UP()
+start_readying()
 {
 	level.p_readying = true;
+	level.p_readied = false;
 
-	// Ready-Up Mode HUD
-	level.waiting = newHudElem();
-	level.waiting.alignX = "center";
-	level.waiting.alignY = "middle";
-	level.waiting.color = (1, 0, 0);
-	level.waiting.x = 320;
-	level.waiting.y = 390;
-	level.waiting.fontScale = 1.5;
-	level.waiting setText(game["waiting"]);
+	_hud_readying_create();
+	_hud_readying_count_create();
+	update();
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
-		players[i] thread readyup();
+		players[i] thread monitor_player();
 	}
-
-	Waiting_On_Players(); //used to be its own thread, now we wait in there until its finished
-
-	if(isdefined(level.waiting))
-		level.waiting destroy();
 }
 
-Waiting_On_Players()
+stop_readying()
 {
-	level.waitingon = newHudElem(self);
-	level.waitingon.x = 575;
-	level.waitingon.y = 40;
-	level.waitingon.alignX = "center";
-	level.waitingon.alignY = "middle";
-	level.waitingon.fontScale = 1.1;
-	level.waitingon.color = (.8, 1, 1);
-	level.waitingon setText(game["waitingon"]);
+	if (level.p_readying == false) {
+		return;
+	}
+	level.p_readying = false;
+	level.p_readied = true;
 
-	level.playerstext = newHudElem(self);
-	level.playerstext.x = 575;
-	level.playerstext.y = 80;
-	level.playerstext.alignX = "center";
-	level.playerstext.alignY = "middle";
-	level.playerstext.fontScale = 1.1;
-	level.playerstext.color = (.8, 1, 1);
-	level.playerstext setText(game["playerstext"]);
+	_hud_readying_destroy();
+	_hud_readying_count_destroy();
 
-	level.notreadyhud = newHudElem(self);
-	level.notreadyhud.x = 575;
-	level.notreadyhud.y = 60;
-	level.notreadyhud.alignX = "center";
-	level.notreadyhud.alignY = "middle";
-	level.notreadyhud.fontScale = 1.2;
-	level.notreadyhud.color = (.98, .98, .60);
+	_hud_ready_create(game["p_halftimeflag"] + 1);
+	iPrintLn("players ready, wait 5 seconds...");
+	wait 5;
+	_hud_ready_destroy();
 
-	// Maintain Player Not Ready count.
-	while (level.p_readying) {
-		notready = 0;
-
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++) {
-			if (!players[i].p_ready) {
-				notready++;
-			}
-		}
-
-		level.notreadyhud setValue(notready);
-	
-		wait 1;
+	if (game["roundsplayed"] == 0) {
+		announcement(&"SD_MATCHSTARTING");
+	} else {
+		announcement(&"SD_MATCHRESUMING");
 	}
 
-	if(isdefined(level.notreadyhud))
-		level.notreadyhud destroy();
-	if(isdefined(level.waitingon))
-		level.waitingon destroy();
-	if(isdefined(level.playerstext))
-		level.playerstext destroy();
+	level notify("kill_endround");
+	level.roundended = false;
+	level thread maps\mp\gametypes\_pam_sd::endRound("reset");
 }
 
-readyup()
+update()
 {
-	if (self.p_readying) {
+	n = 0;
+
+	players = getEntArray("player", "classname");
+	for(i = 0; i < players.size; i++) {
+		n = n + players[i].p_ready;
+	}
+
+	level.p_readying_count_3 setValue(players.size - n);
+
+	if (players.size < 2) {
+		iPrintLn("Two or more players needed to begin.");
+	} else if (n == players.size) {
+		thread stop_readying();
+	}
+}
+
+monitor_player()
+{
+	if (isDefined(self.p_readying) && self.p_readying) {
 		return;
 	}
 	self.p_readying = true;
 
 	self.statusicon = "";
 
-	// Required or the "respawn" notify could happen before it's waittill has begun
-	wait .5;
-
-	self iprintlnbold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
+	self iPrintLnBold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
 
 	status = newClientHudElem(self);
 	status.x = 575;
@@ -127,8 +107,6 @@ readyup()
 			// Change players hud to indicate player not ready
 			readyhud.color = (.73, .99, .73);
 			readyhud setText(game["ready"]);
-
-			update_ready();
 		} else {
 			self.statusicon = "";
 			iprintln(self.p_name + "^7 is ^1not ready");
@@ -137,6 +115,8 @@ readyup()
 			readyhud.color = (1, .84, .84);
 			readyhud setText(game["notready"]);
 		}
+
+		update();
 
 		// Wait for use button release.
 		while (self useButtonPressed() == true && level.p_readying) {
@@ -150,26 +130,105 @@ readyup()
 		status destroy();
 }
 
-is_level_ready()
+_hud_readying_create()
 {
-	// TODO: Figure whether players (1v1) should be alive for start.
-	// if (level.exist["allies"] == 0 || level.exist["axis"] == 0) {
-	// 	return false;
-	// }
-
-	players = getentarray("player", "classname");
-	for(i = 0; i < players.size; i++) {
-		if (!players[i].p_ready) {
-			return false;
-		}
+	if (isDefined(level.p_hud_readying)) {
+		return;
 	}
 
-	return true;
+	level.p_hud_readying = newHudElem();
+	level.p_hud_readying.alignX = "center";
+	level.p_hud_readying.alignY = "middle";
+	level.p_hud_readying.color = (1, 0, 0);
+	level.p_hud_readying.x = 320;
+	level.p_hud_readying.y = 390;
+	level.p_hud_readying.fontScale = 1.5;
+	level.p_hud_readying setText(game["waiting"]);
 }
 
-update_ready()
+_hud_readying_destroy()
 {
-	if (is_level_ready() == true) {
-		level.p_readying = false;
+	if (isDefined(level.p_hud_readying)) {
+		level.p_hud_readying destroy();
+	}
+}
+
+_hud_readying_count_create()
+{
+	if (isDefined(level.p_readying_count_1)) {
+		return;
+	}
+	
+	level.p_readying_count_1 = newHudElem(self);
+	level.p_readying_count_1.x = 575;
+	level.p_readying_count_1.y = 40;
+	level.p_readying_count_1.alignX = "center";
+	level.p_readying_count_1.alignY = "middle";
+	level.p_readying_count_1.fontScale = 1.1;
+	level.p_readying_count_1.color = (.8, 1, 1);
+	level.p_readying_count_1 setText(game["waitingon"]);
+
+	level.p_readying_count_2 = newHudElem(self);
+	level.p_readying_count_2.x = 575;
+	level.p_readying_count_2.y = 80;
+	level.p_readying_count_2.alignX = "center";
+	level.p_readying_count_2.alignY = "middle";
+	level.p_readying_count_2.fontScale = 1.1;
+	level.p_readying_count_2.color = (.8, 1, 1);
+	level.p_readying_count_2 setText(game["playerstext"]);
+
+	level.p_readying_count_3 = newHudElem(self);
+	level.p_readying_count_3.x = 575;
+	level.p_readying_count_3.y = 60;
+	level.p_readying_count_3.alignX = "center";
+	level.p_readying_count_3.alignY = "middle";
+	level.p_readying_count_3.fontScale = 1.2;
+	level.p_readying_count_3.color = (.98, .98, .60);
+}
+_hud_readying_count_destroy()
+{
+	if (isDefined(level.p_readying_count_1)) {
+		level.p_readying_count_1 destroy();
+	}
+	if (isDefined(level.p_readying_count_2)) {
+		level.p_readying_count_2 destroy();
+	}
+	if (isDefined(level.p_readying_count_3)) {
+		level.p_readying_count_3 destroy();
+	}
+}
+
+_hud_ready_create(next_half)
+{
+	level.p_hud_ready = newHudElem();
+	level.p_hud_ready.x = 320;
+	level.p_hud_ready.y = 390;
+	level.p_hud_ready.alignX = "center";
+	level.p_hud_ready.alignY = "middle";
+	level.p_hud_ready.fontScale = 1.5;
+	level.p_hud_ready.color = (0, 1, 0);
+	level.p_hud_ready setText(game["allready"]);
+		
+	level.p_hud_ready_next_half = newHudElem();
+	level.p_hud_ready_next_half.x = 320;
+	level.p_hud_ready_next_half.y = 370;
+	level.p_hud_ready_next_half.alignX = "center";
+	level.p_hud_ready_next_half.alignY = "middle";
+	level.p_hud_ready_next_half.fontScale = 1.5;
+	level.p_hud_ready_next_half.color = (0, 1, 0);
+
+	if (next_half == 1) {
+		level.p_hud_ready_next_half setText(game["start1sthalf"]);
+	} else {
+		level.p_hud_ready_next_half setText(game["start2ndhalf"]);
+	}
+}
+_hud_ready_destroy()
+{
+	if (isDefined(level.p_hud_ready)) {
+		level.p_hud_ready destroy();
+	}
+	if (isDefined(level.p_hud_ready_next_half)) {
+		level.p_hud_ready_next_half destroy();
 	}
 }
