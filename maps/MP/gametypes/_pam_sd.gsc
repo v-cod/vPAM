@@ -1361,25 +1361,35 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (getCvarInt("p_round_restart_delay") != 0) {
-/**/	warmup = getCvarInt("p_round_restart_delay");
+/**/delay = getCvarInt("p_round_restart_delay");
+/**/if (delay > 0) {
 /**/	_hud_labels_create();
-
-		if (game["roundsplayed"] == 0) {
-			_hud_roundstart_create(game["p_halftimeflag"] + 1, warmup);
-
-			wait warmup;
-
-			_hud_roundstart_destroy();
-		} else {
+/**/
+/**/	if (game["roundsplayed"] == 0) {
+/**/		_hud_roundstart_create(game["p_halftimeflag"] + 1, delay);
+/**/
+/**/		wait delay;
+/**/
+/**/		_hud_roundstart_destroy();
+/**/	} else {
 /**/		_hud_scoreboard_create();
-/**/		_hud_round_next_create(warmup);
+/**/		_hud_round_next_create(delay);
 /**/
 /**/		_hud_scoreboard_destroy();
 /**/		_hud_round_next_destroy();
-		}
-
+/**/	}
+/**/
 /**/	_hud_labels_destroy();
+/**/}
+
+/**/// If this round ended after ready-up phase, do not carry over weapons.
+/**/if (level.p_readied) {
+/**/	players = getEntArray("player", "classname");
+/**/	for (i = 0; i < players.size; i++) {
+/**/		players[i].pers["weapon1"] = undefined;
+/**/		players[i].pers["weapon2"] = undefined;
+/**/		players[i].pers["spawnweapon"] = undefined;
+/**/	}
 /**/}
 
 	map_restart(true);

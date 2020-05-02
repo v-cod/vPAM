@@ -5,7 +5,6 @@
 
 ## Should
 
-- Get rid of picked-up weapons during warmup.
 
 ## Could
 
@@ -31,3 +30,4 @@
 - Auto demo/screenshot mechanism (probably not optimal).
 - Test SD timelimit.
 - Check if Punkbuster can detect client cvar changes faster. (To prevent quick toggling.)
+- Intermission for half-time switch.

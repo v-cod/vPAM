@@ -7,6 +7,9 @@ main()
 	// Ready-up phase succeeded.
 	level.p_readied = false;
 
+	// Currently in strat time.
+	level.p_stratting = false;
+
 	if (!isDefined(game["gamestarted"])) {
 		level.p_rules = [];
 		rules\_rules::rules();
@@ -34,7 +37,6 @@ main()
 		game["round1axisscore"] = 0; 
 		game["round2alliesscore"] = 0;
 		game["round2axisscore"] = 0;
-		game["checkingmatchstart"] = false;
 	}
 
 	// level.p_mode = "pam_mode";
@@ -66,8 +68,6 @@ main()
 	level.countdraws = getcvarint("scr_count_draws");
 	level.hithalftime = 0;
 	level.afs_time = getcvarFloat("scr_afs_time");
-
-	level.p_stratting = false;
 
 	level.allow_mg42 = getCvar("scr_allow_mg42");
 	if(level.allow_mg42 == "")
