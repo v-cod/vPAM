@@ -1,3 +1,7 @@
+// game["gamestarted"]
+// game["matchstarted"]
+// game["p_halftimeflag"]
+
 main()
 {
 	// Require prematch ready-up phase.
@@ -10,7 +14,14 @@ main()
 	// Currently in strat time.
 	level.p_stratting = false;
 
+	// Overtime phase on tie.
+	level.p_overtime = true;
+	// Rounds played per overtime. (MUST be even.)
+	level.p_overtime_roundlimit = 4;
+	level.p_overtime_scorelimit = level.p_overtime_roundlimit / 2 + 1;
+
 	if (!isDefined(game["gamestarted"])) {
+
 		level.p_rules = [];
 		rules\_rules::rules();
 
@@ -29,6 +40,11 @@ main()
 	// Ready up phase before match start.
 	if (!game["matchstarted"] && level.p_ready) {
 		maps\mp\gametypes\_pam_readyup::start_readying();
+	}
+	
+	if (!isDefined(game["p_overtime"])) {
+		// Currently in, or going to, overtime phase.
+		game["p_overtime"] = 0;
 	}
 
 	if (!isDefined(game["p_halftimeflag"])) {

@@ -1462,6 +1462,14 @@ checkScoreLimit()
 	if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
 		return;
 
+	if (level.p_overtime && game["p_overtime"] > 0) {
+		limit = level.scorelimit + game["p_overtime"] * level.p_overtime_scorelimit;
+
+		if (game["alliedscore"] < limit && game["axisscore"] < limit) {
+			return;
+		}
+	}
+
 /**/_hud_matchover_create();
 /**/_hud_labels_create();
 /**/_hud_scoreboard_create();
@@ -1489,7 +1497,7 @@ checkRoundLimit()
 	if(level.roundlimit <= 0)
 		return;
 
-/**/// Half time check.
+/**/// Halftime check.
 /**/if (level.roundlimit > 0 && game["p_halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
 /**/	_half_time();
 /**/	return;
@@ -1497,7 +1505,22 @@ checkRoundLimit()
 	
 	if(game["roundsplayed"] < level.roundlimit)
 		return;
-	
+
+	if (level.p_overtime) {
+		// Next round milestone to advance overtime.
+		limit = level.roundlimit + game["p_overtime"] * level.p_overtime_roundlimit;
+
+		if (game["roundsplayed"] < limit) {
+			return;
+		}
+
+		if (game["axisscore"] == game["alliedscore"]) {
+			game["p_overtime"]++;
+			game["matchstarted"] = false;
+			return;
+		}
+	}
+
 /**/_hud_matchover_create();
 /**/_hud_teamwin_create();
 /**/_hud_labels_create();
