@@ -1266,8 +1266,8 @@ endRound(roundwinner)
 		logPrint("L;allies" + losers + "\n");
 	}
 
-/**/iPrintLn("endRound: wait 5 (scores set)");
-/**/wait 5;
+/**/// iPrintLn("endRound: wait 5 (scores set)");
+/**/// wait 5;
 
 	if(game["matchstarted"])
 	{
@@ -1361,7 +1361,7 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/delay = getCvarInt("p_round_restart_delay");
+/**/delay = 5 + getCvarInt("p_round_restart_delay");
 /**/if (delay > 0) {
 /**/	_hud_labels_create();
 /**/
@@ -1378,6 +1378,7 @@ endRound(roundwinner)
 /**/		_hud_scoreboard_destroy();
 /**/		_hud_round_next_destroy();
 /**/	}
+/**/	//level.matchover setText(game["overtime"]);
 /**/
 /**/	_hud_labels_destroy();
 /**/}
@@ -1397,6 +1398,20 @@ endRound(roundwinner)
 
 endMap()
 {
+/**/_hud_matchover_create();
+/**/_hud_labels_create();
+/**/_hud_teamwin_create();
+/**/_hud_scoreboard_create();
+/**/
+/**/wait 10;
+/**/
+/**/_hud_labels_destroy();
+/**/_hud_scoreboard_destroy();
+/**/_hud_teamwin_destroy();
+/**/
+/**/if (isdefined(level.p_hud_matchover))
+/**/	level.p_hud_matchover destroy();
+
 	game["state"] = "intermission";
 	level notify("intermission");
 	
@@ -1462,27 +1477,13 @@ checkScoreLimit()
 	if(game["alliedscore"] < level.scorelimit && game["axisscore"] < level.scorelimit)
 		return;
 
-	if (level.p_overtime && game["p_overtime"] > 0) {
-		limit = level.scorelimit + game["p_overtime"] * level.p_overtime_scorelimit;
-
-		if (game["alliedscore"] < limit && game["axisscore"] < limit) {
-			return;
-		}
-	}
-
-/**/_hud_matchover_create();
-/**/_hud_labels_create();
-/**/_hud_scoreboard_create();
-/**/_hud_teamwin_create();
+/**/if (level.p_overtime && game["p_overtime"] > 0) {
+/**/	limit = level.scorelimit + game["p_overtime"] * level.p_overtime_scorelimit;
 /**/
-/**/wait 10;
-/**/
-/**/_hud_labels_destroy();
-/**/_hud_scoreboard_destroy();
-/**/_hud_teamwin_destroy();
-/**/
-/**/if (isdefined(level.p_hud_matchover))
-/**/	level.p_hud_matchover destroy();
+/**/	if (game["alliedscore"] < limit && game["axisscore"] < limit) {
+/**/		return;
+/**/	}
+/**/}
 
 	if(level.mapended)
 		return;
@@ -1506,34 +1507,20 @@ checkRoundLimit()
 	if(game["roundsplayed"] < level.roundlimit)
 		return;
 
-	if (level.p_overtime) {
-		// Next round milestone to advance overtime.
-		limit = level.roundlimit + game["p_overtime"] * level.p_overtime_roundlimit;
-
-		if (game["roundsplayed"] < limit) {
-			return;
-		}
-
-		if (game["axisscore"] == game["alliedscore"]) {
-			game["p_overtime"]++;
-			game["matchstarted"] = false;
-			return;
-		}
-	}
-
-/**/_hud_matchover_create();
-/**/_hud_teamwin_create();
-/**/_hud_labels_create();
-/**/_hud_scoreboard_create();
+/**/if (level.p_overtime) {
+/**/	// Next round milestone to advance overtime.
+/**/	limit = level.roundlimit + game["p_overtime"] * level.p_overtime_roundlimit;
 /**/
-/**/wait 10;
+/**/	if (game["roundsplayed"] < limit) {
+/**/		return;
+/**/	}
 /**/
-/**/_hud_labels_destroy();
-/**/_hud_scoreboard_destroy();
-/**/_hud_teamwin_destroy();
-/**/
-/**/if(isdefined(level.p_hud_matchover))
-/**/	level.p_hud_matchover destroy();
+/**/	if (game["axisscore"] == game["alliedscore"]) {
+/**/		game["p_overtime"]++;
+/**/		game["matchstarted"] = false; // Match will require re-start (e.g. ready-up).
+/**/		return;
+/**/	}
+/**/}
 	
 	if(level.mapended)
 		return;
@@ -2141,6 +2128,17 @@ _hud_labels_create()
 	level.p_hud_labels_left.fontScale = 1;
 	level.p_hud_labels_left.color = (1, 1, 1);
 	level.p_hud_labels_left setText(game["leaguestring"]);
+
+	if (game["p_overtime"] > 0) {
+		level.p_hud_labels_overtime_mode = newHudElem();
+		level.p_hud_labels_overtime_mode.x = 10;
+		level.p_hud_labels_overtime_mode.y = 30;
+		level.p_hud_labels_overtime_mode.alignX = "left";
+		level.p_hud_labels_overtime_mode.alignY = "middle";
+		level.p_hud_labels_overtime_mode.fontScale = 1;
+		level.p_hud_labels_overtime_mode.color = (1, 1, 0);
+		level.p_hud_labels_overtime_mode setText(game["overtimemode"]);
+	}
 }
 
 _hud_labels_destroy()
@@ -2505,22 +2503,29 @@ _hud_roundstart_destroy()
 		level.p_hud_stopwatch destroy();
 }
 
+_hud_halftime_create()
+{
+	if (isDefined(level.p_hud_halftime)) {
+		return;
+	}
+
+	level.p_hud_halftime = newHudElem();
+	level.p_hud_halftime.x = 575;
+	level.p_hud_halftime.y = 175;
+	level.p_hud_halftime.alignX = "center";
+	level.p_hud_halftime.alignY = "middle";
+	level.p_hud_halftime.fontScale = 1.5;
+	level.p_hud_halftime.color = (1, 1, 0);
+	level.p_hud_halftime setText(game["halftime"]);
+}
+
 _half_time()
 {
 	game["matchstarted"] = false;
 	game["p_halftimeflag"] = 1;
-
-	// Display scores.
-	level.halftime = newHudElem();
-	level.halftime.x = 575;
-	level.halftime.y = 175;
-	level.halftime.alignX = "center";
-	level.halftime.alignY = "middle";
-	level.halftime.fontScale = 1.5;
-	level.halftime.color = (1, 1, 0);
-	level.halftime setText(game["halftime"]);
 	
 	_hud_labels_create();
+	_hud_halftime_create();
 	_hud_scoreboard_create();
 	Create_HUD_TeamSwap();
 
@@ -2555,38 +2560,10 @@ _half_time()
 				player.pers["team"] = "axis";
 			}
 
-			player.sessionteam = player.pers["team"];
+			// player.sessionteam = player.pers["team"];
 			// player spawnSpectator();
-
-			// player closeMenu();
-			// // player notify("menuresponse", game["menu_team"], player.pers["team"]);
-			// if (player.pers["team"] == "allies") {
-			// 	player setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
-			// 	player openMenu(game["menu_weapon_allies"]);
-			// } else {
-			// 	player setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
-			// 	player openMenu(game["menu_weapon_axis"]);
-			// }
 		}
 	}
-	
-	// maps\mp\gametypes\_pam_readyup::start_readying();
-
-	// // Get rid of warmup weapons.
-	// players = getentarray("player", "classname");
-	// for (i = 0; i < players.size; i++) { 
-	// 	player = players[i];
-
-	// 	player.pers["weapon1"] = undefined;
-	// 	player.pers["weapon2"] = undefined;
-	// 	player.pers["spawnweapon"] = player.pers["weapon"];
-	// }
-
-	// _hud_labels_destroy();
-
-	// map_restart(true);
-
-	// return;
 }
 
 Create_HUD_TeamSwap()
@@ -2627,7 +2604,7 @@ _hud_matchover_create()
 	level.p_hud_matchover.alignY = "middle";
 	level.p_hud_matchover.fontScale = 1;
 	level.p_hud_matchover.color = (1, 1, 0);
-	level.p_hud_matchover setText(game["matchover"]);
+	level.matchover setText(game["matchover"]);
 }
 
 Hold_All_Players()

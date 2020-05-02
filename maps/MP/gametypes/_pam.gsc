@@ -117,6 +117,8 @@ _precache()
 	if (!isdefined(game["leaguestring"]))
 		game["leaguestring"] = &"Unknown Pam_Mode Error";
 	precacheString(game["leaguestring"]);
+	game["overtimemode"] = &"Overtime";
+	precacheString(game["overtimemode"]);
 
 	// Team Win Hud Elements
 	game["team1win"] = &"Team 1 Wins!";
@@ -127,6 +129,8 @@ _precache()
 	precacheString(game["dsptie"]);
 	game["matchover"] = &"Match Over";
 	precacheString(game["matchover"]);
+	game["overtime"] = &"Going to OverTime";
+	precacheString(game["overtime"]);
 
 	game["halftime"] = &"Halftime";
 	precacheString(game["halftime"]);
