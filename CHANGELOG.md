@@ -20,6 +20,7 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Death icon (like stock) on death pre-match.
 - Secondary weapon choice from other team.
 - Strat time lagbinding detection.
+- Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 
 ### Removed
 - Removed 'ClanBase warning' (pre-match message).

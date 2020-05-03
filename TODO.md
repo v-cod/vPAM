@@ -9,9 +9,7 @@
 ## Could
 
 - Overtime automatically after draw.
-- Weapon picking upgrade (secondary/picking from opposite team).
 - Keep score during warm-up.
-- No weapon menu if no choice.
 
 ## Would
 
@@ -31,3 +29,4 @@
 - Test SD timelimit.
 - Check if Punkbuster can detect client cvar changes faster. (To prevent quick toggling.)
 - Intermission for half-time switch.
+- No weapon menu if no choice.

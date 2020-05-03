@@ -21,7 +21,6 @@ main()
 	level.p_overtime_scorelimit = level.p_overtime_roundlimit / 2 + 1;
 
 	if (!isDefined(game["gamestarted"])) {
-
 		level.p_rules = [];
 		rules\_rules::rules();
 
@@ -35,6 +34,55 @@ main()
 		}
 
 		_precache();
+	}
+
+	s = getCvar("p_weapons");
+	level.p_weapons = 0;
+	if (s == "secondary") {
+		level.p_weapons = 1;
+	} else if (s == "american" || s == "british" || s == "russian") {
+		level.p_weapons = 1;
+		game["menu_weapon_allies"] = "weapon_" + s;
+	} else if (s != "" && s != "0" && s != "default") {
+		level.p_weapons = 2;
+		level.p_weapons_arr = explode(s, " ");
+		for (i = 0; i < level.p_weapons_arr.size; i++) {
+			level.p_weapons_arr[i] += "_mp";
+		}
+	}
+	if (!isDefined(game["gamestarted"])) {
+		if (level.p_weapons == 1) {
+			precacheMenu(game["menu_weapon_allies"]);
+			switch (getCvar("p_weapons")) {
+			case "american":
+				precacheItem("fraggrenade_mp");
+				precacheItem("colt_mp");
+				precacheItem("m1carbine_mp");
+				precacheItem("m1garand_mp");
+				precacheItem("thompson_mp");
+				precacheItem("bar_mp");
+				precacheItem("springfield_mp");
+				break;
+			case "british":
+				precacheItem("mk1britishfrag_mp");
+				precacheItem("colt_mp");
+				precacheItem("enfield_mp");
+				precacheItem("sten_mp");
+				precacheItem("bren_mp");
+				precacheItem("springfield_mp");
+				break;
+			case "russian":
+				precacheItem("rgd-33russianfrag_mp");
+				precacheItem("luger_mp");
+				precacheItem("ppsh_mp");
+				precacheItem("mosin_nagant_sniper_mp");
+				break;
+			}
+		} else if (level.p_weapons == 2) {
+			for (i = 0; i < level.p_weapons_arr.size; i++) {
+				precacheItem(level.p_weapons_arr[i]);
+			}
+		}
 	}
 
 	// Ready up phase before match start.
@@ -85,16 +133,6 @@ main()
 	level.hithalftime = 0;
 	level.afs_time = getcvarFloat("scr_afs_time");
 
-	level.allow_mg42 = getCvar("scr_allow_mg42");
-	if(level.allow_mg42 == "")
-		level.allow_mg42 = "1";
-	setCvar("scr_allow_mg42", level.allow_mg42);
-	setCvar("ui_allow_mg42", level.allow_mg42);
-	makeCvarServerInfo("ui_allow_mg42", level.allow_mg42);
-	if(level.allow_mg42 != "1") {
-		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
-	}
-
 	if (getcvar("scr_allow_pistol") == "") {
 		setcvar("scr_allow_pistol", "0");
 	}
@@ -102,11 +140,26 @@ main()
 	if (getcvar("scr_allow_nades") == "") {
 		setcvar("scr_allow_nades", "0");
 	}
+}
+explode(string, delimiter) {
+	array = 0;
+	result[array] = "";
 
-	// Fix _teams.gsc bug removing wrong entity.
-	if(level.allow_kar98ksniper != "1") {
-		maps\mp\gametypes\_teams::deletePlacedEntity("mpweapon_kar98k_scoped");
+	for (i = 0; i < string.size; i++) {
+		if (string[i] == delimiter) {
+			if (result[array] != "") {
+				array++;
+				result[array] = "";
+			}
+		} else {
+			result[array] += string[i];
+		}
 	}
+
+	if (result.size > 1 && result[array] == "") {
+		result[array] = undefined;
+	}
+	return result;
 }
 
 _precache()

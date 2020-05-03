@@ -47,6 +47,8 @@ cvars()
 	/* ============== Weapon Setup Options ===================*/
 	/*========================================================*/
 
+	setCvar("p_weapons", "mosin_nagant");
+
 	//Force Bolt-Action Rifles Only
 	setcvar("scr_force_bolt_rifles", "1");
 
@@ -73,7 +75,7 @@ cvars()
 
 	setcvar("scr_allow_bar", "1");
 	setcvar("scr_allow_bren", "1");
-	setcvar("scr_allow_mp44", "1");
+	setcvar("scr_allow_mp44", "0");
 	setcvar("scr_allow_ppsh", "1");
 
 	//Rockets

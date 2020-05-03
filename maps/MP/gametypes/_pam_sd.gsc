@@ -84,6 +84,9 @@ Callback_StartGameType()
 
 		//thread addBotClients();
 	}
+
+/**/// Call main routine for variable setup and precaching.
+/**/maps\mp\gametypes\_pam::main();
 	
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::initGlobalCvars();
@@ -92,13 +95,24 @@ Callback_StartGameType()
 	thread maps\mp\gametypes\_teams::updateGlobalCvars();
 	thread maps\mp\gametypes\_teams::updateWeaponCvars();
 
-/**/// Call main routine for variable setup and precaching.
-/**/maps\mp\gametypes\_pam::main();
-
 	game["gamestarted"] = true;
 	
 	setClientNameMode("manual_change");
 
+/**/level.allow_mg42 = getCvar("scr_allow_mg42");
+/**/if(level.allow_mg42 == "")
+/**/	level.allow_mg42 = "1";
+/**/setCvar("scr_allow_mg42", level.allow_mg42);
+/**/setCvar("ui_allow_mg42", level.allow_mg42);
+/**/makeCvarServerInfo("ui_allow_mg42", level.allow_mg42);
+/**/if(level.allow_mg42 != "1") {
+/**/	maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
+/**/}
+/**/
+/**/// Fix _teams.gsc bug removing wrong entity.
+/**/if(level.allow_kar98ksniper != "1") {
+/**/	maps\mp\gametypes\_teams::deletePlacedEntity("mpweapon_kar98k_scoped");
+/**/}
 /**/// Refer to custom functions.
 /**/thread bombzones();
 /**/thread startGame();
@@ -144,7 +158,16 @@ Callback_PlayerConnect()
 	
 	if(isDefined(self.pers["team"]) && self.pers["team"] != "spectator")
 	{
-		self setClientCvar("ui_weapontab", "1");
+		// self setClientCvar("ui_weapontab", "1");
+/**/	if (level.p_weapons == 2) {
+/**/		self.pers["weapon"] = level.p_weapons_arr[0];
+/**/	
+/**/		if (level.p_weapons_arr.size > 1) {
+/**/			self.pers["weapon_secondary"] = level.p_weapons_arr[1];
+/**/		}
+/**/	} else {
+/**/		self setClientCvar("ui_weapontab", "1");
+/**/	}
 
 		if(self.pers["team"] == "allies")
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
@@ -191,6 +214,11 @@ Callback_PlayerConnect()
 
 		if(response == "open" || response == "close")
 			continue;
+
+/**/	if (level.p_weapons == 2 && response == "weapon") {
+/**/		menu_weapon();
+/**/		continue;
+/**/	}
 
 		if(menu == game["menu_team"])
 		{
@@ -319,6 +347,11 @@ Callback_PlayerConnect()
 				// update spectator permissions immediately on change of team
 				maps\mp\gametypes\_teams::SetSpectatePermissions();
 
+/**/			if (level.p_weapons == 2) {
+/**/				menu_weapon();
+/**/				continue;
+/**/			}
+
 				self setClientCvar("ui_weapontab", "1");
 
 				if(self.pers["team"] == "allies")
@@ -393,9 +426,10 @@ Callback_PlayerConnect()
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
 
-/**/		// TODO: Default weapon procedure.
-/**/		menu_weapon(menu, response);
-/**/		continue;
+/**/		if (level.p_weapons > 0) {
+/**/			menu_weapon(menu, response);
+/**/			continue;
+/**/		}
 
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 
@@ -2604,7 +2638,7 @@ _hud_matchover_create()
 	level.p_hud_matchover.alignY = "middle";
 	level.p_hud_matchover.fontScale = 1;
 	level.p_hud_matchover.color = (1, 1, 0);
-	level.matchover setText(game["matchover"]);
+	level.p_hud_matchover setText(game["matchover"]);
 }
 
 Hold_All_Players()
@@ -2687,7 +2721,18 @@ showhit()
 }
 
 // Weapon procedure allowing second weapon pick.
-menu_weapon(menu, response) {
+menu_weapon(menu, response)
+{
+	if (level.p_weapons == 2) {
+		self.pers["weapon"] = level.p_weapons_arr[0];
+		if (level.p_weapons_arr.size > 1) {
+			self.pers["weapon_secondary"] = level.p_weapons_arr[1];
+		}
+
+		menu_weapon_proceed();
+		return;
+	}
+
 	// Allow enemy team weapons.
 	weapon = self maps\mp\gametypes\_teams::restrict_anyteam(response);
 	if (weapon == "restricted") {
@@ -2715,15 +2760,22 @@ menu_weapon(menu, response) {
 		self.pers["weapon_secondary"] = weapon;
 	}
 
+	menu_weapon_proceed();
+}
+
+menu_weapon_proceed()
+{
 	if (!game["matchstarted"] || !level.roundstarted) {
 		if (self.sessionstate == "playing") {
 			self setWeaponSlotWeapon("primary", self.pers["weapon"]);
 			self setWeaponSlotAmmo("primary", 999);
 			self setWeaponSlotClipAmmo("primary", 999);
-
-			self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
-			self setWeaponSlotAmmo("primaryb", 999);
-			self setWeaponSlotClipAmmo("primaryb", 999);
+			
+			if (isDefined(self.pers["weapon_secondary"])) {
+				self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
+				self setWeaponSlotAmmo("primaryb", 999);
+				self setWeaponSlotClipAmmo("primaryb", 999);
+			}
 
 			self switchToWeapon(self.pers["weapon"]);
 		} else {
@@ -2754,31 +2806,9 @@ menu_weapon(menu, response) {
 			self thread maps\mp\gametypes\sd::printJoinedTeam(self.pers["team"]);
 			level checkMatchStart();
 		} else {
-			weaponname = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon"]);
-			weaponname2 = maps\mp\gametypes\_teams::getWeaponName(self.pers["weapon_secondary"]);
-
-			if (self.pers["team"] == "allies") {
-				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
-				} else {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
-				}
-				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon2"])) {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname2);
-				} else {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname2);
-				}
-			} else if (self.pers["team"] == "axis") {
-				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon"])) {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
-				} else {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
-				}
-				if (maps\mp\gametypes\_teams::useAn(self.pers["weapon2"])) {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname2);
-				} else {
-					self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname2);
-				}
+			_you_will_spawn_with_next_round(self.pers["weapon"]);
+			if (isDefined(self.pers["weapon_secondary"])) {
+				_you_will_spawn_with_next_round(self.pers["weapon_secondary"]);
 			}
 		}
 	}
@@ -2786,6 +2816,26 @@ menu_weapon(menu, response) {
 	self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
 	if (isDefined(self.autobalance_notify))
 		self.autobalance_notify destroy();
+}
+
+// Print informative message telling weapons will be given after death.
+_you_will_spawn_with_next_round(weapon)
+{
+	weaponname = maps\mp\gametypes\_teams::getWeaponName(weapon);
+
+	if (self.pers["team"] == "allies") {
+		if (maps\mp\gametypes\_teams::useAn(weapon)) {
+			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
+		} else {
+			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
+		}
+	} else if (self.pers["team"] == "axis") {
+		if (maps\mp\gametypes\_teams::useAn(weapon)) {
+			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
+		} else {
+			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
+		}
+	}
 }
 
 _hud_alive_create()
