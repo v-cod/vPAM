@@ -42,6 +42,10 @@ stop_readying()
 
 update()
 {
+	if (level.p_readying == false) {
+		return;
+	}
+
 	n = 0;
 
 	players = getEntArray("player", "classname");
@@ -86,6 +90,8 @@ monitor_player()
 	readyhud.fontScale = 1.2;
 	readyhud.color = (1, .66, .66);
 	readyhud setText(game["notready"]);
+	
+	update();
 
 	for (;;) {
 		// Wait for use button press.

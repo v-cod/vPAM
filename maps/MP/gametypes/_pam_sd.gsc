@@ -158,21 +158,18 @@ Callback_PlayerConnect()
 	
 	if(isDefined(self.pers["team"]) && self.pers["team"] != "spectator")
 	{
-		// self setClientCvar("ui_weapontab", "1");
-/**/	if (level.p_weapons == 2) {
-/**/		self.pers["weapon"] = level.p_weapons_arr[0];
-/**/	
-/**/		if (level.p_weapons_arr.size > 1) {
-/**/			self.pers["weapon_secondary"] = level.p_weapons_arr[1];
-/**/		}
-/**/	} else {
-/**/		self setClientCvar("ui_weapontab", "1");
-/**/	}
+/**/	// self setClientCvar("ui_weapontab", "1");
 
 		if(self.pers["team"] == "allies")
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_allies"]);
 		else
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
+
+/**/	// When preset weapons, no weapon menu should be shown.
+/**/	if (level.p_weapons != 2) {
+/**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+/**/		self setClientCvar("ui_weapontab", "1");
+/**/	}
 
 		if(isDefined(self.pers["weapon"]))
 /**/		spawnPlayer();
@@ -212,13 +209,19 @@ Callback_PlayerConnect()
 			self openMenu(game["menu_team"]);
 		}
 
+/**/	// With preset weapons, no weapons menu should be shown.
+/**/	if (level.p_weapons == 2) {
+/**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+/**/		self setClientCvar("ui_weapontab", "0");
+/**/		if (response == "open" && (menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])) {
+/**/			self closeMenu();
+/**/			menu_weapon(menu, response);
+/**/			continue;
+/**/		}
+/**/	}
+
 		if(response == "open" || response == "close")
 			continue;
-
-/**/	if (level.p_weapons == 2 && response == "weapon") {
-/**/		menu_weapon();
-/**/		continue;
-/**/	}
 
 		if(menu == game["menu_team"])
 		{
@@ -346,11 +349,6 @@ Callback_PlayerConnect()
 
 				// update spectator permissions immediately on change of team
 				maps\mp\gametypes\_teams::SetSpectatePermissions();
-
-/**/			if (level.p_weapons == 2) {
-/**/				menu_weapon();
-/**/				continue;
-/**/			}
 
 				self setClientCvar("ui_weapontab", "1");
 
@@ -615,6 +613,8 @@ Callback_PlayerDisconnect()
 	lpselfguid = self getGuid();
 	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
+/**/self thread maps\mp\gametypes\_pam_readyup::update();
+
 	if(game["matchstarted"])
 /**/	level thread updateTeamStatus();
 }
@@ -622,8 +622,9 @@ Callback_PlayerDisconnect()
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
 /**/if (level.p_readying) {
-/**/	if (isPlayer(eAttacker) && self != eAttacker)
+/**/	if (isPlayer(eAttacker) && self != eAttacker) {
 /**/		eAttacker.pers["killer"] = true;
+/**/	}
 /**/	
 /**/	if (!self.pers["killer"])
 /**/		return;
@@ -775,17 +776,16 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 /**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
 /**/}
 	self.headicon = "";
-	if (!isdefined (self.autobalance))
-	{
-		self.pers["deaths"]++;
-		self.deaths = self.pers["deaths"];
-	}
-
 /**/if (level.p_readying || level.p_readied) {
 /**/	updateTeamStatus();
 /**/	self thread spawnPlayer();
 /**/	return;
 /**/}
+	if (!isdefined (self.autobalance))
+	{
+		self.pers["deaths"]++;
+		self.deaths = self.pers["deaths"];
+	}
 
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();

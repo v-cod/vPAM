@@ -47,7 +47,7 @@ cvars()
 	/* ============== Weapon Setup Options ===================*/
 	/*========================================================*/
 
-	setCvar("p_weapons", "mosin_nagant");
+	setCvar("p_weapons", "mosin_nagant kar98k");
 
 	//Force Bolt-Action Rifles Only
 	setcvar("scr_force_bolt_rifles", "1");
