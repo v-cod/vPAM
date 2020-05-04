@@ -1947,14 +1947,7 @@ bombzone_think(bombzone_other)
 					bombtrigger thread bomb_countdown();
 					
 					level notify("bomb_planted");
-					level.clock destroy();
-					
-/**/				level.clock = newHudElem();
-/**/				level.clock.x = 320;
-/**/				level.clock.y = 460;
-/**/				level.clock.alignX = "center";
-/**/				level.clock.alignY = "middle";
-/**/				level.clock.font = "bigfixed";
+/**/				// level.clock destroy();
 /**/				level.clock setTimer(59);
 
 					return;	//TEMP, script should stop after the wait .05
@@ -1998,10 +1991,10 @@ bomb_countdown()
 
 /**/// wait countdowntime;
 /**/// Fade from yellow to red
-/**/for(i = 0; i < 50; i++)
-/**/{
-/**/	if(isdefined(level.clock))
+/**/for (i = 0; i < 50; i++) {
+/**/	if (isDefined(level.clock)) {
 /**/		level.clock.color = (1, 1 - i*0.02, 0);
+/**/	}
 /**/	wait 1;
 /**/}
 /**/
