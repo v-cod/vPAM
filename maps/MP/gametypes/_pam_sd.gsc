@@ -781,6 +781,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 		self.deaths = self.pers["deaths"];
 	}
 
+/**/if (level.p_readying || level.p_readied) {
+/**/	updateTeamStatus();
+/**/	self thread spawnPlayer();
+/**/	return;
+/**/}
+
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();
 	lpselfname = self.name;
@@ -860,11 +866,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 	delay = 2;	// Delay the player becoming a spectator till after he's done dying
 	wait delay;	// ?? Also required for Callback_PlayerKilled to complete before killcam can execute
-
-/**/if (level.p_readying) {
-/**/	self thread spawnPlayer();
-/**/	return;
-/**/}
 
 	if(doKillcam && !level.roundended)
 		self thread maps\mp\gametypes\sd::killcam(attackerNum, delay);
@@ -1706,7 +1707,7 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(getcvar("sv_playersleft") == "1") {	
+/**/if(getCvar("sv_playersleft") == "1") {	
 /**/	_hud_alive_update();
 /**/}
 

@@ -4,6 +4,14 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Added
+- Anti fast shoot monitoring.
+- scr_allow_nades to control nades equipment.
+- Death icon (like stock) on death pre-match.
+- Configurable weapon configuration. (Secondary, change allied, or pre-set.)
+- Strat time lagbinding detection.
+- Configurable overtime on tie.
+
 ### Changed
 - Major flow restructuring (relocating snippets) and superfluous code removal.
     - Changelog, todo and Makefile.
@@ -13,14 +21,6 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Rifle damage upped through script instead of weapon file.
 - Halftime always at middle of rounds. (rounds / 2)
 - Replaced scr_end_score and scr_end_round with stock equivalents (scr_sd).
-
-### Added
-- Anti fast shoot monitoring.
-- scr_allow_nades to control nades equipment.
-- Death icon (like stock) on death pre-match.
-- Secondary weapon choice from other team.
-- Strat time lagbinding detection.
-- Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 
 ### Removed
 - Removed 'ClanBase warning' (pre-match message).
