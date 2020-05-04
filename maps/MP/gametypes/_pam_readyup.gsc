@@ -71,7 +71,7 @@ monitor_player()
 
 	self.statusicon = "";
 
-	self iPrintLnBold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
+	self thread _player_information();
 
 	status = newClientHudElem(self);
 	status.x = 575;
@@ -134,6 +134,26 @@ monitor_player()
 		readyhud destroy();
 	if(isdefined(status))
 		status destroy();
+}
+
+_player_information()
+{
+	if (isDefined(self.pers["p_informed"]) && self.pers["p_informed"] == true) {
+		return;
+	}
+	self.pers["p_informed"] = true;
+
+	while (self.sessionstate != "playing") {
+		wait 0.2;
+	}
+
+	for (i = 1; getCvar("p_msg_" + i) != ""; i++) {
+		self iPrintLnBold(getCvar("p_msg_" + i));
+		
+		wait 1.5;
+	}
+
+	self iPrintLnBold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
 }
 
 _hud_readying_create()

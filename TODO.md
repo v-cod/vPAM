@@ -1,7 +1,5 @@
 ## Must
 
-- Ready-up message on spawn.
-- Check players' scores staying the same during halftime ready-up.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.
 
@@ -11,7 +9,7 @@
 
 ## Could 
 
-- Keep score during warm-up.
+- Support Ship and Chateau.
 
 ## Would
 

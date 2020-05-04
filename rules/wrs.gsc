@@ -3,7 +3,11 @@ cvars()
 	// Labels
 	game["leaguestring"] = &"walRus";
 	game["pamstring"] = &"^7d^4`^9logics^4.";
-	
+
+	// Messages to inform players during ready-up.
+	setCvar("p_msg_1", "");
+	// setCvar("p_msg_2", "");
+
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
 	/*========================================================*/

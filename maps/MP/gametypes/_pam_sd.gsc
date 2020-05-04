@@ -2693,7 +2693,7 @@ Hold_All_Players()
 
 		dist = distancesquared(players[i].p_spawn_origin, players[i].origin);		
 		if (dist > dist_max) {
-			iPrintLn("False start: " + player.name);
+			iPrintLn("^1False start^7: " + players[i].name);
 			players[i] setOrigin(players[i].p_spawn_origin);
 		}
 	}
