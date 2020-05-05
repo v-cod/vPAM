@@ -144,6 +144,40 @@ main()
 			for(i = 0; i < spawnpoints.size; i++) {
 				spawnpoints[i].angles = (0, 180, 0);
 			}
+		} else if (getCvar("mapname") == "mp_chateau") {
+			bombtrigger = spawn("script_origin", (10000, 64, -64));
+			bombtrigger.targetname = "bombtrigger";
+			bombtrigger.squaredradius = 64 * 64;
+
+			bombzone_A = spawn("script_origin", (880, 1800, 168));
+			bombzone_A.targetname = "bombzone_A";
+			bombzone_A.squaredradius = 64 * 64;
+
+			bombzone_B = spawn("script_origin", (1550, 640, 144));
+			bombzone_B.targetname = "bombzone_B";
+			bombzone_B.squaredradius = 160 * 160;
+
+			spawn("mp_searchanddestroy_intermission", (-1134, 272, 532));
+			// Angles appear not be preserved by setting them to spawn() return entity.
+			spawnpoints = getEntArray("mp_searchanddestroy_intermission", "classname");
+			for(i = 0; i < spawnpoints.size; i++) {
+				spawnpoints[i].angles = (0, 45, 0);
+			}
+
+			al = (-1075, 360, 112);
+			ax = (1800, 320, 144);
+			for (x = 0; x < 5; x++) {
+				for (y = 0; y < 5; y++) {
+					offset = (x * 50, y * 50, 0);
+					spawn("mp_searchanddestroy_spawn_allied", (al[0], al[1], al[2]) + offset);
+					spawn("mp_searchanddestroy_spawn_axis", (ax[0], ax[1], ax[2]) + offset);
+				}
+			}
+			// Angles appear not be preserved by setting them to spawn() return entity.
+			spawnpoints = getEntArray("mp_searchanddestroy_spawn_axis", "classname");
+			for(i = 0; i < spawnpoints.size; i++) {
+				spawnpoints[i].angles = (0, 180, 0);
+			}
 		}
 	}
 	// } // END WRS
