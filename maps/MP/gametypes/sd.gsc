@@ -2144,7 +2144,7 @@ bombzones()
 // WRS
 bomb_or_zone_trigger()
 {
-	wait 0; // Skip possible notification that would immediately end this routine.
+	wait 1; // Skip possible notification that would immediately end this routine.
 
 	level endon("bomb_defused");
 	level endon("bomb_planted");
@@ -2152,12 +2152,11 @@ bomb_or_zone_trigger()
 	while (true) {
 		players = getEntArray("player", "classname");
 		for (i = 0; i < players.size; i++) {
-			while (distanceSquared(players[i].origin, self.origin) < self.squaredradius) {
+			if (distanceSquared(players[i].origin, self.origin) < self.squaredradius) {
 				self notify("trigger", players[i]);
-				wait .05;
 			}
 		}
-		wait .05;
+		wait .2;
 	}
 }
 

@@ -38,7 +38,7 @@ minefield_trigger()
 				self notify("trigger", players[i]);
 			}
 		}
-		wait .5;
+		wait .2;
 	}
 }
 
