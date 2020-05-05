@@ -34,7 +34,7 @@ minefield_trigger()
 	while (true) {
 		players = getEntArray("player", "classname");
 		for (i = 0; i < players.size; i++) {
-			if (distanceSquared(players[i].origin, self.origin) < self.squaredradius) {
+			if (players[i].sessionstate == "playing" && distanceSquared(players[i].origin, self.origin) < self.squaredradius) {
 				self notify("trigger", players[i]);
 			}
 		}
