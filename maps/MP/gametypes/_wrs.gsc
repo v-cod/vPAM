@@ -849,9 +849,6 @@ end_map(text, playername) {
 		choice = maps\mp\gametypes\_wrs_vote::sprint(10);
 		if (choice == 0) {
 			setCvar("scr_wrs_sprint", "0");
-		} else if (choice == 1) {
-			setCvar("scr_wrs_sprint", "60");
-			setCvar("scr_wrs_sprint_stop", "10");
 		} else {
 			setCvar("scr_wrs_sprint", "60");
 			setCvar("scr_wrs_sprint_stop", "0");

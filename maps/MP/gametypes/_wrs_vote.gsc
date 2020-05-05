@@ -29,8 +29,7 @@ init()
 
 	level.wrs_vote_sprint_header = &"Sprint                                 Votes";
 	level.wrs_vote_sprint[0] = &"Disable sprint";
-	level.wrs_vote_sprint[1] = &"Only round start";
-	level.wrs_vote_sprint[2] = &"Enable sprint";
+	level.wrs_vote_sprint[1] = &"Enable sprint";
 
 	if (!isDefined(game["gamestarted"])) {
 		for (i = 0; i < level.wrs_maps.size; i++) {
