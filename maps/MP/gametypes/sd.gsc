@@ -110,6 +110,44 @@ Spectators spawn randomly at one of these positions.
 
 main()
 {
+	// WRS {
+	if (getCvarInt("scr_wrs")) {
+		if (getCvar("mapname") == "mp_ship") {
+			// Mine shutting down half of the ship.
+			mine = spawn("script_origin", (0, 64, 0));
+			mine.targetname = "minefield";
+			mine.squaredradius = 4300 * 4300;
+
+			bombtrigger = spawn("script_origin", (10000, 64, -64));
+			bombtrigger.targetname = "bombtrigger";
+			bombtrigger.squaredradius = 64 * 64;
+
+			bombzone_A = spawn("script_origin", (5275, -210, 450));
+			bombzone_A.targetname = "bombzone_A";
+			bombzone_A.squaredradius = 80 * 80;
+
+			bombzone_B = spawn("script_origin", (4848, 664, 55));
+			bombzone_B.targetname = "bombzone_B";
+			bombzone_B.squaredradius = 128 * 128;
+
+			al = (7800, -400, -64);
+			ax = (4325, 400, 64);
+			for (x = 0; x < 5; x++) {
+				for (y = 0; y < 5; y++) {
+					offset = (x * 50, y * 50, 0);
+					spawn("mp_searchanddestroy_spawn_allied", (al[0], al[1], al[2]) + offset);
+					spawn("mp_searchanddestroy_spawn_axis", (ax[0], ax[1], ax[2]) + offset);
+				}
+			}
+			// Angles appear not be preserved by setting them to spawn() return entity.
+			spawnpoints = getEntArray("mp_searchanddestroy_spawn_allied", "classname");
+			for(i = 0; i < spawnpoints.size; i++) {
+				spawnpoints[i].angles = (0, 180, 0);
+			}
+		}
+	}
+	// } // END WRS
+
 	spawnpointname = "mp_searchanddestroy_spawn_allied";
 	spawnpoints = getentarray(spawnpointname, "classname");
 
@@ -2069,8 +2107,34 @@ bombzones()
 	objective_add(1, "current", bombzone_B.origin, "gfx/hud/hud@objectiveB.tga");
 }
 
+// WRS
+bomb_or_zone_trigger()
+{
+	wait 0; // Skip possible notification that would immediately end this routine.
+
+	level endon("bomb_defused");
+	level endon("bomb_planted");
+
+	while (true) {
+		players = getEntArray("player", "classname");
+		for (i = 0; i < players.size; i++) {
+			while (distanceSquared(players[i].origin, self.origin) < self.squaredradius) {
+				self notify("trigger", players[i]);
+				wait .05;
+			}
+		}
+		wait .05;
+	}
+}
+
 bombzone_think(bombzone_other)
 {
+	// WRS {
+	if (isDefined(self.squaredradius)) {
+		self thread bomb_or_zone_trigger();
+	}
+	// } // END WRS
+
 	level endon("round_ended");
 
 	level.barincrement = (level.barsize / (20.0 * level.planttime));
@@ -2099,7 +2163,10 @@ bombzone_think(bombzone_other)
 				other.planticon setShader("ui_mp/assets/hud@plantbomb.tga", 64, 64);
 			}
 
-			while(other istouching(self) && isAlive(other) && other useButtonPressed())
+			// WRS
+			// Checking touch isn't necessary, because it was just triggered by 'touch'.
+			while((other istouching(self) || isDefined(self.squaredradius)) && isAlive(other) && other useButtonPressed())
+			// while(other istouching(self) && isAlive(other) && other useButtonPressed())
 			{
 				other notify("kill_check_bombzone");
 
@@ -2223,6 +2290,14 @@ check_bombzone(trigger)
 	self endon("kill_check_bombzone");
 	level endon("round_ended");
 
+	// WRS {
+	if (isDefined(trigger.squaredradius)) {
+		while(isDefined(trigger) && !isDefined(trigger.planting) && isAlive(self) && distancesquared(self.origin, trigger.origin) < trigger.squaredradius) {
+			wait 0.05;
+		}
+	}
+	// } END WRS
+
 	while(isDefined(trigger) && !isDefined(trigger.planting) && self istouching(trigger) && isAlive(self))
 		wait 0.05;
 
@@ -2237,15 +2312,17 @@ bomb_countdown()
 
 	level.bombmodel playLoopSound("bomb_tick");
 
+	countdowntime = 60;
+
 	// WRS {
 	if (level.wrs) {
-		level.clock setTimer(60);
+		level.clock setTimer(countdowntime);
 
-		for(i = 0;i < 50;i++){
+		for(i = 0;i < countdowntime - 10;i++){
 			if(!isDefined(level.clock)){
 				break;
 			}
-			level.clock.color = (1,1 - i/50.0,0);
+			level.clock.color = (1,1 - i / (countdowntime - 10.0),0);
 			wait 1;
 		}
 		if(isDefined(level.clock)){
@@ -2253,9 +2330,7 @@ bomb_countdown()
 		}
 		wait 10;
 		level.clock destroy();
-	} else {
-		countdowntime = 60;
-
+	}else{
 		wait countdowntime;
 	}
 	// } // END WRS
@@ -2288,6 +2363,12 @@ bomb_countdown()
 
 bomb_think()
 {
+	// WRS {
+	if (isDefined(self.squaredradius)) {
+		self thread bomb_or_zone_trigger();
+	// } // END WRS
+	}
+
 	self endon("bomb_exploded");
 	level.barincrement = (level.barsize / (20.0 * level.defusetime));
 
@@ -2308,7 +2389,10 @@ bomb_think()
 				other.defuseicon setShader("ui_mp/assets/hud@defusebomb.tga", 64, 64);
 			}
 
-			while(other islookingat(self) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
+			// WRS
+			// For custom bombs, looking at does not work.
+			while((other islookingat(self) || isDefined(self.squaredradius)) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
+			// while(other islookingat(self) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
 			{
 				other notify("kill_check_bomb");
 
@@ -2404,6 +2488,14 @@ check_bomb(trigger)
 {
 	self notify("kill_check_bomb");
 	self endon("kill_check_bomb");
+
+	// WRS {
+	if (isDefined(trigger.squaredradius)) {
+		while(isDefined(trigger) && !isDefined(trigger.defusing) && distancesquared(self.origin, trigger.origin) < trigger.squaredradius && isAlive(self)) {
+			wait 0.05;
+		}
+	}
+	// } END WRS
 
 	while(isDefined(trigger) && !isDefined(trigger.defusing) && distance(self.origin, trigger.origin) < 32 && self islookingat(trigger) && isAlive(self))
 		wait 0.05;
