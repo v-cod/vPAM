@@ -64,6 +64,9 @@ update()
 
 monitor_player()
 {
+	// Wait for this player to spawn.
+	wait 0;
+
 	if (isDefined(self.p_readying) && self.p_readying) {
 		return;
 	}
