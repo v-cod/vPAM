@@ -20,6 +20,9 @@ main()
 	level.p_overtime_roundlimit = 4;
 	level.p_overtime_scorelimit = level.p_overtime_roundlimit / 2 + 1;
 
+	// Only allow melee damage.
+	level.p_bash = false;
+
 	if (!isDefined(game["gamestarted"])) {
 		level.p_rules = [];
 		rules\_rules::rules();

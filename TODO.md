@@ -1,5 +1,7 @@
 ## Must
 
+- Aim run monitor.
+- Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.
 
@@ -7,13 +9,12 @@
 
 - Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
 
-## Could 
+## Could
 
 - Support Ship and Chateau.
 
 ## Would
 
-- Bash for side/map.
 - Detect disallowed jumps.
 - Memorize result from previous game.
 - Vote/veto for map(s) pre-game.

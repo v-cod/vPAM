@@ -631,11 +631,17 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/}
 /**/
 /**/// TODO: Necessary for damage?:
-/**/if (level.p_stratting)
+/**/if (level.p_stratting) {
 /**/	return;
+/**/}
 /**/
-/**/if(level.roundended && !level.p_readying)
+/**/if (level.roundended && !level.p_readying) {
 /**/	return;
+/**/}
+/**/
+/**/if (level.p_bash && sMeansOfDeath != "MOD_MELEE") {
+/**/	return;
+/**/}
 
 	if(self.sessionteam == "spectator")
 		return;

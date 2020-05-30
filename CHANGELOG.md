@@ -11,6 +11,7 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 - Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 - Strat time lagbinding detection.
 - Configurable overtime on tie.
+- Configurable melee damage only. (Bash round.)
 
 ### Changed
 - Major flow restructuring (relocating snippets) and superfluous code removal.
