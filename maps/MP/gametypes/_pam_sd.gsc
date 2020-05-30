@@ -982,6 +982,7 @@ spawnPlayer()
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
 /**/thread maps\mp\gametypes\_pam_utilities::watchPlayerFastShoot();
+/**/thread maps\mp\gametypes\_pam_utilities::watchPlayerAimRun();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
