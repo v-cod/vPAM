@@ -1,6 +1,5 @@
 ## Must
 
-- Aim run monitor.
 - Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.

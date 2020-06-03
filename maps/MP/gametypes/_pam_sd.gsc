@@ -87,7 +87,6 @@ Callback_StartGameType()
 
 /**/// Call main routine for variable setup and precaching.
 /**/maps\mp\gametypes\_pam::main();
-	
 	maps\mp\gametypes\_teams::modeltype();
 	maps\mp\gametypes\_teams::initGlobalCvars();
 	maps\mp\gametypes\_teams::initWeaponCvars();
@@ -95,24 +94,15 @@ Callback_StartGameType()
 	thread maps\mp\gametypes\_teams::updateGlobalCvars();
 	thread maps\mp\gametypes\_teams::updateWeaponCvars();
 
-	game["gamestarted"] = true;
-	
-	setClientNameMode("manual_change");
-
-/**/level.allow_mg42 = getCvar("scr_allow_mg42");
-/**/if(level.allow_mg42 == "")
-/**/	level.allow_mg42 = "1";
-/**/setCvar("scr_allow_mg42", level.allow_mg42);
-/**/setCvar("ui_allow_mg42", level.allow_mg42);
-/**/makeCvarServerInfo("ui_allow_mg42", level.allow_mg42);
-/**/if(level.allow_mg42 != "1") {
-/**/	maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
-/**/}
-/**/
 /**/// Fix _teams.gsc bug removing wrong entity.
 /**/if(level.allow_kar98ksniper != "1") {
 /**/	maps\mp\gametypes\_teams::deletePlacedEntity("mpweapon_kar98k_scoped");
 /**/}
+
+	game["gamestarted"] = true;
+	
+	setClientNameMode("manual_change");
+
 /**/// Refer to custom functions.
 /**/thread bombzones();
 /**/thread startGame();
@@ -452,10 +442,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (getCvarInt("scr_allow_pistol") > 0) {
+/**/				if (level.p_allow_pistol) {
 /**/					maps\mp\gametypes\_teams::givePistol();
 /**/				}
-/**/				if (getCvarInt("scr_allow_nades") > 0) {
+/**/				if (level.p_allow_nades) {
 /**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 /**/				}
 				}
@@ -478,10 +468,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (getCvarInt("scr_allow_pistol") > 0) {
+/**/				if (level.p_allow_pistol) {
 /**/					maps\mp\gametypes\_teams::givePistol();
 /**/				}
-/**/				if (getCvarInt("scr_allow_nades") > 0) {
+/**/				if (level.p_allow_nades) {
 /**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 /**/				}
 				}
@@ -972,10 +962,10 @@ spawnPlayer()
 	maps\mp\gametypes\_teams::givePistol();
 	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
 
-/**/if (getcvarint("scr_allow_pistol") == 0) {
+/**/if (!level.p_allow_pistol) {
 /**/	self takeWeapon(self getWeaponSlotWeapon("pistol"));
 /**/}
-/**/if (getcvarint("scr_allow_nades") == 0) {
+/**/if (!level.p_allow_nades) {
 /**/	self takeWeapon(self getWeaponSlotWeapon("grenade"));
 /**/}
 
@@ -1315,7 +1305,7 @@ endRound(roundwinner)
 	{
 		checkScoreLimit();
 /**/	// game["roundsplayed"]++;
-/**/	if (roundwinner != "draw" || level.countdraws == 1) {
+/**/	if (roundwinner != "draw" || !level.p_replay_draw) {
 /**/		game["roundsplayed"]++;
 /**/	}
 		checkRoundLimit();
@@ -1403,7 +1393,7 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/delay = 5 + getCvarInt("p_round_restart_delay");
+/**/delay = 5 + level.p_round_restart_delay;
 /**/if (delay > 0) {
 /**/	_hud_labels_create();
 /**/
@@ -1714,7 +1704,7 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(getCvar("sv_playersleft") == "1") {	
+/**/if(level.p_hud_alive) {	
 /**/	_hud_alive_update();
 /**/}
 
@@ -2678,7 +2668,7 @@ Hold_All_Players()
 
 	thread maps\mp\gametypes\_teams::sayMoveIn();
 
-	// Attempt to detect false start (e.g. lagbinding).
+	// Attempt to detect false start (lagbinding).
 	dist_max = getCvarInt("g_speed") * 1.2; // Fastest possible speed (pistol).
 	dist_max = dist_max * dist_max; // squared
 

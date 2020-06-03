@@ -1,3 +1,5 @@
+// Lines changed compared to original routines prepended with '/**/'
+
 //	Callback Setup
 //	This script provides the hooks from code into script for the gametype callback functions.
 

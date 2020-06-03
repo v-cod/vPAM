@@ -1,11 +1,7 @@
-// game["gamestarted"]
-// game["matchstarted"]
-// game["p_halftimeflag"]
-
 main()
 {
 	// Require prematch ready-up phase.
-	level.p_ready = true;
+	level.p_ready = !!getCvarInt("p_ready");
 	// Currently in ready-up phase.
 	level.p_readying = false;
 	// Ready-up phase succeeded.
@@ -15,32 +11,29 @@ main()
 	level.p_stratting = false;
 
 	// Overtime phase on tie.
-	level.p_overtime = true;
+	level.p_overtime = !!getCvarInt("p_overtime_on_tie");
 	// Rounds played per overtime. (MUST be even.)
-	level.p_overtime_roundlimit = 4;
+	level.p_overtime_roundlimit = getCvarInt("p_overtime_roundlimit");
 	level.p_overtime_scorelimit = level.p_overtime_roundlimit / 2 + 1;
 
 	// Only allow melee damage.
-	level.p_bash = false;
+	level.p_bash = !!getCvarInt("p_bash");
 
-	if (!isDefined(game["gamestarted"])) {
-		level.p_rules = [];
-		rules\_rules::rules();
+	level.p_replay_draw = !!getCvarInt("p_replay_draw");
+	level.p_hud_alive = !!getCvarInt("p_hud_alive");
+	level.p_afs_time = getCvarFloat("p_afs_time");
+	
+	level.p_round_restart_delay = getCvarInt("p_round_restart_delay");
 
-		ruleset = getCvar("pam_mode");
+	level.p_allow_pistol = !!getCvarInt("p_allow_pistol");
+	level.p_allow_nades = !!getCvarInt("p_allow_nades");
 
-		if (isDefined(level.p_rules[ruleset])) {
-			[[level.p_rules[ruleset]]]();
-		} else {
-			maps\mp\gametypes\_callbacksetup::AbortLevel();
-			return;
-		}
-
-		_precache();
-	}
-
-	s = getCvar("p_weapons");
+	// Weapon choice mechanism.
+	// 0 for default.
+	// 1 for picking a secondary weapon, optionally from specified allies.
+	// 2 for fixed, pre-selected weapons.
 	level.p_weapons = 0;
+	s = getCvar("p_weapons");
 	if (s == "secondary") {
 		level.p_weapons = 1;
 	} else if (s == "american" || s == "british" || s == "russian") {
@@ -53,7 +46,27 @@ main()
 			level.p_weapons_arr[i] += "_mp";
 		}
 	}
+	
+	if (!isDefined(game["p_overtime"])) {
+		// Currently in, or going to, overtime phase.
+		game["p_overtime"] = 0;
+	}
+
 	if (!isDefined(game["gamestarted"])) {
+		level.p_rules = [];
+		rules\_rules::rules();
+
+		ruleset = getCvar("pam_mode");
+
+		if (!isDefined(level.p_rules[ruleset])) {
+			ruleset = "pub";
+			setCvar("pam_mode", ruleset);
+		}
+
+		[[level.p_rules[ruleset]]]();
+
+		_precache();
+
 		if (level.p_weapons == 1) {
 			precacheMenu(game["menu_weapon_allies"]);
 			switch (getCvar("p_weapons")) {
@@ -92,11 +105,6 @@ main()
 	if (!game["matchstarted"] && level.p_ready) {
 		maps\mp\gametypes\_pam_readyup::start_readying();
 	}
-	
-	if (!isDefined(game["p_overtime"])) {
-		// Currently in, or going to, overtime phase.
-		game["p_overtime"] = 0;
-	}
 
 	if (!isDefined(game["p_halftimeflag"])) {
 		game["p_halftimeflag"] = 0;
@@ -106,42 +114,8 @@ main()
 		game["round2axisscore"] = 0;
 	}
 
-	// level.p_mode = "pam_mode";
-	
-	// // Show amount of alive players per team.
-	// level.p_alive = "sv_playersleft";
-	// level _register_cvar("alive", "bool", true, "sv_playersleft");
-	
-	// level.p_draw_rounds = "scr_count_draws";
-	// level.p_antifs = "scr_afs_time";
-	// level.p_allow_mg42 = "scr_allow_mg42";
-	// level.p_allow_pistol = "scr_allow_pistol";
-	// level.p_allow_nades = "scr_allow_nades";
-	
-
-	if(getCvar("pam_mode") == "")
-		setCvar("pam_mode", "pub");
-
-	if(getcvar("p_round_restart_delay") == "")
-		setcvar("p_round_restart_delay", "5");
-
-	if(getcvar("sv_playersleft") == "")
-		setcvar("sv_playersleft", "1");
-
-
-	/* Set up Level variables */
-	level.league = getcvar("pam_mode");
-	level.playersleft = getcvarint("sv_playersleft");
-	level.countdraws = getcvarint("scr_count_draws");
-	level.hithalftime = 0;
-	level.afs_time = getcvarFloat("scr_afs_time");
-
-	if (getcvar("scr_allow_pistol") == "") {
-		setcvar("scr_allow_pistol", "0");
-	}
-
-	if (getcvar("scr_allow_nades") == "") {
-		setcvar("scr_allow_nades", "0");
+	if(getCvarInt("scr_allow_mg42") == 0) {
+		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
 	}
 }
 explode(string, delimiter) {

@@ -11,7 +11,7 @@ cmdline = \
 	+set rconPassword a
 
 
-$(outfile): maps/MP/gametypes/*.gsc
+$(outfile): maps/MP/gametypes/*.gsc rules/*.gsc
 	git archive --format=zip --worktree-attributes --output=$@ $$(test -n "$$(git stash create)" && echo $$(git stash create) || echo HEAD)
 
 .PHONY: clean

@@ -8,11 +8,19 @@ cvars()
 	setCvar("p_msg_1", "");
 	// setCvar("p_msg_2", "");
 
+	setCvar("p_ready", true);
+	setCvar("p_bash", false);
+	setcvar("p_replay_draw", true); // Re-play rounds that end in a draw
+	setcvar("p_hud_alive", true);          // players left
+	setcvar("p_round_restart_delay", 5);   // round warmup time
+	
+	setCvar("p_overtime_on_tie", true);
+	setCvar("p_overtime_roundlimit", 4);
+
 	/*========================================================*/
 	/* ============== Match Setup Options ====================*/
 	/*========================================================*/
-	setcvar("scr_count_draws", "0");		// Re-play rounds that end in a draw
-	setcvar("scr_afs_time", "1.2");			// Anti fast shoot interval time (s)
+	setcvar("p_afs_time", "1.2");			// Anti fast shoot interval time (s)
 
 
 	setcvar("scr_sd_roundlimit", "2");    // End map after this round.
@@ -52,9 +60,8 @@ cvars()
 	/*========================================================*/
 
 	setCvar("p_weapons", "mosin_nagant kar98k");
-
-	//Force Bolt-Action Rifles Only
-	setcvar("scr_force_bolt_rifles", "1");
+	setcvar("p_allow_pistol", "0");
+	setcvar("p_allow_nades", "0");
 
 
 	//Snipers
@@ -90,11 +97,8 @@ cvars()
  
 
 	//Pistols
-	setcvar("scr_allow_pistol", "0");
 
 
-	setcvar("sv_playersleft", "1");          // players left
-	setcvar("p_round_restart_delay", "5");   // round warmup time
 	setcvar("g_disableClientConsole", "0");  // disable client console
 
 

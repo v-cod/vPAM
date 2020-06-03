@@ -6,7 +6,7 @@ This project uses [Semantic Versioning 2.0.0](http://semver.org/spec/v2.0.0.html
 
 ### Added
 - Anti fast shoot monitoring.
-- scr_allow_nades to control nades equipment.
+- p_allow_nades to control nades equipment.
 - Death icon (like stock) on death pre-match.
 - Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 - Strat time lagbinding detection.
