@@ -9,11 +9,13 @@ rules()
 	// The second part refers to the rule file without '.gsc' (but ending with '::cvars').
 	// The same rule file might be added multiple times to make aliases.
 
-	add("pub",    rules\wrs::cvars);
-	add("public", rules\wrs::cvars); // alias
+	add("public", rules\public::cvars);
+	add("pub",    rules\public::cvars); // alias
 
-	add("wrs",    rules\wrs::cvars);
-	add("walrus", rules\wrs::cvars);
+	add("match", rules\match::cvars);
+
+	add("vcodgg_match", rules\vcodgg_match::cvars);
+	add("gg_match",     rules\vcodgg_match::cvars); // alias
 }
 
 /**///////////////////////////**/

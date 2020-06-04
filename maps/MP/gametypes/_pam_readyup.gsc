@@ -156,7 +156,7 @@ _player_information()
 		wait 1.5;
 	}
 
-	self iPrintLnBold("^7Hit the ^9[{+activate}] ^7key to begin^4.");
+	self iPrintLnBold("^7Press ^9[{+activate}] ^7to ready-up.");
 }
 
 _hud_readying_create()

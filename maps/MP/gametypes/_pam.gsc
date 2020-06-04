@@ -1,5 +1,23 @@
 main()
-{
+{	
+	game["pamstring"] = &"vPAM";
+
+	if (!isDefined(game["gamestarted"])) {
+		level.p_rules = [];
+		rules\_rules::rules();
+
+		ruleset = getCvar("pam_mode");
+
+		if (!isDefined(level.p_rules[ruleset])) {
+			ruleset = "pub";
+			setCvar("pam_mode", ruleset);
+		}
+
+		[[level.p_rules[ruleset]]]();
+		
+		thread _watch_pam_mode();
+	}
+
 	// Require prematch ready-up phase.
 	level.p_ready = !!getCvarInt("p_ready");
 	// Currently in ready-up phase.
@@ -36,7 +54,7 @@ main()
 	// 2 for fixed, pre-selected weapons.
 	level.p_weapons = 0;
 	s = getCvar("p_weapons");
-	if (s == "secondary") {
+	if (s == "opponent") {
 		level.p_weapons = 1;
 	} else if (s == "american" || s == "british" || s == "russian") {
 		level.p_weapons = 1;
@@ -49,24 +67,7 @@ main()
 		}
 	}
 
-	if (!isDefined(game["p_overtime"])) {
-		// Currently in, or going to, overtime phase.
-		game["p_overtime"] = 0;
-	}
-
 	if (!isDefined(game["gamestarted"])) {
-		level.p_rules = [];
-		rules\_rules::rules();
-
-		ruleset = getCvar("pam_mode");
-
-		if (!isDefined(level.p_rules[ruleset])) {
-			ruleset = "pub";
-			setCvar("pam_mode", ruleset);
-		}
-
-		[[level.p_rules[ruleset]]]();
-
 		_precache();
 
 		if (level.p_weapons == 1) {
@@ -103,6 +104,11 @@ main()
 		}
 	}
 
+	if (!isDefined(game["p_overtime"])) {
+		// Currently in, or going to, overtime phase.
+		game["p_overtime"] = 0;
+	}
+
 	// Ready up phase before match start.
 	if (!game["matchstarted"] && level.p_ready) {
 		maps\mp\gametypes\_pam_readyup::start_readying();
@@ -116,7 +122,7 @@ main()
 		game["round2axisscore"] = 0;
 	}
 
-	if(getCvarInt("scr_allow_mg42") == 0) {
+	if(!getCvarInt("p_allow_mg42")) {
 		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
 	}
 }
@@ -249,29 +255,27 @@ _precache()
 	precacheShader("hudStopwatchNeedle");
 
 	precacheShader("gfx/hud/hud@fire_ready.tga");
-	precacheItem("mosin_nagant_mp");
-	precacheItem("kar98k_mp");
 }
 
-// _cvar(cvar, type, def)
-// {
-// 	if (getCvar(cvar) == "") {
-// 		return def;
-// 	}
+_watch_pam_mode()
+{
+	m = getCvar("pam_mode");
 
-// 	switch (type) {
-// 	case "bool":
-// 		return !!getCvarInt(cvar);
-// 	case "int":
-// 		return getCvarInt(cvar);
-// 	case "float":
-// 		return getCvarFloat(cvar);
-// 	default:
-// 		return getCvar(cvar);
-// 	}
-// }
+	while (true) {
+		while (m == getCvar("pam_mode")) {
+			wait 1;
+		}
+		
+		m_new = getCvar("pam_mode");
+		if (!isDefined(level.p_rules[m_new])) {
+			iPrintLn("^1Unknown mode: ^7" + m_new);
 
-// _register_cvar(id, type, cvar)
-// {
-// 	level.p[id] = _cvar();
-// }
+			setCvar("pam_mode", m);
+			continue;
+		}
+
+		setCvar("sv_maprotationcurrent", "map " + getCvar("mapname"));
+		exitLevel(false);
+		return;
+	}
+}

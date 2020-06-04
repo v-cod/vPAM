@@ -1314,9 +1314,9 @@ endRound(roundwinner)
 	if(!game["matchstarted"] && roundwinner == "reset")
 	{
 		game["matchstarted"] = true;
-/**/	// Only reset scores if no rounds played yet. (Might be halftime.)
 /**/	// thread resetScores();
 /**/	// game["roundsplayed"] = 0;
+/**/	// Only reset scores if no rounds played yet. (Might have been halftime.)
 /**/	if (game["roundsplayed"] == 0) {
 /**/		thread resetScores();
 /**/	}
@@ -2137,10 +2137,10 @@ _hud_labels_create()
 	}
 
 	level.p_hud_labels_right = newHudElem();
-	level.p_hud_labels_right.x = 575;
+	level.p_hud_labels_right.x = 640 - 10;
 	level.p_hud_labels_right.y = 10;
-	level.p_hud_labels_right.alignX = "center";
-	level.p_hud_labels_right.alignY = "middle";
+	level.p_hud_labels_right.alignX = "right";
+	level.p_hud_labels_right.alignY = "top";
 	level.p_hud_labels_right.fontScale = 1;
 	level.p_hud_labels_right.color = (1, 1, 1);
 	level.p_hud_labels_right setText(game["pamstring"]);
@@ -2149,7 +2149,7 @@ _hud_labels_create()
 	level.p_hud_labels_left.x = 10;
 	level.p_hud_labels_left.y = 10;
 	level.p_hud_labels_left.alignX = "left";
-	level.p_hud_labels_left.alignY = "middle";
+	level.p_hud_labels_left.alignY = "top";
 	level.p_hud_labels_left.fontScale = 1;
 	level.p_hud_labels_left.color = (1, 1, 1);
 	level.p_hud_labels_left setText(game["leaguestring"]);
