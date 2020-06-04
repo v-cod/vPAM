@@ -7,6 +7,8 @@ main()
 	// Ready-up phase succeeded.
 	level.p_readied = false;
 
+	// Freeze players during grace period.
+	level.p_strat = !!getCvarInt("p_strat");
 	// Currently in strat time.
 	level.p_stratting = false;
 
@@ -46,7 +48,7 @@ main()
 			level.p_weapons_arr[i] += "_mp";
 		}
 	}
-	
+
 	if (!isDefined(game["p_overtime"])) {
 		// Currently in, or going to, overtime phase.
 		game["p_overtime"] = 0;

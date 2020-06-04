@@ -1074,7 +1074,7 @@ startRound()
 
 		if((level.roundlength * 60) > level.graceperiod)
 		{
-/**/		if (getCvar("scr_strat_time") == "1" && level.graceperiod > 0) {
+/**/		if (level.p_strat && level.graceperiod > 0) {
 /**/			level.clock setTimer(level.graceperiod);
 /**/			thread Hold_All_Players();
 /**/		}
@@ -1084,7 +1084,7 @@ startRound()
 			level notify("round_started");
 			level.roundstarted = true;
 			level.clock.color = (1, 1, 1);
-/**/		if (getCvar("scr_strat_time") == "1" && level.graceperiod > 0) {
+/**/		if (level.p_strat && level.graceperiod > 0) {
 /**/			level.clock setTimer(level.roundlength * 60);
 /**/		}
 

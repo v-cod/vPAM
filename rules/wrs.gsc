@@ -28,10 +28,10 @@ cvars()
 	setcvar("scr_sd_scorelimit", "0");    // Score limit per map.
 	setcvar("scr_sd_timelimit", "0");     // Time limit per map.
 
-	
+
 	// Grace/Strat Period
-	setcvar("scr_sd_graceperiod", "3");		// Grace Period
-	setcvar("scr_strat_time", "1");			//Hold players still during Strat Time?
+	setcvar("scr_sd_graceperiod", "3"); // Grace period
+	setcvar("p_strat", true); // Freeze players during grace period.
 
 
 	// Allow Voting 
