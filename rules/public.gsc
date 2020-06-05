@@ -5,7 +5,7 @@ cvars()
 
 
 	// LABEL
-	game["leaguestring"] = &"public";
+	game["p_istr_label_left"] = &"public";
 
 
 	// MATCH

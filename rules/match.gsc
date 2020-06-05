@@ -4,7 +4,7 @@ cvars()
 	rules\public::cvars();
 
 	// LABEL
-	game["leaguestring"] = &"match";
+	game["p_istr_label_left"] = &"match";
 
 	// MATCH
 	setCvar("scr_sd_scorelimit", 11);

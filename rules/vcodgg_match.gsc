@@ -4,7 +4,7 @@ cvars()
 	rules\match::cvars();
 
 	// LABEL
-	game["leaguestring"] = &"vCoD.gg Match";
+	game["p_istr_label_left"] = &"vCoD.gg Match";
 
 	// MATCH
 	setCvar("scr_sd_scorelimit", 0);

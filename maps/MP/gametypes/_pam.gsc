@@ -1,7 +1,5 @@
 main()
-{	
-	game["pamstring"] = &"vPAM";
-
+{
 	if (!isDefined(game["gamestarted"])) {
 		level.p_rules = [];
 		rules\_rules::rules();
@@ -149,12 +147,17 @@ explode(string, delimiter) {
 
 _precache()
 {
-	precacheString(game["pamstring"]);
+	if (!isDefined(game["p_istr_label_left"])) {
+		game["p_istr_label_left"] = &"^1unknown";
+	}
 
-	// Logo
-	if (!isdefined(game["leaguestring"]))
-		game["leaguestring"] = &"Unknown Pam_Mode Error";
-	precacheString(game["leaguestring"]);
+	if (!isDefined(game["p_istr_label_right"])) {
+		game["p_istr_label_right"] = &"vPAM";
+	}
+
+	precacheString(game["p_istr_label_left"]);
+	precacheString(game["p_istr_label_right"]);
+
 	game["overtimemode"] = &"Overtime";
 	precacheString(game["overtimemode"]);
 

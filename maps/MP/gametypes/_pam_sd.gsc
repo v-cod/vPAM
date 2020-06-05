@@ -2143,7 +2143,7 @@ _hud_labels_create()
 	level.p_hud_labels_right.alignY = "top";
 	level.p_hud_labels_right.fontScale = 1;
 	level.p_hud_labels_right.color = (1, 1, 1);
-	level.p_hud_labels_right setText(game["pamstring"]);
+	level.p_hud_labels_right setText(game["p_istr_label_right"]);
 
 	level.p_hud_labels_left = newHudElem();
 	level.p_hud_labels_left.x = 10;
@@ -2152,7 +2152,7 @@ _hud_labels_create()
 	level.p_hud_labels_left.alignY = "top";
 	level.p_hud_labels_left.fontScale = 1;
 	level.p_hud_labels_left.color = (1, 1, 1);
-	level.p_hud_labels_left setText(game["leaguestring"]);
+	level.p_hud_labels_left setText(game["p_istr_label_left"]);
 
 	if (game["p_overtime"] > 0) {
 		level.p_hud_labels_overtime_mode = newHudElem();

@@ -4,7 +4,7 @@
 cvars()
 {
 	// LABEL
-	game["leaguestring"] = &"basic";
+	game["p_istr_label_left"] = &"basic";
 
 
 	/// MATCH
