@@ -14,7 +14,7 @@ cvars()
 	setCvar("p_bash", false);            // Only allow bash damage to be done.
 
 	setCvar("p_replay_draw", true);      // Do not count rounds ending in a draw.
-	setCvar("p_round_restart_delay", 5); // Time to wait before starting next round. Shows small scoreboard.
+	setCvar("p_round_restart_delay", 10);// Time to wait before starting next round. Shows small scoreboard.
 
 	setCvar("p_strat", false);           // Hold players still during grace period.
 

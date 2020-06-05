@@ -1393,19 +1393,21 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/delay = 5 + level.p_round_restart_delay;
-/**/if (delay > 0) {
+/**/if (level.p_round_restart_delay > 0) {
 /**/	_hud_labels_create();
 /**/
-/**/	if (game["roundsplayed"] == 0) {
-/**/		_hud_roundstart_create(game["p_halftimeflag"] + 1, delay);
+/**/	// TODO: Handle overtime?
+/**/	if (roundwinner == "reset") {
+/**/		_hud_halfstart_create(game["p_halftimeflag"] + 1, level.p_round_restart_delay);
 /**/
-/**/		wait delay;
+/**/		wait level.p_round_restart_delay;
 /**/
-/**/		_hud_roundstart_destroy();
+/**/		_hud_halfstart_destroy();
 /**/	} else {
 /**/		_hud_scoreboard_create();
-/**/		_hud_round_next_create(delay);
+/**/		_hud_round_next_create(level.p_round_restart_delay);
+/**/
+/**/		wait level.p_round_restart_delay;
 /**/
 /**/		_hud_scoreboard_destroy();
 /**/		_hud_round_next_destroy();
@@ -2360,9 +2362,6 @@ _hud_scoreboard_destroy()
 
 _hud_round_next_create(time)
 {
-	if ( time < 3 )
-		time = 3;
-
 	level.round = newHudElem();
 	level.round.x = 540;
 	level.round.y = 295;
@@ -2401,9 +2400,6 @@ _hud_round_next_create(time)
 			
 		player thread stopwatch_start(time);
 	}
-	
-	iPrintLn("next round HUD, wait " + time + " seconds...");
-	wait time;
 
 	if(isdefined(level.round))
 		level.round destroy();
@@ -2474,7 +2470,7 @@ stopwatch_start(time)
 		self.stopwatch destroy();
 }
 
-_hud_roundstart_create(half, time)
+_hud_halfstart_create(half, time)
 {
 	level.hud_round = newHudElem();
 	level.hud_round.x = 540;
@@ -2516,7 +2512,7 @@ _hud_roundstart_create(half, time)
 	level.p_hud_stopwatch setClock(time, 60, "hudStopwatch", 64, 64);
 }
 
-_hud_roundstart_destroy()
+_hud_halfstart_destroy()
 {
 	if(isdefined(level.hud_round))
 		level.hud_round destroy();
@@ -2589,6 +2585,8 @@ _half_time()
 			// player spawnSpectator();
 		}
 	}
+
+	map_restart(true);
 }
 
 Create_HUD_TeamSwap()

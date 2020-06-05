@@ -100,24 +100,21 @@ main()
 				precacheItem(level.p_weapons_arr[i]);
 			}
 		}
-	}
 
-	if (!isDefined(game["p_overtime"])) {
 		// Currently in, or going to, overtime phase.
 		game["p_overtime"] = 0;
+
+		game["p_halftimeflag"] = 0;
+
+		game["round1alliesscore"] = 0;
+		game["round1axisscore"] = 0; 
+		game["round2alliesscore"] = 0;
+		game["round2axisscore"] = 0;
 	}
 
 	// Ready up phase before match start.
 	if (!game["matchstarted"] && level.p_ready) {
 		maps\mp\gametypes\_pam_readyup::start_readying();
-	}
-
-	if (!isDefined(game["p_halftimeflag"])) {
-		game["p_halftimeflag"] = 0;
-		game["round1alliesscore"] = 0;
-		game["round1axisscore"] = 0; 
-		game["round2alliesscore"] = 0;
-		game["round2axisscore"] = 0;
 	}
 
 	if(!getCvarInt("p_allow_mg42")) {
