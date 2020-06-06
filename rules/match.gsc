@@ -14,9 +14,9 @@ cvars()
 	setCvar("p_msg_1", "Be civil.");
 
 	// WEAPONS
-	setCvar("p_allow_MG42", false);
 	setCvar("p_allow_pistol", true);
 	setCvar("p_allow_nades", true);
+	setCvar("p_allow_MG42", false);
 	setCvar("scr_allow_fg42", false);
 
 	// STRAT

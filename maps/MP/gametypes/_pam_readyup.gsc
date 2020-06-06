@@ -24,7 +24,7 @@ stop_readying()
 	_hud_readying_destroy();
 	_hud_readying_count_destroy();
 
-	_hud_ready_create(game["p_halftimeflag"] + 1);
+	_hud_ready_create(game["p_half"]);
 	iPrintLn("players ready, wait 5 seconds...");
 	wait 5;
 	_hud_ready_destroy();

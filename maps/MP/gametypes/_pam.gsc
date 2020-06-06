@@ -101,10 +101,11 @@ main()
 			}
 		}
 
-		// Currently in, or going to, overtime phase.
-		game["p_overtime"] = 0;
+		// Current or next half.
+		game["p_half"] = 1;
 
-		game["p_halftimeflag"] = 0;
+		// Current or next overtime.
+		game["p_overtime"] = 0;
 
 		game["round1alliesscore"] = 0;
 		game["round1axisscore"] = 0; 
@@ -197,10 +198,10 @@ _precache()
 	precacheString(game["start1sthalf"]);
 
 	//Half Starting Display
-	game["first"] = &"First";
-	precacheString(game["first"]);
-	game["second"] = &"Second";
-	precacheString(game["second"]);
+	game["p_hud_half_1"] = &"First";
+	precacheString(game["p_hud_half_1"]);
+	game["p_hud_half_2"] = &"Second";
+	precacheString(game["p_hud_half_2"]);
 	game["half"] = &"Half";
 	precacheString(game["half"]);
 	game["starting"] = &"Starting";

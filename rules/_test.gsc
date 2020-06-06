@@ -10,17 +10,20 @@ cvars()
 	setCvar("scr_sd_scorelimit", 0);
 	setCvar("scr_sd_roundlimit", 4);
 
-	setCvar("p_msg_1", "Welcome to vCoD.gg match.");
+	setCvar("p_overtime_on_tie", true);
+	setCvar("p_overtime_roundlimit", 4);
+
+	setCvar("p_msg_1", "Welcome to a test match.");
 	setCvar("p_msg_2", "I wish you the very best with killing.");
 	setCvar("p_msg_3", "Don't whine too much about this mod.");
 	setCvar("p_msg_4", "And be happy.");
 
 	// WEAPONS
-	setCvar("p_weapons", "mosin_nagant kar98k"); // Rifles only.
-	setCvar("p_allow_pistol", false); // Rifles only.
-	setCvar("p_allow_nades", false); // Rifles only.
-	setCvar("p_allow_MG42", false); // Rifles only.
-	setCvar("scr_allow_fg42", false); // Rifles only.
+	setCvar("p_weapons", "opponent");
+	setCvar("p_allow_pistol", true);
+	setCvar("p_allow_nades", true);
+	setCvar("p_allow_MG42", true);
+	setCvar("scr_allow_fg42", true);
 
 	// STRAT
 	setCvar("p_strat", true);

@@ -1113,6 +1113,14 @@ startRound()
 /**/	level.clock destroy();
 /**/	_hud_labels_create();
 /**/
+/**/	if (game["roundsplayed"] > 0) {
+/**/		_hud_scoreboard_create();
+/**/	}
+
+		if (game["p_half"] == 2) {
+			_hud_halftime_create();
+		}
+/**/
 /**/	return;
 	}
 	
@@ -1183,10 +1191,10 @@ resetScores()
 	game["axisscore"] = 0;
 	setTeamScore("axis", game["axisscore"]);
 
-/**/game["round1alliesscore"] = 0;
-/**/game["round1axisscore"] = 0; 
-/**/game["round2alliesscore"] = 0;
-/**/game["round2axisscore"] = 0;
+/**/game["p_alliedscore_half_1"] = 0;
+/**/game["p_axisscore_half_1"] = 0; 
+/**/game["p_alliedscore_half_2"] = 0;
+/**/game["p_axisscore_half_2"] = 0;
 }
 
 endRound(roundwinner)
@@ -1256,11 +1264,7 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-/**/	if (game["p_halftimeflag"] == 1) {
-/**/		game["round2alliesscore"]++;
-/**/	} else if(game["matchstarted"]) {
-/**/		game["round1alliesscore"]++;
-/**/	}
+/**/	game["p_alliedscore_half_" + game["p_half"]]++;
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1279,11 +1283,7 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-/**/	if (game["p_halftimeflag"] == 1) {
-/**/		game["round2axisscore"]++;
-/**/	} else if(game["matchstarted"]) {
-/**/		game["round1axisscore"]++;
-/**/	}
+/**/	game["p_axisscore_half_" + game["p_half"]]++;
 
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
@@ -1396,24 +1396,21 @@ endRound(roundwinner)
 /**/if (level.p_round_restart_delay > 0) {
 /**/	_hud_labels_create();
 /**/
-/**/	// TODO: Handle overtime?
-/**/	if (roundwinner == "reset") {
-/**/		_hud_halfstart_create(game["p_halftimeflag"] + 1, level.p_round_restart_delay);
-/**/
-/**/		wait level.p_round_restart_delay;
-/**/
-/**/		_hud_halfstart_destroy();
-/**/	} else {
+/**/	if (game["roundsplayed"] > 0) {
 /**/		_hud_scoreboard_create();
-/**/		_hud_round_next_create(level.p_round_restart_delay);
-/**/
-/**/		wait level.p_round_restart_delay;
-/**/
-/**/		_hud_scoreboard_destroy();
-/**/		_hud_round_next_destroy();
 /**/	}
-/**/	//level.matchover setText(game["overtime"]);
 /**/
+/**/	if (roundwinner == "reset") {
+/**/		_hud_round_next_create(level.p_round_restart_delay, game["p_half"]);
+/**/	} else {
+/**/		_hud_round_next_create(level.p_round_restart_delay);
+/**/	}
+/**/	//level.p_hud_matchover setText(game["overtime"]);
+/**/
+/**/	wait level.p_round_restart_delay;
+/**/
+/**/	_hud_scoreboard_destroy();
+/**/	_hud_round_next_destroy();
 /**/	_hud_labels_destroy();
 /**/}
 
@@ -1533,7 +1530,7 @@ checkRoundLimit()
 		return;
 
 /**/// Halftime check.
-/**/if (level.roundlimit > 0 && game["p_halftimeflag"] == 0 && game["roundsplayed"] >= level.roundlimit / 2) {
+/**/if (level.roundlimit > 0 && game["p_half"] == 1 && game["roundsplayed"] >= level.roundlimit / 2) {
 /**/	_half_time();
 /**/	return;
 /**/}
@@ -2236,7 +2233,7 @@ _hud_scoreboard_create()
 	level.firhalfaxisscorenum.alignY = "middle";
 	level.firhalfaxisscorenum.fontScale = .75;
 	level.firhalfaxisscorenum.color = (.73, .99, .75);
-	level.firhalfaxisscorenum setValue(game["round1axisscore"]);
+	level.firhalfaxisscorenum setValue(game["p_axisscore_half_1"]);
 
 	level.firhalfalliesscorenum = newHudElem();
 	level.firhalfalliesscorenum.x = 618;
@@ -2245,7 +2242,7 @@ _hud_scoreboard_create()
 	level.firhalfalliesscorenum.alignY = "middle";
 	level.firhalfalliesscorenum.fontScale = .75;
 	level.firhalfalliesscorenum.color = (.85, .99, .99);
-	level.firhalfalliesscorenum setValue(game["round1alliesscore"]);
+	level.firhalfalliesscorenum setValue(game["p_alliedscore_half_1"]);
 
 	// Second Half Score Display
 	level.sechalfscore = newHudElem();
@@ -2264,7 +2261,7 @@ _hud_scoreboard_create()
 	level.sechalfaxisscorenum.alignY = "middle";
 	level.sechalfaxisscorenum.fontScale = .75;
 	level.sechalfaxisscorenum.color = (.85, .99, .99);
-	level.sechalfaxisscorenum setValue(game["round2axisscore"]);
+	level.sechalfaxisscorenum setValue(game["p_axisscore_half_2"]);
 
 	level.sechalfalliesscorenum = newHudElem();
 	level.sechalfalliesscorenum.x = 532;
@@ -2273,7 +2270,7 @@ _hud_scoreboard_create()
 	level.sechalfalliesscorenum.alignY = "middle";
 	level.sechalfalliesscorenum.fontScale = .75;
 	level.sechalfalliesscorenum.color = (.73, .99, .75);
-	level.sechalfalliesscorenum setValue(game["round2alliesscore"]);
+	level.sechalfalliesscorenum setValue(game["p_alliedscore_half_2"]);
 			
 	// Match Score Display
 	level.matchscore = newHudElem();
@@ -2286,7 +2283,7 @@ _hud_scoreboard_create()
 	level.matchscore setText(game["matchscore2"]);
 
 	level.matchaxisscorenum = newHudElem();
-	if(game["p_halftimeflag"] == 1)
+	if(game["p_half"] == 2)
 	{
 		level.matchaxisscorenum.x = 618;
 		level.matchaxisscorenum.color = (.85, .99, .99);
@@ -2303,9 +2300,9 @@ _hud_scoreboard_create()
 	level.matchaxisscorenum setValue(game["axisscore"]);
 
 	level.matchalliesscorenum = newHudElem();
-	if(game["p_halftimeflag"] == 1)
+	if(game["p_half"] == 2)
 	{
-		level.matchalliesscorenum.x = 535;
+		level.matchalliesscorenum.x = 532;
 		level.matchalliesscorenum.color = (.73, .99, .75);
 	}
 	else
@@ -2360,61 +2357,64 @@ _hud_scoreboard_destroy()
 
 }
 
-_hud_round_next_create(time)
+_hud_round_next_create(time, half)
 {
-	level.round = newHudElem();
-	level.round.x = 540;
-	level.round.y = 295;
-	level.round.alignX = "center";
-	level.round.alignY = "middle";
-	level.round.fontScale = 1;
-	level.round.color = (1, 1, 0);
-	level.round setText(game["round"]);		
+	level.p_hud_round_next_1 = newHudElem();
+	level.p_hud_round_next_1.x = 540;
+	level.p_hud_round_next_1.y = 295;
+	level.p_hud_round_next_1.alignX = "center";
+	level.p_hud_round_next_1.alignY = "middle";
+	level.p_hud_round_next_1.fontScale = 1;
+	level.p_hud_round_next_1.color = (1, 1, 0);
+	level.p_hud_round_next_1 setText(game["round"]);		
 		
-	level.roundnum = newHudElem();
-	level.roundnum.x = 540;
-	level.roundnum.y = 315;
-	level.roundnum.alignX = "center";
-	level.roundnum.alignY = "middle";
-	level.roundnum.fontScale = 1;
-	level.roundnum.color = (1, 1, 0);
+	level.p_hud_round_next_2 = newHudElem();
+	level.p_hud_round_next_2.x = 540;
+	level.p_hud_round_next_2.y = 315;
+	level.p_hud_round_next_2.alignX = "center";
+	level.p_hud_round_next_2.alignY = "middle";
+	level.p_hud_round_next_2.fontScale = 1;
+	level.p_hud_round_next_2.color = (1, 1, 0);
 	round = game["roundsplayed"] + 1;
-	level.roundnum setValue(round);
+	level.p_hud_round_next_2 setValue(round);
 
-	level.starting = newHudElem();
-	level.starting.x = 540;
-	level.starting.y = 335;
-	level.starting.alignX = "center";
-	level.starting.alignY = "middle";
-	level.starting.fontScale = 1;
-	level.starting.color = (1, 1, 0);
-	level.starting setText(game["starting"]);
-
-	// Give all players a count-down stopwatch
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		player = players[i];
-		
-		if ( isDefined(player.pers["team"]) && player.pers["team"] == "spectator")
-			continue;
-			
-		player thread stopwatch_start(time);
+	level.p_hud_round_next_3 = newHudElem();
+	level.p_hud_round_next_3.x = 540;
+	level.p_hud_round_next_3.y = 335;
+	level.p_hud_round_next_3.alignX = "center";
+	level.p_hud_round_next_3.alignY = "middle";
+	level.p_hud_round_next_3.fontScale = 1;
+	level.p_hud_round_next_3.color = (1, 1, 0);
+	level.p_hud_round_next_3 setText(game["starting"]);
+	
+	if (isDefined(half)) {
+		level.p_hud_round_next_1 setText(game["p_hud_half_" + half]);
+		level.p_hud_round_next_2 setText(game["half"]);
 	}
 
-	if(isdefined(level.round))
-		level.round destroy();
-	if(isdefined(level.roundnum))
-		level.roundnum destroy();
-	if(isdefined(level.starting))
-		level.starting destroy();
+	level.p_hud_stopwatch = newHudElem();
+	level.p_hud_stopwatch.x = 590;
+	level.p_hud_stopwatch.y = 315;
+	level.p_hud_stopwatch.alignX = "center";
+	level.p_hud_stopwatch.alignY = "middle";
+	level.p_hud_stopwatch.sort = 9999;
+	level.p_hud_stopwatch.archived = false;
+	level.p_hud_stopwatch setClock(time, 60, "hudStopwatch", 64, 64);
 }
-
 _hud_round_next_destroy()
 {
-	if(isdefined(level.round))
-		level.round destroy();
-	if(isdefined(level.roundnum))
-		level.roundnum destroy();
+	if (isDefined(level.p_hud_round_next_1)) {
+		level.p_hud_round_next_1 destroy();
+	}
+	if (isDefined(level.p_hud_round_next_2)) {
+		level.p_hud_round_next_2 destroy();
+	}
+	if (isDefined(level.p_hud_round_next_3)) {
+		level.p_hud_round_next_3 destroy();
+	}
+	if (isDefined(level.p_hud_stopwatch)) {
+		level.p_hud_stopwatch destroy();
+	}
 }
 
 
@@ -2432,12 +2432,12 @@ _hud_teamwin_create()
 		level.teamwin.color = (1, 1, 0);
 		level.teamwin setText(game["dsptie"]);
 	}
-	else if (game["axisscore"] > game["alliedscore"] && game["p_halftimeflag"] == 1)
+	else if (game["axisscore"] > game["alliedscore"] && game["p_half"] == 2)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);
 	}
-	else if (game["axisscore"] < game["alliedscore"] && game["p_halftimeflag"] == 0)
+	else if (game["axisscore"] < game["alliedscore"] && game["p_half"] == 1)
 	{
 		level.teamwin.color = (.85, .99, .99);
 		level.teamwin setText(game["team2win"]);
@@ -2453,75 +2453,6 @@ _hud_teamwin_destroy()
 {
 	if(isdefined(level.teamwin))
 		level.teamwin destroy();
-}
-
-stopwatch_start(time)
-{
-	if(isDefined(self.stopwatch))
-		self.stopwatch destroy();
-		
-	self.stopwatch = newClientHudElem(self);
-	maps\mp\gametypes\_pam_utilities::InitClock(self.stopwatch, time);
-	self.stopwatch.archived = false;
-
-	wait (time);
-
-	if(isDefined(self.stopwatch)) 
-		self.stopwatch destroy();
-}
-
-_hud_halfstart_create(half, time)
-{
-	level.hud_round = newHudElem();
-	level.hud_round.x = 540;
-	level.hud_round.y = 295;
-	level.hud_round.alignX = "center";
-	level.hud_round.alignY = "middle";
-	level.hud_round.fontScale = 1;
-	level.hud_round.color = (1, 1, 0);
-	if (half == 1)
-		level.hud_round setText(game["first"]);	
-	else
-		level.hud_round setText(game["second"]);	
-		
-	level.roundnum = newHudElem();
-	level.roundnum.x = 540;
-	level.roundnum.y = 315;
-	level.roundnum.alignX = "center";
-	level.roundnum.alignY = "middle";
-	level.roundnum.fontScale = 1;
-	level.roundnum.color = (1, 1, 0);
-	level.roundnum setText(game["half"]);
-
-	level.starting = newHudElem();
-	level.starting.x = 540;
-	level.starting.y = 335;
-	level.starting.alignX = "center";
-	level.starting.alignY = "middle";
-	level.starting.fontScale = 1;
-	level.starting.color = (1, 1, 0);
-	level.starting setText(game["starting"]);
-
-	level.p_hud_stopwatch = newHudElem();
-	level.p_hud_stopwatch.x = 590;
-	level.p_hud_stopwatch.y = 315;
-	level.p_hud_stopwatch.alignX = "center";
-	level.p_hud_stopwatch.alignY = "middle";
-	level.p_hud_stopwatch.sort = 9999;
-	level.p_hud_stopwatch.archived = false;
-	level.p_hud_stopwatch setClock(time, 60, "hudStopwatch", 64, 64);
-}
-
-_hud_halfstart_destroy()
-{
-	if(isdefined(level.hud_round))
-		level.hud_round destroy();
-	if(isdefined(level.roundnum))
-		level.roundnum destroy();
-	if(isdefined(level.starting))
-		level.starting destroy();
-	if(isdefined(level.p_hud_stopwatch))
-		level.p_hud_stopwatch destroy();
 }
 
 _hud_halftime_create()
@@ -2543,7 +2474,7 @@ _hud_halftime_create()
 _half_time()
 {
 	game["matchstarted"] = false;
-	game["p_halftimeflag"] = 1;
+	game["p_half"] = 2;
 	
 	_hud_labels_create();
 	_hud_halftime_create();
@@ -2552,7 +2483,7 @@ _half_time()
 
 	iPrintLn("_half_time: wait 5");
 	wait 5;
-		
+
 	Destroy_HUD_TeamSwap();
 
 	// Switch team scores.
