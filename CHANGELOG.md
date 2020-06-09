@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Anti fastshoot monitoring.
 - Anti aimrun mechanism.
+- Anti speeding mechanism.
 - Strat time lagbinding detection.
 - p_allow_nades to control nades equipment.
 - Death icon (like stock) on death pre-match.

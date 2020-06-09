@@ -1,6 +1,5 @@
 ## Must
 
-- Feature to punish A+D speeders.
 - Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.
@@ -8,6 +7,7 @@
 ## Should
 
 - Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
+- Exploits (fastshoot, aimrun, speeding) to work with all weapons.
 
 ## Could
 
@@ -18,7 +18,6 @@
 - Intermission for half-time switch.
 - auto_change name during readying.
 - Configurable: Clarify killing during warm-up (icon?).
-- Anti fast shoot for weapons other than kar/mos.
 - Detect disallowed jumps.
 - Memorize result from previous game.
 - Restart map/mod on empty server.

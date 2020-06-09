@@ -973,6 +973,7 @@ spawnPlayer()
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
 /**/thread maps\mp\gametypes\_pam_utilities::watchPlayerFastShoot();
 /**/thread maps\mp\gametypes\_pam_utilities::watchPlayerAimRun();
+/**/thread maps\mp\gametypes\_pam_utilities::watchPlayerSpeed();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
@@ -2592,7 +2593,7 @@ Hold_All_Players()
 
 	players = getentarray("player", "classname");
 	for (i = 0; i < players.size; i++) { 
-		players[i].maxspeed = getCvar("g_speed");
+		players[i].maxspeed = getCvarInt("g_speed");
 	}
 
 	thread maps\mp\gametypes\_teams::sayMoveIn();
