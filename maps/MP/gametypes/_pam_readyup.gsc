@@ -5,7 +5,6 @@ start_readying()
 
 	_hud_readying_create();
 	_hud_readying_count_create();
-	update();
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
@@ -55,9 +54,12 @@ update()
 
 	level.p_readying_count_3 setValue(players.size - n);
 
-	if (players.size < 2) {
-		iPrintLn("Two or more players needed to begin.");
-	} else if (n == players.size) {
+	 if (n == players.size) {
+		if (players.size < 2) {
+			iPrintLn("Two or more players needed to begin.");
+			return;
+		}
+
 		thread stop_readying();
 	}
 }
@@ -213,6 +215,7 @@ _hud_readying_count_create()
 	level.p_readying_count_3.alignY = "middle";
 	level.p_readying_count_3.fontScale = 1.2;
 	level.p_readying_count_3.color = (.98, .98, .60);
+	level.p_readying_count_3 setValue(0);
 }
 _hud_readying_count_destroy()
 {
