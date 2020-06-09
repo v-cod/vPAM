@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 - Configurable melee damage only. (Bash round.)
 - Configurable overtime on tie.
+- Configurable accent color for mod messages.
 
 ### Changed
 - Allow spawning during grace (strat).
@@ -23,10 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rifle damage upped through script instead of weapon file.
 - Halftime always at middle of rounds. (rounds / 2)
 - Replaced scr_end_score and scr_end_round with stock equivalents (scr_sd).
+- PK3 checker prints checksum of all paks.
 - CHANGELOG, TODO and Makefile.
 
 ### Removed
-- Removed pk3 checker.
 - Removed feature to give spectator black screen.
 - 'Check Sniper' functionality; wasn't used or useful.
 - Removed feature to allow dropping second weapon.

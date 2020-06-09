@@ -2481,7 +2481,7 @@ _half_time()
 	_hud_scoreboard_create();
 	Create_HUD_TeamSwap();
 
-	iPrintLn("_half_time: wait 5");
+	iPrintLn(level.p_prefix + "_half_time: wait 5");
 	wait 5;
 
 	Destroy_HUD_TeamSwap();
@@ -2612,7 +2612,7 @@ Hold_All_Players()
 
 		dist = distancesquared(players[i].p_spawn_origin, players[i].origin);		
 		if (dist > dist_max) {
-			iPrintLn("^1False start^7: " + players[i].name);
+			iPrintLn(level.p_prefix + "^1FALSE START^7: " + players[i].name);
 			players[i] setOrigin(players[i].p_spawn_origin);
 		}
 	}

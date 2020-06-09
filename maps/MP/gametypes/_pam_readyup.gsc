@@ -24,7 +24,7 @@ stop_readying()
 	_hud_readying_count_destroy();
 
 	_hud_ready_create(game["p_half"]);
-	iPrintLn("players ready, wait 5 seconds...");
+	iPrintLn(level.p_prefix + "players ready, wait 5 seconds...");
 	wait 5;
 	_hud_ready_destroy();
 
@@ -56,7 +56,7 @@ update()
 
 	 if (n == players.size) {
 		if (players.size < 2) {
-			iPrintLn("Two or more players needed to begin.");
+			iPrintLn(level.p_prefix + "^1More playeds needed.");
 			return;
 		}
 
@@ -113,14 +113,14 @@ monitor_player()
 
 		if (self.p_ready) {
 			self.statusicon = game["headicon_carrier"];
-			iprintln(self.p_name + "^7 is ^2ready");
+			iprintln(level.p_prefix + self.p_name + "^7 is ^2ready");
 
 			// Change players hud to indicate player not ready
 			readyhud.color = (.73, .99, .73);
 			readyhud setText(game["ready"]);
 		} else {
 			self.statusicon = "";
-			iprintln(self.p_name + "^7 is ^1not ready");
+			iprintln(level.p_prefix + self.p_name + "^7 is ^1not ready");
 
 			// Change players hud to indicate player not ready
 			readyhud.color = (1, .84, .84);
@@ -152,13 +152,34 @@ _player_information()
 		wait 0.2;
 	}
 
+	print_checksums();
+
 	for (i = 1; getCvar("p_msg_" + i) != ""; i++) {
 		self iPrintLnBold(getCvar("p_msg_" + i));
 		
 		wait 1.5;
 	}
 
-	self iPrintLnBold("^7Press ^9[{+activate}] ^7to ready-up.");
+	self iPrintLnBold("^7Press " + level.p_color + "[{+activate}] ^7to ready-up.");
+}
+
+print_checksums()
+{
+	sums = getCvar("sv_paks");
+	paks = getCvar("sv_pakNames");
+
+	sums = maps\mp\gametypes\_pam::explode(sums, " ");
+	paks = maps\mp\gametypes\_pam::explode(paks, " ");
+
+	self iPrintLn(level.p_prefix + "Server mods (and checksums)");
+
+	for (i = 0; i < sums.size; i++) {
+		if (paks[i].size == 4 && paks[i][0] == "p" && paks[i][1] == "a" && paks[i][2] == "k") {
+			continue;
+		}
+
+		self iPrintLn(level.p_prefix + paks[i] + " (" + level.p_color + sums[i] + "^7)");
+	}
 }
 
 _hud_readying_create()

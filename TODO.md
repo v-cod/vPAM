@@ -1,5 +1,6 @@
 ## Must
 
+- Feature to punish A+D speeders.
 - Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.

@@ -16,6 +16,9 @@ main()
 		thread _watch_pam_mode();
 	}
 
+	level.p_color = game["p_color"];
+	level.p_prefix = "PAM " + level.p_color + "# ^7";
+
 	// Require prematch ready-up phase.
 	level.p_ready = !!getCvarInt("p_ready");
 	// Currently in ready-up phase.
@@ -269,7 +272,7 @@ _watch_pam_mode()
 		
 		m_new = getCvar("pam_mode");
 		if (!isDefined(level.p_rules[m_new])) {
-			iPrintLn("^1Unknown mode: ^7" + m_new);
+			iPrintLn(level.p_prefix +  "^1Unknown mode: ^7" + m_new);
 
 			setCvar("pam_mode", m);
 			continue;

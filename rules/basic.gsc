@@ -3,9 +3,9 @@
 /**///////////////////////////**/
 cvars()
 {
-	// LABEL
+	// INTERFACE
 	game["p_istr_label_left"] = &"basic";
-
+	game["p_color"] = "^5";
 
 	/// MATCH
 	setCvar("p_ready", false);           // Require players to ready-up before starting match.
