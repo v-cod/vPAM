@@ -82,7 +82,7 @@ watchPlayerAimRun()
 
 // Slow down a speeding player.
 watchPlayerSpeed()
-{	
+{
 	// Walking forward, while rapidly moving left and right, causes a player to speed up significantly.
 	// Speed increases of up to +15% have been observed with this technique.
 	// Probably similar to strafe jumping and wall running (up to +22% speed increase).
@@ -90,6 +90,8 @@ watchPlayerSpeed()
 	// This algorithm checks the speed of a player in overlapping (every T) timeframes (TF). It will allow speeding
 	// if a player came off the ground in that timeframe to ignore strafe jumping and ladder boosting. It will also
 	// attempt to ignore wall runners by using a tracer to check if there's a wall next to their feet.
+
+	// TODO: Crouching (and proning). And weapons other than bolt.
 
 	// Measure F times within TF seconds, thus with T in between.
 	TF = 1.2; // Timeframe to measure speed in.
@@ -121,7 +123,7 @@ watchPlayerSpeed()
 				ground_count += frame[j]["ground"];
 			}
 
-			if (self touching_wall()) {
+			if (self is_next_to_wall()) {
 				wait TF;
 				origin_new = (self.origin[0], self.origin[1], 0);
 				for (i = 0; i < F; i++) {
@@ -156,16 +158,34 @@ slow_down(factor)
 
 	self.maxspeed = getCvarInt("g_speed") * factor;
 	wait 1;
-	self.maxspeed = getCvarInt("g_speed") * 1;
+	self.maxspeed = getCvarInt("g_speed");
 }
 
-touching_wall()
+// Test if touching a wall on the player's sides. Does not optimally detect models.
+is_next_to_wall()
 {
-	// Measure from just above ground.
-	p = (self.origin[0], self.origin[1], self.origin[2] + 1);
-	rvec = anglesToRight(self.angles);
+	vr = anglesToRight(self.angles);
 
-	// Trace 20 units besides the feet, right first, then left.
-	return bulletTrace(p, (p[0] + rvec[0] * 20, p[1] + rvec[1] * 20, p[2]), false)["fraction"] < 1
-		|| bulletTrace(p, (p[0] - rvec[0] * 20, p[1] - rvec[1] * 20, p[2]), false)["fraction"] < 1;
+	// Measure left and right of the player's feet, just above the ground where an obstacle might be encountered.
+	p = (self.origin[0], self.origin[1], self.origin[2] + 16);
+	// A wall will be at 15 units of distance. 17 is to include margin if a player looks to or away a little from a wall.
+	pl = (p[0] - vr[0]*17, p[1] - vr[1]*17, p[2]);
+	pr = (p[0] + vr[0]*17, p[1] + vr[1]*17, p[2]);
+
+	if (bulletTrace(p, pl, false)["fraction"] < 1 ||
+		bulletTrace(p, pr, false)["fraction"] < 1) {
+		return true;
+	}
+
+	// If there is no low obstacle, measure from near ground up to detect other kinds of walls (e.g. fence with open
+	// bottom) next to the player.
+	plt = (pl[0], pl[1], pl[2] + 64);
+	prt = (pr[0], pr[1], pr[2] + 64);
+
+	if (bulletTrace(pl, plt, false)["fraction"] < 1 ||
+		bulletTrace(pr, prt, false)["fraction"] < 1) {
+		return true;
+	}
+
+	return false;
 }
