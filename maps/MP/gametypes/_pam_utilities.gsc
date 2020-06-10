@@ -27,7 +27,7 @@ watchPlayerFastShoot()
 		a1 = a2;
 		b1 = b2;
 
-		wait level.p_afs_time;
+		wait level.p_anti_fastshoot;
 
 		if (self.sessionstate != "playing") {
 			return;

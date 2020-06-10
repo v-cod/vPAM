@@ -42,8 +42,11 @@ main()
 
 	level.p_replay_draw = !!getCvarInt("p_replay_draw");
 	level.p_hud_alive = !!getCvarInt("p_hud_alive");
-	level.p_afs_time = getCvarFloat("p_afs_time");
-	
+
+	level.p_anti_aimrun = !!getCvarInt("p_anti_aimrun");
+	level.p_anti_fastshoot = getCvarFloat("p_anti_fastshoot");
+	level.p_anti_speeding = !!getCvarInt("p_anti_speeding");
+
 	level.p_round_restart_delay = getCvarInt("p_round_restart_delay");
 
 	level.p_allow_pistol = !!getCvarInt("p_allow_pistol");

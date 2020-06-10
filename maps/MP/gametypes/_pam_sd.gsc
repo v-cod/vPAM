@@ -971,9 +971,16 @@ spawnPlayer()
 
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
-/**/thread maps\mp\gametypes\_pam_utilities::watchPlayerFastShoot();
-/**/thread maps\mp\gametypes\_pam_utilities::watchPlayerAimRun();
-/**/thread maps\mp\gametypes\_pam_utilities::watchPlayerSpeed();
+
+/**/if (level.p_anti_fastshoot) {
+/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerFastShoot();
+/**/}
+/**/if (level.p_anti_aimrun) {
+/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerAimRun();
+/**/}
+/**/if (level.p_anti_speeding) {
+/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerSpeed();
+/**/}
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");

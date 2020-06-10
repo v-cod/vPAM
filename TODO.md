@@ -6,7 +6,6 @@
 
 ## Should
 
-- Check autobalance and its weapon choice/spawn effects (ChangeTeam()).
 - Exploits (fastshoot, aimrun, speeding) to work with all weapons.
 
 ## Could
@@ -26,10 +25,10 @@
 - No weapon menu if no choice.
 - Bombtimer configuration. (Colors, tenths of seconds, hide.)
 - Weapon drop configuration. (Drop all, drop primary, drop current, none.)
+- Black screen for spectators during match.
 - Hitblip configurable.
 - Configurable damages (bullets, bash, rifles, etc.).
 - Configurable nades for weapon class (sniper, rifle, SMG/AR.)
 - Auto demo/screenshot mechanism (probably not optimal).
-- Black screen for spectators during match.
 - Vote/veto for map(s) pre-game.
 - Support Ship and Chateau.
