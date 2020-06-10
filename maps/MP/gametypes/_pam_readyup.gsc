@@ -98,7 +98,7 @@ monitor_player()
 	
 	update();
 
-	for (;;) {
+	while (true) {
 		// Wait for use button press.
 		while (self useButtonPressed() == false && level.p_readying) {
 			wait .05;

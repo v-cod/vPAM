@@ -13,10 +13,7 @@ cvars()
 	setCvar("p_overtime_on_tie", true);
 	setCvar("p_overtime_roundlimit", 4);
 
-	setCvar("p_msg_1", "Welcome to a test match.");
-	setCvar("p_msg_2", "I wish you the very best with killing.");
-	setCvar("p_msg_3", "Don't whine too much about this mod.");
-	setCvar("p_msg_4", "And be happy.");
+	setCvar("p_msg_1", "Test match.");
 
 	// WEAPONS
 	setCvar("p_weapons", "opponent");

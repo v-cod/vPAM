@@ -89,85 +89,116 @@ watchPlayerSpeed()
 	//
 	// This algorithm checks the speed of a player in overlapping (every T) timeframes (TF). It will allow speeding
 	// if a player came off the ground in that timeframe to ignore strafe jumping and ladder boosting. It will also
-	// attempt to ignore wall runners by using a tracer to check if there's a wall next to their feet.
+	// attempt to ignore wall runners by using a tracer to check if there's a wall next to them.
 
-	// TODO: Crouching (and proning). And weapons other than bolt.
+	// TODO: Weapons other than bolt.
 
 	// Measure F times within TF seconds, thus with T in between.
 	TF = 1.2; // Timeframe to measure speed in.
 	T = 0.4; // Interval period.
 	F = 3; // Frequency (TF/T).
 
-	speed_limit = 225 * TF;
-	speed_limit_sq = speed_limit * speed_limit;
-	
+	speed_limit["stand"] = getCvarInt("g_speed") * 1.03 * 1.15; // speed + error margin + weapon scale speed
+	speed_limit["crouch"] = speed_limit["stand"] * 0.65; // crouch factor
+	speed_limit["prone"] = speed_limit["stand"] * 0.15; // prone factor
+
+	speed_limit_sq = speed_limit["stand"]*speed_limit["stand"] * TF*TF;
+
+	stance = "stand";
+
+	// Circular buffer for frames.
 	frame = [];
-	for (i = 0; i < F; i++) {
-		frame[i]["origin"] = (self.origin[0], self.origin[1], 0);
-		frame[i]["ground"] = true;
-	}
 
 	for (i = 0; self.sessionstate == "playing"; i++) {
 		if (i >= F) {
 			i = 0;
 		}
 
-		origin_new = (self.origin[0], self.origin[1], 0);
-		ground_new = self isOnGround();
+		stance_new = self getStance();
+		if (stance != stance_new) {
+			stance = stance_new;
+			speed_limit_sq = speed_limit[stance]*speed_limit[stance] * TF*TF;
 
-		speed_sq = distanceSquared(frame[i]["origin"], origin_new);
+			frame = [];
+			wait T;
+			continue;
+		}
+		
+		if (self isOnGround() == false) {
+			frame = [];
+			wait T;
+			continue;
+		}
+
+		frame_new = (self.origin[0], self.origin[1], self.angles[1]); // Store yaw in Z axis!!
+
+		if (isDefined(frame[i])) {
+			speed_sq = distanceSquared((frame[i][0], frame[i][1], 0), (frame_new[0], frame_new[1], 0));
+		} else {
+			speed_sq = 0;
+		}
 
 		if (speed_sq > speed_limit_sq) {
-			ground_count = 0 + ground_new;
-			for (j = 0; j < F; j++) {
-				ground_count += frame[j]["ground"];
-			}
-
+			// Ignore wall running. This is done only by now, because bullet tracing might be too CPU intensive for
+			// every single measurement.
 			if (self is_next_to_wall()) {
-				wait TF;
-				origin_new = (self.origin[0], self.origin[1], 0);
-				for (i = 0; i < F; i++) {
-					frame[i]["origin"] = origin_new;
-				}
-				
+				frame = [];
+				wait T;
 				continue;
 			}
 
-			if (ground_count > F) {
-				iPrintLn(level.p_prefix + "^1SPEEDING ^7(slowing down)");
-				self thread slow_down(0.8);
-
-				// Reset frame so this doesn't trigger immediately after.
-				for (i = 0; i < F; i++) {
-					frame[i]["origin"] = origin_new;
+			// Check wall running retrospectively.
+			wall_run = false;
+			for (j = 0; j < F; j++) {
+				if (is_next_to_wall((frame[j][0], frame[j][1], 0), (0, frame[j][2], 0))) {
+					wall_run = true;
+					break;
 				}
 			}
+			if (wall_run) {
+				frame = [];
+				wait T;
+				continue;
+			}
+
+			// Attempt to slow the player down depending on speed.
+			factor = speed_limit_sq / speed_sq * 0.9;
+			factor *= factor;
+
+			ups = distance((frame[i][0], frame[i][1], 0), (frame_new[0], frame_new[1], 0)) / TF;
+			iPrintLn(level.p_prefix + "^1SPEEDING ^7(" + (int)(ups) + " u/s): " + self.name);
+			self thread slow_down(factor, TF);
 		}
 
-		frame[i]["origin"] = origin_new;
-		frame[i]["ground"] = ground_new;
+		frame[i] = frame_new;
 
 		wait T;
 	}
 }
 
-slow_down(factor)
+slow_down(factor, time)
 {
 	self notify("p_slow_down");
 	self endon("p_slow_down");
 
 	self.maxspeed = getCvarInt("g_speed") * factor;
-	wait 1;
+	wait time;
 	self.maxspeed = getCvarInt("g_speed");
 }
 
 // Test if touching a wall on the player's sides. Does not optimally detect models.
-is_next_to_wall()
+is_next_to_wall(origin, angles)
 {
-	vr = anglesToRight(self.angles);
+	// Allow origin and angles to be passed in as parameters. Otherwise get from self.
+	if (!isDefined(origin)) {
+		origin = self.origin;
+		angles = self.angles;
+	}
+
+	vr = anglesToRight(angles);
 
 	// Measure left and right of the player's feet, just above the ground where an obstacle might be encountered.
-	p = (self.origin[0], self.origin[1], self.origin[2] + 16);
+	p = (origin[0], origin[1], origin[2] + 16);
 	// A wall will be at 15 units of distance. 17 is to include margin if a player looks to or away a little from a wall.
 	pl = (p[0] - vr[0]*17, p[1] - vr[1]*17, p[2]);
 	pr = (p[0] + vr[0]*17, p[1] + vr[1]*17, p[2]);
