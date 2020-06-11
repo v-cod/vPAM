@@ -1,8 +1,9 @@
 main()
 {
+	level.p_rules = [];
+	rules\_rules::rules();
+
 	if (!isDefined(game["gamestarted"])) {
-		level.p_rules = [];
-		rules\_rules::rules();
 
 		ruleset = getCvar("pam_mode");
 
@@ -12,9 +13,9 @@ main()
 		}
 
 		[[level.p_rules[ruleset]]]();
-		
-		thread _watch_pam_mode();
 	}
+
+	thread _watch_pam_mode();
 
 	level.p_color = game["p_color"];
 	level.p_prefix = "PAM " + level.p_color + "# ^7";

@@ -83,6 +83,8 @@ watchPlayerAimRun()
 // Slow down a speeding player.
 watchPlayerSpeed()
 {
+	self endon("spawned");
+
 	// Walking forward, while rapidly moving left and right, causes a player to speed up significantly.
 	// Speed increases of up to +15% have been observed with this technique.
 	// Probably similar to strafe jumping and wall running (up to +22% speed increase).
