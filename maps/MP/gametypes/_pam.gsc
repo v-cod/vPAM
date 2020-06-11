@@ -152,6 +152,9 @@ explode(string, delimiter) {
 
 _precache()
 {
+	// For respawning during ready-up.
+	precacheString(&"Press [{+attack}] to respawn");
+
 	if (!isDefined(game["p_istr_label_left"])) {
 		game["p_istr_label_left"] = &"^1unknown";
 	}

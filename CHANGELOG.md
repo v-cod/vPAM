@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strat time lagbinding detection.
 - p_allow_nades to control nades equipment.
 - Death icon (like stock) on death pre-match.
+- Wait for button press to respawn during ready-up.
 - Configurable weapon configuration. (Secondary, change allied, or pre-set.)
 - Configurable melee damage only. (Bash round.)
 - Configurable overtime on tie.

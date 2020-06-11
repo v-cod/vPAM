@@ -11,7 +11,6 @@
 
 ## Could
 
-- Apply scr_forceRespawn to S&D.
 - Configurable halftime/switch.
 
 ## Would

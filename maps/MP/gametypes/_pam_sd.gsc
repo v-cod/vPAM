@@ -774,7 +774,8 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	self.headicon = "";
 /**/if (level.p_readying || level.p_readied) {
 /**/	updateTeamStatus();
-/**/	self thread spawnPlayer();
+/**/	self thread respawn();
+/**/	// self thread spawnPlayer();
 /**/	return;
 /**/}
 	if (!isdefined (self.autobalance))
@@ -1040,6 +1041,82 @@ spawnSpectator(origin, angles)
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_ALLIESATTACKING");
 	else if(game["attackers"] == "axis")
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_SPECTATOR_AXISATTACKING");
+}
+
+
+
+respawn()
+{
+	if(!isDefined(self.pers["weapon"]))
+		return;
+
+	self endon("end_respawn");
+
+	if(getCvarInt("scr_forcerespawn") > 0)
+	{
+		self thread waitForceRespawnTime();
+		self thread waitRespawnButton();
+		self waittill("respawn");
+	}
+	else
+	{
+		self thread waitRespawnButton();
+		self waittill("respawn");
+	}
+
+	self thread spawnPlayer();
+}
+
+waitForceRespawnTime()
+{
+	self endon("end_respawn");
+	self endon("respawn");
+
+	wait getCvarInt("scr_forcerespawn");
+	self notify("respawn");
+}
+
+waitRespawnButton()
+{
+	self endon("end_respawn");
+	self endon("respawn");
+
+	wait 0; // Required or the "respawn" notify could happen before it's waittill has begun
+
+	self.respawntext = newClientHudElem(self);
+	self.respawntext.alignX = "center";
+	self.respawntext.alignY = "middle";
+	self.respawntext.x = 320;
+	self.respawntext.y = 70;
+	self.respawntext.archived = false;
+	self.respawntext setText(&"Press [{+attack}] to respawn");
+
+	thread removeRespawnText();
+	thread waitRemoveRespawnText("end_respawn");
+	thread waitRemoveRespawnText("respawn");
+
+	while(self attackButtonPressed() != true)
+		wait .05;
+
+	self notify("remove_respawntext");
+
+	self notify("respawn");
+}
+
+removeRespawnText()
+{
+	self waittill("remove_respawntext");
+
+	if(isDefined(self.respawntext))
+		self.respawntext destroy();
+}
+
+waitRemoveRespawnText(message)
+{
+	self endon("remove_respawntext");
+
+	self waittill(message);
+	self notify("remove_respawntext");
 }
 
 startGame()
