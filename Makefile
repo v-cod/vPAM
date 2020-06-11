@@ -3,7 +3,7 @@ BIN_DIR ?= ../cod/out
 # Commandline added to server start.
 ARGS ?= 
 
-outfile = z_svr_wrs.pk3
+outfile = z_svr_vpam-1.12.pk3
 homepath = ~/.callofduty
 cmdline = \
 	+set developer 1 \
