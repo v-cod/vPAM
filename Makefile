@@ -6,6 +6,7 @@ ARGS ?=
 outfile = z_svr_wrs.pk3
 homepath = ~/.callofduty
 cmdline = \
+	+set developer 1 \
 	+set dedicated 2 \
 	+set logfile 2 +set g_logSync 1 \
 	+set rconPassword a
