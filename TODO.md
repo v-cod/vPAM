@@ -1,5 +1,6 @@
 ## Must
 
+- Crouch walking speeding gives false positives.
 - Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.
@@ -10,7 +11,8 @@
 
 ## Could
 
-- Disable halftime/switch.
+- Apply scr_forceRespawn to S&D.
+- Configurable halftime/switch.
 
 ## Would
 
