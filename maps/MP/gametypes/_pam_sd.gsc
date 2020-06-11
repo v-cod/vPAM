@@ -603,7 +603,7 @@ Callback_PlayerDisconnect()
 	lpselfguid = self getGuid();
 	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
-/**/self thread maps\mp\gametypes\_pam_readyup::update();
+/**/level thread maps\mp\gametypes\_pam_readyup::update();
 
 	if(game["matchstarted"])
 /**/	level thread updateTeamStatus();

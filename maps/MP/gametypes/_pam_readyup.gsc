@@ -45,11 +45,13 @@ update()
 		return;
 	}
 
+	wait 0; // Wait for possible disconnect of player.
+
 	n = 0;
 
 	players = getEntArray("player", "classname");
 	for(i = 0; i < players.size; i++) {
-		n = n + players[i].p_ready;
+		n += players[i].p_ready;
 	}
 
 	level.p_readying_count_3 setValue(players.size - n);
