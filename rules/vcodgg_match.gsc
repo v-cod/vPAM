@@ -10,10 +10,8 @@ cvars()
 	setCvar("scr_sd_scorelimit", 0);
 	setCvar("scr_sd_roundlimit", 20);
 
-	setCvar("p_msg_1", "Welcome to vCoD.gg match.");
-	setCvar("p_msg_2", "I wish you the very best with killing.");
-	setCvar("p_msg_3", "Don't whine too much about this mod.");
-	setCvar("p_msg_4", "And be happy.");
+	setCvar("p_msg_1", "Welcome to this BETA.");
+	setCvar("p_msg_1", "Please be civil with feedback.");
 
 	// STRAT
 	setCvar("p_strat", true);

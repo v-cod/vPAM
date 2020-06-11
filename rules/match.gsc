@@ -31,4 +31,5 @@ cvars()
 
 	// STOCK
 	setCvar("scr_teambalance", false);
+	setCvar("scr_killcam", false);
 }

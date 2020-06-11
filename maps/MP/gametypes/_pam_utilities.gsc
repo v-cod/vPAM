@@ -100,7 +100,7 @@ watchPlayerSpeed()
 	T = 0.4; // Interval period.
 	F = 3; // Frequency (TF/T).
 
-	speed_limit["stand"] = getCvarInt("g_speed") * 1.03 * 1.15; // speed + error margin + weapon scale speed
+	speed_limit["stand"] = getCvarInt("g_speed") * level.p_anti_speeding * 1.15; // speed + error margin + weapon scale speed
 	speed_limit["crouch"] = speed_limit["stand"] * 0.65; // crouch factor
 	speed_limit["prone"] = speed_limit["stand"] * 0.15; // prone factor
 

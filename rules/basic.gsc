@@ -38,7 +38,7 @@ cvars()
 	// MISC
 	setCvar("p_anti_aimrun", true); // Make weapon unusable if aimrunning.
 	setCvar("p_anti_fastshoot", 1.2); // Minimum rechamber time for rifles.
-	setCvar("p_anti_speeding", true); // Punish players that go too fast (A+D spamming).
+	setCvar("p_anti_speeding", 1.06); // Punish players that go too fast (A+D spamming).
 	setCvar("p_hud_alive", true); // Show amount of team players alive.
 
 

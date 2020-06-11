@@ -46,7 +46,7 @@ main()
 
 	level.p_anti_aimrun = !!getCvarInt("p_anti_aimrun");
 	level.p_anti_fastshoot = getCvarFloat("p_anti_fastshoot");
-	level.p_anti_speeding = !!getCvarInt("p_anti_speeding");
+	level.p_anti_speeding = getCvarFloat("p_anti_speeding");
 
 	level.p_round_restart_delay = getCvarInt("p_round_restart_delay");
 
