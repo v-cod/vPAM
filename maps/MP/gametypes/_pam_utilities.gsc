@@ -71,6 +71,10 @@ watchPlayerAimRun()
 		// Rough time between clip change and end of reloading animation.
 		wait 1;
 
+		if (self.sessionstate != "playing") {
+			return;
+		}
+
 		// Keep toggling weapon if aim run glitching.
 		while (self attackButtonPressed()) {
 			self disableWeapon();

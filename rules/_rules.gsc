@@ -18,6 +18,9 @@ rules()
 
 	add("vcodgg_match", rules\vcodgg_match::cvars);
 	add("gg_match",     rules\vcodgg_match::cvars); // alias
+
+	add("rifles",     rules\rifles::cvars); // alias
+	add("ro",         rules\rifles::cvars); // alias
 }
 
 /**///////////////////////////**/
