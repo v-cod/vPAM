@@ -1,4 +1,246 @@
 // Lines changed compared to original routines prepended with '/**/'
+/*
+	Search and Destroy
+	Attackers objective: Bomb one of 2 positions
+	Defenders objective: Defend these 2 positions / Defuse planted bombs
+	Round ends:	When one team is eliminated, bomb explodes, bomb is defused, or roundlength time is reached
+	Map ends:	When one team reaches the score limit, or time limit or round limit is reached
+	Respawning:	Players remain dead for the round and will respawn at the beginning of the next round
+
+	Level requirements
+	------------------
+		Allied Spawnpoints:
+			classname		mp_searchanddestroy_spawn_allied
+			Allied players spawn from these. Place atleast 16 of these relatively close together.
+
+		Axis Spawnpoints:
+			classname		mp_searchanddestroy_spawn_axis
+			Axis players spawn from these. Place atleast 16 of these relatively close together.
+
+		Spectator Spawnpoints:
+			classname		mp_searchanddestroy_intermission
+			Spectators spawn from these and intermission is viewed from these positions.
+			Atleast one is required, any more and they are randomly chosen between.
+
+		Bombzone A:
+			classname		trigger_multiple
+			targetname		bombzone_A
+			script_gameobjectname	bombzone
+			This is a volume of space in which the bomb can planted. Must contain an origin brush.
+		
+		Bombzone B:
+			classname		trigger_multiple
+			targetname		bombzone_B
+			script_gameobjectname	bombzone
+			This is a volume of space in which the bomb can planted. Must contain an origin brush.
+			
+		Bomb:
+			classname		trigger_lookat
+			targetname		bombtrigger
+			script_gameobjectname	bombzone
+			This should be a 16x16 unit trigger with an origin brush placed so that it's center lies on the bottom plane of the trigger.
+			Must be in the level somewhere. This is the trigger that is used when defusing a bomb.
+			It gets moved to the position of the planted bomb model.
+					
+	Level script requirements
+	-------------------------
+		Team Definitions:
+			game["allies"] = "american";
+			game["axis"] = "german";
+			This sets the nationalities of the teams. Allies can be american, british, or russian. Axis can be german.
+	
+			game["attackers"] = "allies";
+			game["defenders"] = "axis";
+			This sets which team is attacking and which team is defending. Attackers plant the bombs. Defenders protect the targets.
+
+		If using minefields or exploders:
+			maps\mp\_load::main();
+		
+	Optional level script settings
+	------------------------------
+		Soldier Type and Variation:
+			game["american_soldiertype"] = "airborne";
+			game["american_soldiervariation"] = "normal";
+			game["german_soldiertype"] = "wehrmacht";
+			game["german_soldiervariation"] = "normal";
+			This sets what models are used for each nationality on a particular map.
+			
+			Valid settings:
+				american_soldiertype		airborne
+				american_soldiervariation	normal, winter
+				
+				british_soldiertype		airborne, commando
+				british_soldiervariation	normal, winter
+				
+				russian_soldiertype		conscript, veteran
+				russian_soldiervariation	normal, winter
+				
+				german_soldiertype		waffen, wehrmacht, fallschirmjagercamo, fallschirmjagergrey, kriegsmarine
+				german_soldiervariation		normal, winter
+
+		Layout Image:
+			game["layoutimage"] = "yourlevelname";
+			This sets the image that is displayed when players use the "View Map" button in game.
+			Create an overhead image of your map and name it "hud@layout_yourlevelname".
+			Then move it to main\levelshots\layouts. This is generally done by taking a screenshot in the game.
+			Use the outsideMapEnts console command to keep models such as trees from vanishing when noclipping outside of the map.
+
+		Exploder Effects:
+			Setting script_noteworthy on a bombzone trigger to an exploder group can be used to trigger additional effects.
+
+	Note
+	----
+		Setting "script_gameobjectname" to "bombzone" on any entity in a level will cause that entity to be removed in any gametype that
+		does not explicitly allow it. This is done to remove unused entities when playing a map in other gametypes that have no use for them.
+*/
+
+/*QUAKED mp_searchanddestroy_spawn_allied (0.0 1.0 0.0) (-16 -16 0) (16 16 72)
+defaultmdl="xmodel/airborne"
+Allied players spawn randomly at one of these positions at the beginning of a round.
+*/
+
+/*QUAKED mp_searchanddestroy_spawn_axis (1.0 0.0 0.0) (-16 -16 0) (16 16 72)
+defaultmdl="xmodel/wehrmacht_soldier"
+Axis players spawn randomly at one of these positions at the beginning of a round.
+*/
+
+/*QUAKED mp_searchanddestroy_intermission (1.0 0.0 1.0) (-16 -16 -16) (16 16 16)
+Intermission is randomly viewed from one of these positions.
+Spectators spawn randomly at one of these positions.
+*/
+
+main()
+{
+	spawnpointname = "mp_searchanddestroy_spawn_allied";
+	spawnpoints = getentarray(spawnpointname, "classname");
+	
+	if(!spawnpoints.size)
+	{
+		maps\mp\gametypes\_callbacksetup::AbortLevel();
+		return;
+	}
+
+	for(i = 0; i < spawnpoints.size; i++)
+		spawnpoints[i] placeSpawnpoint();
+
+	spawnpointname = "mp_searchanddestroy_spawn_axis";
+	spawnpoints = getentarray(spawnpointname, "classname");
+
+	if(!spawnpoints.size)
+	{
+		maps\mp\gametypes\_callbacksetup::AbortLevel();
+		return;
+	}
+
+	for(i = 0; i < spawnpoints.size; i++)
+		spawnpoints[i] PlaceSpawnpoint();
+
+	level.callbackStartGameType = ::Callback_StartGameType;
+	level.callbackPlayerConnect = ::Callback_PlayerConnect;
+	level.callbackPlayerDisconnect = ::Callback_PlayerDisconnect;
+	level.callbackPlayerDamage = ::Callback_PlayerDamage;
+	level.callbackPlayerKilled = ::Callback_PlayerKilled;
+
+	maps\mp\gametypes\_callbacksetup::SetupCallbacks();
+
+	level._effect["bombexplosion"] = loadfx("fx/explosions/mp_bomb.efx");
+
+	allowed[0] = "sd";
+	allowed[1] = "bombzone";
+	allowed[2] = "blocker";
+	maps\mp\gametypes\_gameobjects::main(allowed);
+	
+	if(getCvar("scr_sd_timelimit") == "")		// Time limit per map
+		setCvar("scr_sd_timelimit", "0");
+	else if(getCvarFloat("scr_sd_timelimit") > 1440)
+		setCvar("scr_sd_timelimit", "1440");
+	level.timelimit = getCvarFloat("scr_sd_timelimit");
+	setCvar("ui_sd_timelimit", level.timelimit);
+	makeCvarServerInfo("ui_sd_timelimit", "0");
+
+	if(!isDefined(game["timepassed"]))
+		game["timepassed"] = 0;
+
+	if(getCvar("scr_sd_scorelimit") == "")		// Score limit per map
+		setCvar("scr_sd_scorelimit", "10");
+	level.scorelimit = getCvarInt("scr_sd_scorelimit");
+	setCvar("ui_sd_scorelimit", level.scorelimit);
+	makeCvarServerInfo("ui_sd_scorelimit", "10");
+
+	if(getCvar("scr_sd_roundlimit") == "")		// Round limit per map
+		setCvar("scr_sd_roundlimit", "0");
+	level.roundlimit = getCvarInt("scr_sd_roundlimit");
+	setCvar("ui_sd_roundlimit", level.roundlimit);
+	makeCvarServerInfo("ui_sd_roundlimit", "0");
+
+	if(getCvar("scr_sd_roundlength") == "")		// Time length of each round
+		setCvar("scr_sd_roundlength", "4");
+	else if(getCvarFloat("scr_sd_roundlength") > 10)
+		setCvar("scr_sd_roundlength", "10");
+	level.roundlength = getCvarFloat("scr_sd_roundlength");
+
+	if(getCvar("scr_sd_graceperiod") == "")		// Time at round start where spawning and weapon choosing is still allowed
+		setCvar("scr_sd_graceperiod", "15");
+	else if(getCvarFloat("scr_sd_graceperiod") > 60)
+		setCvar("scr_sd_graceperiod", "60");
+	level.graceperiod = getCvarFloat("scr_sd_graceperiod");
+
+	killcam = getCvar("scr_killcam");
+	if(killcam == "")				// Kill cam
+		killcam = "1";
+	setCvar("scr_killcam", killcam, true);
+	level.killcam = getCvarInt("scr_killcam");
+	
+	if(getCvar("scr_teambalance") == "")		// Auto Team Balancing
+		setCvar("scr_teambalance", "0");
+	level.teambalance = getCvarInt("scr_teambalance");
+	level.lockteams = false;
+
+	if(getCvar("scr_freelook") == "")		// Free look spectator
+		setCvar("scr_freelook", "1");
+	level.allowfreelook = getCvarInt("scr_freelook");
+	
+	if(getCvar("scr_spectateenemy") == "")		// Spectate Enemy Team
+		setCvar("scr_spectateenemy", "1");
+	level.allowenemyspectate = getCvarInt("scr_spectateenemy");
+	
+	if(getCvar("scr_drawfriend") == "")		// Draws a team icon over teammates
+		setCvar("scr_drawfriend", "0");
+	level.drawfriend = getCvarInt("scr_drawfriend");
+
+	if(!isDefined(game["state"]))
+		game["state"] = "playing";
+	if(!isDefined(game["roundsplayed"]))
+		game["roundsplayed"] = 0;
+	if(!isDefined(game["matchstarted"]))
+		game["matchstarted"] = false;
+		
+	if(!isDefined(game["alliedscore"]))
+		game["alliedscore"] = 0;
+	setTeamScore("allies", game["alliedscore"]);
+
+	if(!isDefined(game["axisscore"]))
+		game["axisscore"] = 0;
+	setTeamScore("axis", game["axisscore"]);
+
+	level.bombplanted = false;
+	level.bombexploded = false;
+	level.roundstarted = false;
+	level.roundended = false;
+	level.mapended = false;
+	
+	if (!isdefined (game["BalanceTeamsNextRound"]))
+		game["BalanceTeamsNextRound"] = false;
+	
+	level.exist["allies"] = 0;
+	level.exist["axis"] = 0;
+	level.exist["teams"] = false;
+	level.didexist["allies"] = false;
+	level.didexist["axis"] = false;
+
+	if(level.killcam >= 1)
+		setarchive(true);
+}
 
 Callback_StartGameType()
 {

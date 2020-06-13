@@ -4,7 +4,6 @@ main()
 	rules\_rules::rules();
 
 	if (!isDefined(game["gamestarted"])) {
-
 		ruleset = getCvar("pam_mode");
 
 		if (!isDefined(level.p_rules[ruleset])) {
@@ -13,6 +12,8 @@ main()
 		}
 
 		[[level.p_rules[ruleset]]]();
+	} else {
+		logPrint(level.thisdoesnotexist);
 	}
 
 	thread _watch_pam_mode();

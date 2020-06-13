@@ -36,7 +36,7 @@ stop_readying()
 
 	level notify("kill_endround");
 	level.roundended = false;
-	level thread maps\mp\gametypes\_pam_sd::endRound("reset");
+	level thread maps\mp\gametypes\sd::endRound("reset");
 }
 
 update()
