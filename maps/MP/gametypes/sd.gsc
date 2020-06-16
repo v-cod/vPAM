@@ -372,7 +372,7 @@ Callback_PlayerConnect()
 /**/self.p_readying = false;
 
 /**/if (level.p_readying == true) {
-/**/    self thread maps\mp\gametypes\_pam_readyup::monitor_player(lpselfnum);
+/**/    self thread maps\mp\gametypes\_pam_readyup::monitor_player();
 /**/}
 
 	if(game["state"] == "intermission")
@@ -3173,6 +3173,7 @@ menu_weapon(menu, response)
 {
 	if (level.p_weapons == 2) {
 		self.pers["weapon"] = level.p_weapons_arr[0];
+		self.pers["selectedweapon"] = self.pers["weapon"];
 		if (level.p_weapons_arr.size > 1) {
 			self.pers["weapon_secondary"] = level.p_weapons_arr[1];
 		}

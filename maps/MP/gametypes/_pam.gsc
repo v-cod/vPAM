@@ -12,8 +12,6 @@ main()
 		}
 
 		[[level.p_rules[ruleset]]]();
-	} else {
-		logPrint(level.thisdoesnotexist);
 	}
 
 	thread _watch_pam_mode();

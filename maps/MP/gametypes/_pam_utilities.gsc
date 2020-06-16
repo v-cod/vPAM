@@ -209,8 +209,8 @@ is_next_to_wall(origin, angles)
 	pl = (p[0] - vr[0]*17, p[1] - vr[1]*17, p[2]);
 	pr = (p[0] + vr[0]*17, p[1] + vr[1]*17, p[2]);
 
-	if (bulletTrace(p, pl, false)["fraction"] < 1 ||
-		bulletTrace(p, pr, false)["fraction"] < 1) {
+	if (bulletTrace(p, pl, false, undefined)["fraction"] < 1 ||
+		bulletTrace(p, pr, false, undefined)["fraction"] < 1) {
 		return true;
 	}
 
@@ -219,8 +219,8 @@ is_next_to_wall(origin, angles)
 	plt = (pl[0], pl[1], pl[2] + 64);
 	prt = (pr[0], pr[1], pr[2] + 64);
 
-	if (bulletTrace(pl, plt, false)["fraction"] < 1 ||
-		bulletTrace(pr, prt, false)["fraction"] < 1) {
+	if (bulletTrace(pl, plt, false, undefined)["fraction"] < 1 ||
+		bulletTrace(pr, prt, false, undefined)["fraction"] < 1) {
 		return true;
 	}
 
