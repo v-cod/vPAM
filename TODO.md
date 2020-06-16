@@ -1,8 +1,7 @@
 ## Must
 
-- Fix irregular crash on switch from first ready-up to first round start (unknown cause).
-- Fix irregular random crash in middle of round (unknown cause).
-- Crouch walking speeding gives false positives.
+- Crouch walking speeding gives speeding false positives.
+- Wall running facing the wall gives speeding false positive.
 - Rigid base rules.
 - CVAR loop and good setup/rules infrastrcture.
 - Help command to show variables available.
