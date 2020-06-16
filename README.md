@@ -43,7 +43,8 @@ Additional:
 Patch info: https://web.archive.org/web/20050124024705/http://www.callofduty.com/patch/
 Official Linux 1.5b patch: https://web.archive.org/web/20050125090626/http://download.activision.com/callofduty/cod-lnxded-bins-1.5b.tar.bz2
 https://web.archive.org/web/20050404011412/http://inherent.infinityward.com/faq/
-https://web.archive.org/web/20150731231429/http://www.evenbalance.com:80/publications/cod-ad/index.htm
+
+Punkbuster (guides): https://web.archive.org/web/20130217023131/http://www.evenbalance.com/index.php?page=support-cod.php
 
 ### Punkbuster
 
