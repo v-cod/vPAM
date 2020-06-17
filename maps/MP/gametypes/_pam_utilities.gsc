@@ -110,7 +110,9 @@ watchPlayerSpeed()
 
 	speed_limit_sq = speed_limit["stand"]*speed_limit["stand"] * TF*TF;
 
-	stance = "stand";
+	// A flag that will be set on a stance change or if player goes off ground.
+	self.p_speeding_reset = false;
+	thread watchPlayerSpeedEvents();
 
 	// Circular buffer for frames.
 	frame = [];
@@ -120,9 +122,10 @@ watchPlayerSpeed()
 			i = 0;
 		}
 
-		stance_new = self getStance();
-		if (stance != stance_new) {
-			stance = stance_new;
+		if (self.p_speeding_reset) {
+			self.p_speeding_reset = false;
+
+			stance = self getStance();
 			speed_limit_sq = speed_limit[stance]*speed_limit[stance] * TF*TF;
 
 			frame = [];
@@ -130,12 +133,6 @@ watchPlayerSpeed()
 			continue;
 		}
 		
-		if (self isOnGround() == false) {
-			frame = [];
-			wait T;
-			continue;
-		}
-
 		frame_new = (self.origin[0], self.origin[1], self.angles[1]); // Store yaw in Z axis!!
 
 		if (isDefined(frame[i])) {
@@ -181,6 +178,22 @@ watchPlayerSpeed()
 		wait T;
 	}
 }
+// Set a flag if stance chances or player goes off the ground.
+watchPlayerSpeedEvents()
+{
+	stance = self getStance();
+
+	while (self.sessionstate == "playing") {
+		stance_new = self getStance();
+
+		if (stance != stance_new || self isOnGround() == false) {
+			self.p_speeding_reset = true;
+		}
+
+		stance = stance_new;
+		wait 0.05;
+	}
+}
 
 slow_down(factor, time)
 {
@@ -205,9 +218,9 @@ is_next_to_wall(origin, angles)
 
 	// Measure left and right of the player's feet, just above the ground where an obstacle might be encountered.
 	p = (origin[0], origin[1], origin[2] + 16);
-	// A wall will be at 15 units of distance. 17 is to include margin if a player looks to or away a little from a wall.
-	pl = (p[0] - vr[0]*17, p[1] - vr[1]*17, p[2]);
-	pr = (p[0] + vr[0]*17, p[1] + vr[1]*17, p[2]);
+	// A wall will be at 15 units of distance. 22 is to include margin if a player looks to or away a little from a wall.
+	pl = (p[0] - vr[0]*22, p[1] - vr[1]*22, p[2]);
+	pr = (p[0] + vr[0]*22, p[1] + vr[1]*22, p[2]);
 
 	if (bulletTrace(p, pl, false, undefined)["fraction"] < 1 ||
 		bulletTrace(p, pr, false, undefined)["fraction"] < 1) {
