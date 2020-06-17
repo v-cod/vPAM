@@ -154,15 +154,21 @@ _player_information()
 		wait 0.2;
 	}
 
+	if (game["p_half"] == 1) {
+		cvar_prefix = "p_msg_";
+	} else {
+		cvar_prefix = "p_msg_halftime_";
+	}
+
 	print_checksums();
 
-	for (i = 1; getCvar("p_msg_" + i) != ""; i++) {
-		self iPrintLnBold(getCvar("p_msg_" + i));
+	for (i = 1; getCvar(cvar_prefix + i) != ""; i++) {
+		self iPrintLnBold(getCvar(cvar_prefix + i));
 		
 		wait 1.5;
 	}
 
-	self iPrintLnBold("^7Press " + level.p_color + "[{+activate}] ^7to ready-up.");
+	self iPrintLnBold("^7Press " + level.p_color + "[{+activate}] ^7to ready-up" + level.p_color + ".");
 }
 
 print_checksums()

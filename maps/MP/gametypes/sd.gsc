@@ -3033,6 +3033,9 @@ _half_time()
 		player.pers["selectedweapon"] = undefined;
 		player.pers["savedmodel"] = undefined;
 
+		// Make sure player is re-informed during potential next ready-up phase.
+		player.pers["p_informed"] = undefined;
+
 		if (isDefined(player.pers["team"])) {
 			if (player.pers["team"] == "axis") {
 				player.pers["team"] = "allies";
