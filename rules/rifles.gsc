@@ -6,14 +6,11 @@ cvars()
 	// LABEL
 	game["p_istr_label_left"] = &"rifles";
 
-	setCvar("p_anti_speeding", 0);
-
 	// MATCH
 	setCvar("scr_sd_scorelimit", 0);
 	setCvar("scr_sd_roundlimit", 20);
 
-	setCvar("p_msg_1", "This is a ^5BETA.");
-	setCvar("p_msg_1", "Please be civil with feedback.");
+	setCvar("p_msg_1", "");
 
 	// STRAT
 	setCvar("p_strat", false);
