@@ -58,7 +58,7 @@ update()
 
 	 if (n == players.size) {
 		if (players.size < 2) {
-			iPrintLn(level.p_prefix + "^1More playeds needed.");
+			iPrintLn(level.p_prefix + "^1More players needed.");
 			return;
 		}
 
