@@ -11,7 +11,7 @@ cmdline = \
 	+set rconPassword a
 
 
-$(outfile): maps/MP/gametypes/*.gsc rules/*.gsc
+$(outfile): maps/MP/gametypes/*.gsc rules/*.gsc rules/**/*.gsc
 	zip -r $@ $^
 
 .PHONY: clean
