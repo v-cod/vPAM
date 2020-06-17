@@ -17,7 +17,7 @@ cvars()
 
 	// STRAT
 	setCvar("p_strat", false);
-	setCvar("scr_sd_graceperiod", 5);
+	setCvar("scr_sd_graceperiod", 15);
 
 	// WEAPONS
 	setCvar("p_weapons", "mosin_nagant kar98k");
