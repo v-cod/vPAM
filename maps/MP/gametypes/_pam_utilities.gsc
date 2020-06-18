@@ -215,15 +215,22 @@ is_next_to_wall(origin, angles)
 	}
 
 	vr = anglesToRight(angles);
-
+	vf = anglesToForward(angles);
+	
 	// Measure left and right of the player's feet, just above the ground where an obstacle might be encountered.
 	p = (origin[0], origin[1], origin[2] + 16);
 	// A wall will be at 15 units of distance. 22 is to include margin if a player looks to or away a little from a wall.
 	pl = (p[0] - vr[0]*22, p[1] - vr[1]*22, p[2]);
 	pr = (p[0] + vr[0]*22, p[1] + vr[1]*22, p[2]);
+	
+	// Measure from front and back of the player.
+	pf = (p[0] - vf[0]*22, p[1] - vf[1]*22, p[2]);
+	pb = (p[0] + vf[0]*22, p[1] + vf[1]*22, p[2]);
 
 	if (bulletTrace(p, pl, false, undefined)["fraction"] < 1 ||
-		bulletTrace(p, pr, false, undefined)["fraction"] < 1) {
+		bulletTrace(p, pr, false, undefined)["fraction"] < 1 ||
+		bulletTrace(p, pf, false, undefined)["fraction"] < 1 ||
+		bulletTrace(p, pb, false, undefined)["fraction"] < 1){
 		return true;
 	}
 
@@ -231,9 +238,13 @@ is_next_to_wall(origin, angles)
 	// bottom) next to the player.
 	plt = (pl[0], pl[1], pl[2] + 64);
 	prt = (pr[0], pr[1], pr[2] + 64);
+	pft = (pf[0], pf[1], pf[2] + 64);
+	pbt = (pb[0], pb[1], pb[2] + 64);
 
 	if (bulletTrace(pl, plt, false, undefined)["fraction"] < 1 ||
-		bulletTrace(pr, prt, false, undefined)["fraction"] < 1) {
+		bulletTrace(pr, prt, false, undefined)["fraction"] < 1 ||
+		bulletTrace(pf, pft, false, undefined)["fraction"] < 1 ||
+		bulletTrace(pb, pbt, false, undefined)["fraction"] < 1){
 		return true;
 	}
 

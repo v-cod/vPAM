@@ -135,6 +135,8 @@ monitor_player()
 		while (self useButtonPressed() == true && level.p_readying) {
 			wait .05;
 		}
+
+		wait .2; // Prevent spamming.
 	}
 
 	if(isdefined(readyhud))

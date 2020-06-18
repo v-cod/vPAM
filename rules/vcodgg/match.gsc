@@ -20,6 +20,7 @@ cvars()
 
 	setCvar("p_msg_halftime_1", "Please check Veritas AC is working^4: ^7/echo !info^4.");
 	setCvar("p_msg_halftime_2", "Ready up to begin the second half^4.");
+	setCvar("p_msg_halftime_3", ""); // Pause.
 
 	// STRAT
 	setCvar("p_strat", true);
