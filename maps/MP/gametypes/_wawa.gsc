@@ -1,170 +1,43 @@
-main(){
+main()
+{
 	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
 
 	maps\mp\gametypes\_wrs_admin::init();
 
-	level.wrs_PrintPrefix = "";
+	level.wrs_hud_label_Left = &"^4E^3U^4R^3O ^2RIFLES";
+	level.wrs_hud_label_Right = &"eurorifles.clanwebsite.com";
 
-	level.wrs_LabelLeft  = &"^4E^3U^4R^3O ^2RIFLES";
-	level.wrs_LabelRight = &"eurorifles.clanwebsite.com";
-
-	thread wrs_Labels();
-	thread wrs_ServerMessages();
-
-	if(getCvar("w_fs_check") == ""			)
-		setCvar	("w_fs_check",1			);
-	level.fs_check	= getCvarInt("w_fs_check"	);
+	thread _labels();
 
 	thread maps\mp\gametypes\_wrs_admin::monitor();
 }
 
-wrs_Labels(){
-	level.wrs_LabelLeftHud = newHudElem();
-	level.wrs_LabelLeftHud.x = 630;
-	level.wrs_LabelLeftHud.y = 475;
-	level.wrs_LabelLeftHud.alignX = "right";
-	level.wrs_LabelLeftHud.alignY = "middle";
-	level.wrs_LabelLeftHud.sort = -3;
-	level.wrs_LabelLeftHud.alpha = 1;
-	level.wrs_LabelLeftHud.fontScale = 0.7;
-	level.wrs_LabelLeftHud.archived = false;
-	level.wrs_LabelLeftHud setText(level.wrs_LabelLeft);
+_labels()
+{
+	level.wrs_hud_label_LeftHud = newHudElem();
+	level.wrs_hud_label_LeftHud.x = 630;
+	level.wrs_hud_label_LeftHud.y = 475;
+	level.wrs_hud_label_LeftHud.alignX = "right";
+	level.wrs_hud_label_LeftHud.alignY = "middle";
+	level.wrs_hud_label_LeftHud.sort = -3;
+	level.wrs_hud_label_LeftHud.alpha = 1;
+	level.wrs_hud_label_LeftHud.fontScale = 0.7;
+	level.wrs_hud_label_LeftHud.archived = false;
+	level.wrs_hud_label_LeftHud setText(level.wrs_hud_label_Left);
 
-	level.wrs_LabelRightHud = newHudElem();
-	level.wrs_LabelRightHud.x = 3;
-	level.wrs_LabelRightHud.alignX = "left";
-	level.wrs_LabelRightHud.y = 475;
-	level.wrs_LabelRightHud.alignY = "middle";
-	level.wrs_LabelRightHud.sort = -3;
-	level.wrs_LabelRightHud.alpha = 1;
-	level.wrs_LabelRightHud.fontScale = 0.7;
-	level.wrs_LabelRightHud.archived = false;
-	level.wrs_LabelRightHud setText(level.wrs_LabelRight);
-}
-wrs_ServerMessages(){
-	while(true){
-		for(j = 0;j < 8;j++){
-			for(i = 1;i < 10;i++){
-				if(getCvar("scr_wrs_msg_" + i) != ""){
-					iPrintLn(level.wrs_PrintPrefix + getCvar("scr_wrs_msg_" + i));
-					wait 30.0 - .05;
-				}
-				wait .05;
-			}
-		}
-	}
-}
-
-wrs_Welcome(){
-	if(!isDefined(self.welcomed))
-		self.welcomed = false;
-
-	if(self.welcomed == false){
-		self iPrintLnBold("Stick to the rules, soldier " + self.name);
-		self iPrintLnBold("Visit ^4E^3U^4R^3O^2^7: eurorifles^4.^7eu");
-
-		self.welcomed = true;
-	}
-}
-
-wrs_Messages(){
-	while(1){
-		while(!getCvarInt("w_WalrusMessageWait"))
-			wait 5;
-
-		for(i = 0; i < 6; i++){
-			message = getCvar("w_WalrusMessage"+i);
-
-			if(message != ""){
-				iPrintLn(message);
-				wait getCvarInt("w_WalrusMessageWait");
-			}
-		}
-	}
-}
-
-
-wrs_AFS(){
-	while(self.sessionstate == "playing"){
-		oldA = self getWeaponSlotClipAmmo("primary");	//Get the clipammo
-		oldB = self getWeaponSlotClipAmmo("primaryb");
-
-		newA = oldA;									//Put it in variable to compare later
-		newB = oldB;
-
-		while(self.sessionstate == "playing" && oldA == newA && oldB == newB){	//While he's playing and while bullets didn't change
-			newA = self getWeaponSlotClipAmmo("primary");
-			newB = self getWeaponSlotClipAmmo("primaryb");
-			wait .05;
-		}
-		if(oldA < newA || oldB < newB)	//Probably reloaded
-			continue;
-
-		if(oldA != newA)a = 1;
-		else 			a = 0;
-
-		if(a) old = self getWeaponSlotClipAmmo("primary");
-		else  old = self getWeaponSlotClipAmmo("primaryb");
-
-		for(i = 0;i < 24;i++){
-			if(self.sessionstate != "playing")
-				return;
-			wait .05;
-		}
-
-		if(a) new = self getWeaponSlotClipAmmo("primary");
-		else  new = self getWeaponSlotClipAmmo("primaryb");
-
-		if(self.sessionstate == "playing" && old > new){
-			if(!isDefined(self.pers["afs"]))
-				self.pers["afs"] = 0;
-			self.pers["afs"]++;
-			logPrint("WRS;FASTSHOOT;" + self.name + ";" + self getGuid() + ";\n");
-			if(level.wrs_AFS > 0)
-				iPrintLn(level.wrs_PrintPrefix + self.name + " ^1shot ^7too ^1fast^7("+self.pers["afs"]+")!");
-			if(level.wrs_AFS > 1){
-				if(self.pers["afs"] < 4)
-					self iPrintLn(level.wrs_PrintPrefix + "^1Fastshoot Warning: " + self.pers["afs"]);
-				else if(self.pers["afs"] < 7){
-					self iPrintLn(level.wrs_PrintPrefix + "^1Fastshoot Warning: " + self.pers["afs"] + " ^7|^1Score Decreased!");
-					self.score--;
-				}
-				else{
-					self iPrintLn(level.wrs_PrintPrefix + "^1Fastshoot Warning: ^1" + self.pers["afs"] + " ^7|^1Score Decreased & Suicide!");
-					self.score--;
-					self suicide();
-				}
-			}
-		}
-	}
-}
-
-showhit(){
-	self notify("wawa_showhit");
-	self endon("wawa_showhit");
-	self endon("spawned");
-
-	if(isDefined(self.wawa_hitblip))
-		self.wawa_hitblip destroy();
-
-	self.wawa_hitblip = newClientHudElem(self);
-	self.wawa_hitblip.alignX = "center";
-	self.wawa_hitblip.alignY = "middle";
-	self.wawa_hitblip.x = 320;
-	self.wawa_hitblip.y = 240;
-	self.wawa_hitblip.alpha = .5;
-	self.wawa_hitblip setShader("gfx/hud/hud@fire_ready.tga", 32, 32);
-	self.wawa_hitblip scaleOverTime(.15, 64, 64);
-
-	wait .15;
-
-	if(isDefined(self.wawa_hitblip))
-		self.wawa_hitblip destroy();
+	level.wrs_hud_label_RightHud = newHudElem();
+	level.wrs_hud_label_RightHud.x = 3;
+	level.wrs_hud_label_RightHud.alignX = "left";
+	level.wrs_hud_label_RightHud.y = 475;
+	level.wrs_hud_label_RightHud.alignY = "middle";
+	level.wrs_hud_label_RightHud.sort = -3;
+	level.wrs_hud_label_RightHud.alpha = 1;
+	level.wrs_hud_label_RightHud.fontScale = 0.7;
+	level.wrs_hud_label_RightHud.archived = false;
+	level.wrs_hud_label_RightHud setText(level.wrs_hud_label_Right);
 }
 
 spawnProtectionEmblem(){
-	thread wrs_AFS();
-
 	self notify("wawa_showhit");
 	self endon("wawa_showhit");
 	self endon("spawned");
@@ -206,11 +79,11 @@ spawnProtectionNotify(){
 }
 
 getSpawnPointWawa(spawnpoints){
+//	level endon("intermission");
+
 	// There are no valid spawnpoints in the map
-	if(!isdefined(spawnpoints)){
-		iprintlnbold("spawnpoints undefined, lol");
+	if(!isdefined(spawnpoints))
 		return undefined;
-	}
 
 	if (isDefined(self.opponent))
 		opponent = self.opponent;
