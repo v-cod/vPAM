@@ -1,18 +1,38 @@
-PK3=zzz_svr_wrs.pk3
-BIN_DIR ?= ../out
-PARAM ?= +exec config_srv_base +exec config_srv_sd
+# Directory containing cod_lnxded.
+BIN_DIR ?= ../cod/out
+# Commandline added to server start.
+ARGS ?= 
+MAP ?= mp_harbor
 
-$(PK3): maps/MP/gametypes/*.gsc maps/MP/*.gsc
-	git archive --format=zip --worktree-attributes -o $(PK3) $$(test -n "$$(git stash create)" && echo $$(git stash create) || echo HEAD)
+outfile = z_svr_wrs.pk3
+homepath = ~/.callofduty
+cmdline = \
+	+set dedicated 2 \
+	+set logfile 2 +set g_logSync 1 \
+	+set rconPassword a
 
+
+$(outfile): maps/MP/gametypes/*.gsc maps/MP/*.gsc weapons/mp/*
+	zip -r $@ $^
+
+.PHONY: clean
 clean:
-	rm -f $(PK3)
-	rm -f ~/.callofduty/main/*.pk3
-	rm -f ~/.callofduty/main/*.cfg
+	rm $(outfile)
 
-install: clean $(PK3)
-	cp -f $(PK3) ~/.callofduty/main/
-	cp -f *.cfg ~/.callofduty/main/
-
+.PHONY: run
 run: install
-	$(BIN_DIR)/cod_lnxded +set fs_basepath $(BIN_DIR) +set dedicated 2 +set logfile 2 +set g_logSync 3 $(PARAM) +set rconPassword a
+	HOMEPATH="$$homepath" BINDIR="$$BIN_DIR" ./run \
+		$(cmdline) \
+		$(ARGS) \
+		+devmap $(MAP)
+
+.PHONY: install
+install: $(outfile)
+	rm -f $(homepath)/main/$(outfile)
+	rm -f $(homepath)/main/config_mp.cfg
+	mkdir --parents $(homepath)/main/
+	cp $(outfile) $(homepath)/main/
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(homepath)/main/$(outfile)

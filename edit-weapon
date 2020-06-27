@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# usage: <this> <weapon file> [<original weapon file>]
+# e.g. ./edit-weapon weapons/mp/colt_mp ~/src/cod-paks/weapons/mp/colt_mp
+
+# Write a more readable and editable version to a temporary file.
+tmp=$(mktemp)
+sed -E 's/\\([^\\]*)\\([^\\]*)/\n\1=\2/g' "$1" > "$tmp"
+
+if [ -z "$2" ]; then
+    # Let the user edit the temporary representation in his editor (fallback to vi).
+    "${EDITOR:-vi}" "$tmp"
+else
+    # Convert original to readable version too.
+    tmp2=$(mktemp)
+    sed -E 's/\\([^\\]*)\\([^\\]*)/\n\1=\2/g' "$2" > "$tmp2"
+
+    # Open up diff tool.
+    nvim -d "$tmp" "$tmp2"
+    rm "$tmp2"
+fi
+
+# Convert readable form back to original representation and write it.
+sed -E 's/([^=]*)=([^\n]*)/\\\1\\\2/g' "$tmp" \
+    | tr --delete '\n' > "$1"
+
+rm "$tmp"
