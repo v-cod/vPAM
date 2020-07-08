@@ -34,4 +34,4 @@ install: $(outfile)
 
 .PHONY: uninstall
 uninstall:
-	rm $(homepath)/main/$(outfile)
+	rm -f $(homepath)/main/$(outfile)
