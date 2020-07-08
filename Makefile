@@ -2,8 +2,9 @@
 BIN_DIR ?= ../cod/out
 # Commandline added to server start.
 ARGS ?= 
+MAP ?= mp_harbor
 
-outfile = z_svr_vpam-1.12.pk3
+outfile = z_svr_vpam.pk3
 homepath = ~/.callofduty
 cmdline = \
 	+set dedicated 2 \
@@ -11,8 +12,8 @@ cmdline = \
 	+set rconPassword a
 
 
-$(outfile): maps/MP/gametypes/*.gsc rules/*.gsc rules/**/*.gsc
-	zip -r $@ $^
+$(outfile): src/* src/**/*
+	cd src/; zip -r ../$@ $(^:src/%=%)
 
 .PHONY: clean
 clean:
@@ -23,7 +24,7 @@ run: install
 	HOMEPATH="$$homepath" BINDIR="$$BIN_DIR" ./run \
 		$(cmdline) \
 		$(ARGS) \
-		+devmap mp_harbor
+		+devmap $(MAP)
 
 .PHONY: install
 install: $(outfile)
