@@ -3,6 +3,7 @@ BIN_DIR ?= ../cod/out
 # Commandline added to server start.
 ARGS ?= 
 MAP ?= mp_harbor
+# Mod to build: vpam or wrs.
 MOD ?= vpam
 
 outfile = z_svr_$(MOD).pk3

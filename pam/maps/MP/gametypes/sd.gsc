@@ -2191,8 +2191,8 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(level.p_hud_alive) {	
-/**/	_hud_alive_update();
+/**/if(game["p_hud_alive"]) {	
+/**/	hud\alive::update();
 /**/}
 
 	if(level.exist["allies"])
@@ -3288,53 +3288,4 @@ _you_will_spawn_with_next_round(weapon)
 			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
 		}
 	}
-}
-
-_hud_alive_create()
-{
-	if (isDefined(level.p_hud_alive_allies)) {
-		return;
-	}
-
-	level.p_hud_alive_allies = newHudElem();
-	level.p_hud_alive_allies.x = 384;
-	level.p_hud_alive_allies.y = 454;
-	level.p_hud_alive_allies.fontScale = .75;
-	level.p_hud_alive_allies setText(game["dspalliesleft"]);
-
-	level.p_hud_alive_allies_val = newHudElem();
-	level.p_hud_alive_allies_val.x = 456;
-	level.p_hud_alive_allies_val.y = 454;
-	level.p_hud_alive_allies_val.alignX = "right";
-	level.p_hud_alive_allies_val.fontScale = .75;
-
-	level.p_hud_alive_axis = newHudElem();
-	level.p_hud_alive_axis.x = 384;
-	level.p_hud_alive_axis.y = 464;
-	level.p_hud_alive_axis.fontScale = .75;
-	level.p_hud_alive_axis setText(game["dspaxisleft"]);
-		
-	level.p_hud_alive_axis_val = newHudElem();
-	level.p_hud_alive_axis_val.x = 456;
-	level.p_hud_alive_axis_val.y = 464;
-	level.p_hud_alive_axis_val.alignX = "right";
-	level.p_hud_alive_axis_val.fontScale = .75;
-}
-
-_hud_alive_destroy()
-{
-	if (isDefined(level.p_hud_alive_allies)) {
-		level.p_hud_alive_allies destroy();
-	}
-	if (isDefined(level.p_hud_alive_axis)) {
-		level.p_hud_alive_axis destroy();
-	}
-}
-
-_hud_alive_update()
-{
-	_hud_alive_create();
-
-	level.p_hud_alive_allies_val setValue(level.exist["allies"]);
-	level.p_hud_alive_axis_val setValue(level.exist["axis"]);
 }

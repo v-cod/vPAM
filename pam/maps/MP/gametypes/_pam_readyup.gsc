@@ -136,7 +136,7 @@ monitor_player()
 			wait .05;
 		}
 
-		wait .2; // Prevent spamming.
+		wait .5; // Prevent spamming.
 	}
 
 	if(isdefined(readyhud))
@@ -170,7 +170,7 @@ _player_information()
 		wait 1.5;
 	}
 
-	self iPrintLnBold("^7Press " + level.p_color + "[{+activate}] ^7to ready-up" + level.p_color + ".");
+	self iPrintLnBold("^7Press " + game["p_color"] + "[{+activate}] ^7to ready-up" + game["p_color"] + ".");
 }
 
 print_checksums()
@@ -188,7 +188,7 @@ print_checksums()
 			continue;
 		}
 
-		self iPrintLn(level.p_prefix + paks[i] + " (" + level.p_color + sums[i] + "^7)");
+		self iPrintLn(level.p_prefix + paks[i] + " (" + game["p_color"] + sums[i] + "^7)");
 	}
 }
 

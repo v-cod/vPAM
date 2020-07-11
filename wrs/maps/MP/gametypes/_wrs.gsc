@@ -21,8 +21,8 @@ start()
 	if (level.wrs_labels) {
 		thread _hud_labels_create();
 	}
-	if (level.wrs_alive) {
-		thread _hud_alive_create();
+	if (game["_hud_alive"]) {
+		thread hud\alive::create();
 	}
 	if (level.wrs_feed) {
 		thread _message_feed();
@@ -65,6 +65,8 @@ init()
 	_update_variables();
 
 	if (!isDefined(game["gamestarted"])) {
+		hud::precache();
+
 		precacheString(level.wrs_round_info[0]);
 		precacheString(level.wrs_round_info[1]);
 		precacheString(level.wrs_round_info[2]);
@@ -143,8 +145,8 @@ init()
 _monitor()
 {
 	while (1) {
-		if (level.wrs_alive) {
-			_hud_alive_update();
+		if (game["_hud_alive"]) {
+			hud\alive::update();
 		}
 		_update_variables();
 
@@ -165,7 +167,7 @@ _update_variables()
 	level.wrs_pistol       = _get_cvar("scr_wrs_pistol",       0,   0,   1, "int");
 	level.wrs_nades        = _get_cvar("scr_wrs_nades",        0,   0,   1, "int");
 
-	level.wrs_alive        = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
+	game["_hud_alive"]     = _get_cvar("scr_wrs_alive",        1,   0,   1, "int");
 	level.wrs_labels       = _get_cvar("scr_wrs_labels",       1,   0,   1, "int");
 	level.wrs_stats        = _get_cvar("scr_wrs_stats",        1,   0,   1, "int");
 
@@ -360,89 +362,6 @@ _hud_labels_create()
 	level.wrs_hud_label_right setText(level.wrs_label_right);
 }
 
-_hud_alive_create()
-{
-	level.wrs_hud_info[0]           = newHudElem();
-	level.wrs_hud_info[0].x         = 388;
-	level.wrs_hud_info[0].y         = 460;
-	level.wrs_hud_info[0].alignX    = "right";
-	level.wrs_hud_info[0].alignY    = "middle";
-	level.wrs_hud_info[0] setShader(level.wrs_hud_info_allies, 15, 15);
-
-	level.wrs_hud_info[1]           = newHudElem();
-	level.wrs_hud_info[1].x         = 388;
-	level.wrs_hud_info[1].y         = 460;
-	level.wrs_hud_info[1].alignX    = "left";
-	level.wrs_hud_info[1].alignY    = "middle";
-	level.wrs_hud_info[1].fontScale = .9;
-	level.wrs_hud_info[1].label     = level.wrs_hud_info_text["alive"];
-
-	level.wrs_hud_info[2]           = newHudElem();
-	level.wrs_hud_info[2].x         = 435;
-	level.wrs_hud_info[2].y         = 460;
-	level.wrs_hud_info[2].alignX    = "left";
-	level.wrs_hud_info[2].alignY    = "middle";
-	level.wrs_hud_info[2].fontScale = .9;
-	level.wrs_hud_info[2].label     = level.wrs_hud_info_text["score"];
-
-	// Axis info line
-	level.wrs_hud_info[3]           = newHudElem();
-	level.wrs_hud_info[3].x         = 388;
-	level.wrs_hud_info[3].y         = 472;
-	level.wrs_hud_info[3].alignX    = "right";
-	level.wrs_hud_info[3].alignY    = "middle";
-	level.wrs_hud_info[3] setShader(level.wrs_hud_info_axis, 15, 15);
-
-	level.wrs_hud_info[4]           = newHudElem();
-	level.wrs_hud_info[4].x         = 388;
-	level.wrs_hud_info[4].y         = 472;
-	level.wrs_hud_info[4].alignX    = "left";
-	level.wrs_hud_info[4].alignY    = "middle";
-	level.wrs_hud_info[4].fontScale = .9;
-	level.wrs_hud_info[4].label     = level.wrs_hud_info_text["alive"];
-
-	level.wrs_hud_info[5]           = newHudElem();
-	level.wrs_hud_info[5].x         = 435;
-	level.wrs_hud_info[5].y         = 472;
-	level.wrs_hud_info[5].alignX    = "left";
-	level.wrs_hud_info[5].alignY    = "middle";
-	level.wrs_hud_info[5].fontScale = .9;
-	level.wrs_hud_info[5].label     = level.wrs_hud_info_text["score"];
-}
-
-//These functions handle hud elements for information to player.
-_hud_alive_update()
-{
-	allies = 0;
-	axis   = 0;
-
-	players = getEntArray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		if (players[i].sessionstate != "playing") {
-			continue;
-		}
-
-		if (players[i].pers["team"] == "allies") {
-			allies++;
-		} else if (players[i].pers["team"] == "axis") {
-			axis++;
-		}
-	}
-
-	if (isDefined(level.wrs_hud_info[1])) {
-		level.wrs_hud_info[1] setValue(allies);
-	}
-	if (isDefined(level.wrs_hud_info[2])) {
-		level.wrs_hud_info[2] setValue(getTeamScore("allies"));
-	}
-
-	if (isDefined(level.wrs_hud_info[4])) {
-		level.wrs_hud_info[4] setValue(axis);
-	}
-	if (isDefined(level.wrs_hud_info[5])) {
-		level.wrs_hud_info[5] setValue(getTeamScore("axis"));
-	}
-}
 _sprint_hud_create()
 {
 	self.wrs_hud_sprint_bg = newClientHudElem(self);

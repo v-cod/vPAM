@@ -6,18 +6,19 @@ main()
 	if (!isDefined(game["gamestarted"])) {
 		ruleset = getCvar("pam_mode");
 
+		// Default to pub ruleset.
 		if (!isDefined(level.p_rules[ruleset])) {
 			ruleset = "pub";
 			setCvar("pam_mode", ruleset);
 		}
 
+		// Set cvars according to the ruleset.
 		[[level.p_rules[ruleset]]]();
 	}
 
 	thread _watch_pam_mode();
 
-	level.p_color = game["p_color"];
-	level.p_prefix = "PAM " + level.p_color + "# ^7";
+	level.p_prefix = "PAM " + game["p_color"] + "# ^7";
 
 	// Require prematch ready-up phase.
 	level.p_ready = !!getCvarInt("p_ready");
@@ -41,7 +42,6 @@ main()
 	level.p_bash = !!getCvarInt("p_bash");
 
 	level.p_replay_draw = !!getCvarInt("p_replay_draw");
-	level.p_hud_alive = !!getCvarInt("p_hud_alive");
 
 	level.p_anti_aimrun = !!getCvarInt("p_anti_aimrun");
 	level.p_anti_fastshoot = getCvarFloat("p_anti_fastshoot");
@@ -72,6 +72,9 @@ main()
 	}
 
 	if (!isDefined(game["gamestarted"])) {
+		game["_hud_alive"] = !!getCvarInt("p_hud_alive");
+		hud::precache();
+
 		_precache();
 
 		if (level.p_weapons == 1) {
@@ -117,6 +120,10 @@ main()
 		game["round1axisscore"] = 0; 
 		game["round2alliesscore"] = 0;
 		game["round2axisscore"] = 0;
+	}
+	
+	if (game["p_hud_alive"]) {
+		hud\alive::create();
 	}
 
 	// Ready up phase before match start.
@@ -231,17 +238,6 @@ _precache()
 	precacheString(game["notready"]);
 	game["headicon_carrier"] = "gfx/hud/headicon@re_objcarrier.tga";
 	precacheStatusIcon(game["headicon_carrier"]);
-
-	game["dspaxisleft"] = &"AXIS LEFT:";
-	precacheString(game["dspaxisleft"]);		
-	game["dspalliesleft"] = &"ALLIES LEFT:";
-	precacheString(game["dspalliesleft"]);
-
-	// Players Left Display		
-	game["dspaxisleft"] = &"AXIS LEFT:";
-	precacheString(game["dspaxisleft"]);		
-	game["dspalliesleft"] = &"ALLIES LEFT:";
-	precacheString(game["dspalliesleft"]);
 
 	game["round"] = &"Round";
 	precacheString(game["round"]);
