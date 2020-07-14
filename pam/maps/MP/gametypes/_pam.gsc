@@ -43,14 +43,24 @@ main()
 
 	level.p_replay_draw = !!getCvarInt("p_replay_draw");
 
-	level.p_anti_aimrun = !!getCvarInt("p_anti_aimrun");
-	level.p_anti_fastshoot = getCvarFloat("p_anti_fastshoot");
-	level.p_anti_speeding = getCvarFloat("p_anti_speeding");
+	level._anti_aimrun = !!getCvarInt("p_anti_aimrun");
+	level._anti_fastshoot = getCvarFloat("p_anti_fastshoot");
+	level._anti_speeding = getCvarFloat("p_anti_speeding");
 
 	level.p_round_restart_delay = getCvarInt("p_round_restart_delay");
 
 	level.p_allow_pistol = !!getCvarInt("p_allow_pistol");
 	level.p_allow_nades = !!getCvarInt("p_allow_nades");
+
+	level.p_1s1k_rifle = !!getCvarInt("p_1s1k_rifle");
+	level.p_1s1k_bash = !!getCvarInt("p_1s1k_bash");
+
+	level._allow_drop = !!getCvarInt("p_allow_drop");
+
+	level._nade_count_rifle = getCvarInt("p_nades_rifle");
+	level._nade_count_smg = getCvarInt("p_nades_smg");
+	level._nade_count_mg = getCvarInt("p_nades_mg");
+	level._nade_count_sniper = getCvarInt("p_nades_sniper");
 
 	// Weapon choice mechanism.
 	// 0 for default.
@@ -121,8 +131,14 @@ main()
 		game["round2alliesscore"] = 0;
 		game["round2axisscore"] = 0;
 	}
-	
-	if (game["p_hud_alive"]) {
+
+	if (isDefined(game["matchstarted"]) && game["matchstarted"]) {
+		setClientNameMode("manual_change");
+	} else {
+		setClientNameMode("auto_change");
+	}
+
+	if (game["_hud_alive"]) {
 		hud\alive::create();
 	}
 
@@ -196,10 +212,6 @@ _precache()
 	game["starting"] = &"Starting";
 	precacheString(game["starting"]);
 
-	// Strat Time Announcement
-	game["strattime"] = &"Strat Time";
-	precacheString(game["strattime"]);
-
 	//Teams Swithcing Announcement
 	game["switching"] = &"Team Auto-Switch";
 	precacheString(game["switching"]);	
@@ -224,10 +236,22 @@ _precache()
 	precacheString(game["starting"]);
 
 	// Ready-Up Plugin Requires:
-	game["waiting"] = &"Ready-Up Mode";
-	precacheString(game["waiting"]);
-	game["waitingon"] = &"Waiting on:";
-	precacheString(game["waitingon"]);
+	game["_ISTR_READYING"] = &"READYING";
+	precacheString(game["_ISTR_READYING"]);
+
+	game["_ISTR_STARTING"] = &"STARTING";
+	precacheString(game["_ISTR_STARTING"]);
+
+	game["_ISTR_PRESS_USE_TO_READY"] = &"Press [{+activate}] to ^2ready ^7up";
+	precacheString(game["_ISTR_PRESS_USE_TO_READY"]);
+
+	game["_ISTR_PRESS_USE_TO_UNDO_READY"] = &"Press [{+activate}] to ^1undo ^7ready up";
+	precacheString(game["_ISTR_PRESS_USE_TO_UNDO_READY"]);
+
+	game["_ISTR_WAITING_FOR_PLAYERS"] = &"Waiting on players: ^1";
+	precacheString(game["_ISTR_WAITING_FOR_PLAYERS"]);
+
+
 	game["playerstext"] = &"Players";
 	precacheString(game["playerstext"]);
 	game["status"] = &"Your Status";

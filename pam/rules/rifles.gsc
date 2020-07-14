@@ -16,6 +16,12 @@ cvars()
 	setCvar("p_strat", false);
 	setCvar("scr_sd_graceperiod", 15);
 
+	// MISC
+	setCvar("p_anti_speeding", 1.06);
+
+	setCvar("p_1s1k_rifle", true);
+	setCvar("p_1s1k_bash", true);
+
 	// WEAPONS
 	setCvar("p_weapons", "mosin_nagant kar98k");
 	setCvar("p_allow_pistol", false);
@@ -47,4 +53,5 @@ cvars()
 
 	// STOCK
 	setCvar("scr_teambalance", false);
+	setCvar("scr_friendlyfire", false);
 }

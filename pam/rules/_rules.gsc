@@ -9,8 +9,6 @@ rules()
 	// The second part refers to the rule file without '.gsc' (but ending with '::cvars').
 	// The same rule file might be added multiple times to make aliases.
 
-	add("test", rules\_test::cvars);
-
 	add("public", rules\public::cvars);
 	add("pub",    rules\public::cvars); // alias
 

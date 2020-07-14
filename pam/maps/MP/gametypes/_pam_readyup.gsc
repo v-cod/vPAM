@@ -24,7 +24,6 @@ stop_readying()
 	_hud_readying_count_destroy();
 
 	_hud_ready_create(game["p_half"]);
-	iPrintLn(level.p_prefix + "players ready, wait 5 seconds...");
 	wait 5;
 	_hud_ready_destroy();
 
@@ -54,11 +53,13 @@ update()
 		n += players[i].p_ready;
 	}
 
-	level.p_readying_count_3 setValue(players.size - n);
+	// level.p_readying_count_3 setValue(players.size - n);
+	level._hud_ready_players setValue(players.size - n);
+	// level._hud_ready_players_total setValue();
 
 	 if (n == players.size) {
 		if (players.size < 2) {
-			iPrintLn(level.p_prefix + "^1More players needed.");
+			iPrintLn(level.p_prefix + "^1At least 2 players needed.");
 			return;
 		}
 
@@ -80,24 +81,14 @@ monitor_player()
 
 	self thread _player_information();
 
-	status = newClientHudElem(self);
-	status.x = 575;
-	status.y = 120;
-	status.alignX = "center";
-	status.alignY = "middle";
-	status.fontScale = 1.1;
-	status.color = (.8, 1, 1);
-	status setText(game["status"]);
-
 	readyhud = newClientHudElem(self);
-	readyhud.x = 575;
-	readyhud.y = 135;
+	readyhud.x = 320;
+	readyhud.y = 384;
 	readyhud.alignX = "center";
 	readyhud.alignY = "middle";
-	readyhud.fontScale = 1.2;
-	readyhud.color = (1, .66, .66);
-	readyhud setText(game["notready"]);
-	
+	readyhud.fontScale = 1.5;
+	readyhud setText(game["_ISTR_PRESS_USE_TO_READY"]);
+
 	update();
 
 	while (true) {
@@ -117,16 +108,19 @@ monitor_player()
 			self.statusicon = game["headicon_carrier"];
 			iprintln(level.p_prefix + self.p_name + "^7 is ^2ready");
 
-			// Change players hud to indicate player not ready
-			readyhud.color = (.73, .99, .73);
-			readyhud setText(game["ready"]);
+			// // Change players hud to indicate player not ready
+			readyhud.fontScale = 0.7;
+			readyhud setText(game["_ISTR_PRESS_USE_TO_UNDO_READY"]);
+			
+			self.headicon = "gfx/hud/headicon@quickmessage";
+			self.headiconteam = "none";
 		} else {
 			self.statusicon = "";
 			iprintln(level.p_prefix + self.p_name + "^7 is ^1not ready");
 
-			// Change players hud to indicate player not ready
-			readyhud.color = (1, .84, .84);
-			readyhud setText(game["notready"]);
+			// // Change players hud to indicate player not ready
+			readyhud.fontScale = 1.5;
+			readyhud setText(game["_ISTR_PRESS_USE_TO_READY"]);
 		}
 
 		update();
@@ -199,13 +193,13 @@ _hud_readying_create()
 	}
 
 	level.p_hud_readying = newHudElem();
+	level.p_hud_readying.x = 320;
+	level.p_hud_readying.y = 460;
 	level.p_hud_readying.alignX = "center";
 	level.p_hud_readying.alignY = "middle";
+	level.p_hud_readying.font = "bigfixed";
 	level.p_hud_readying.color = (1, 0, 0);
-	level.p_hud_readying.x = 320;
-	level.p_hud_readying.y = 390;
-	level.p_hud_readying.fontScale = 1.5;
-	level.p_hud_readying setText(game["waiting"]);
+	level.p_hud_readying setText(game["_ISTR_READYING"]);
 }
 
 _hud_readying_destroy()
@@ -217,47 +211,22 @@ _hud_readying_destroy()
 
 _hud_readying_count_create()
 {
-	if (isDefined(level.p_readying_count_1)) {
+	if (isDefined(level._hud_ready_players)) {
 		return;
 	}
 	
-	level.p_readying_count_1 = newHudElem(self);
-	level.p_readying_count_1.x = 575;
-	level.p_readying_count_1.y = 40;
-	level.p_readying_count_1.alignX = "center";
-	level.p_readying_count_1.alignY = "middle";
-	level.p_readying_count_1.fontScale = 1.1;
-	level.p_readying_count_1.color = (.8, 1, 1);
-	level.p_readying_count_1 setText(game["waitingon"]);
-
-	level.p_readying_count_2 = newHudElem(self);
-	level.p_readying_count_2.x = 575;
-	level.p_readying_count_2.y = 80;
-	level.p_readying_count_2.alignX = "center";
-	level.p_readying_count_2.alignY = "middle";
-	level.p_readying_count_2.fontScale = 1.1;
-	level.p_readying_count_2.color = (.8, 1, 1);
-	level.p_readying_count_2 setText(game["playerstext"]);
-
-	level.p_readying_count_3 = newHudElem(self);
-	level.p_readying_count_3.x = 575;
-	level.p_readying_count_3.y = 60;
-	level.p_readying_count_3.alignX = "center";
-	level.p_readying_count_3.alignY = "middle";
-	level.p_readying_count_3.fontScale = 1.2;
-	level.p_readying_count_3.color = (.98, .98, .60);
-	level.p_readying_count_3 setValue(0);
+	level._hud_ready_players = newHudElem();
+	level._hud_ready_players.alpha = 0;
+	level._hud_ready_players.x = 320;
+	level._hud_ready_players.y = 352;
+	level._hud_ready_players.alignX = "center";
+	level._hud_ready_players.fontScale = 1.3;
+	level._hud_ready_players.label = game["_ISTR_WAITING_FOR_PLAYERS"];
 }
 _hud_readying_count_destroy()
 {
-	if (isDefined(level.p_readying_count_1)) {
-		level.p_readying_count_1 destroy();
-	}
-	if (isDefined(level.p_readying_count_2)) {
-		level.p_readying_count_2 destroy();
-	}
-	if (isDefined(level.p_readying_count_3)) {
-		level.p_readying_count_3 destroy();
+	if (isDefined(level._hud_ready_players)) {
+		level._hud_ready_players destroy();
 	}
 }
 

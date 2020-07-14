@@ -4,7 +4,7 @@
 
 ## Should
 
-- Exploit mechanisms (fastshoot, aimrun, speeding) to work with all weapons.
+- Anti speeding to work with weapons other than bolt action rifles.
 
 ## Could
 
@@ -12,8 +12,8 @@
 
 ## Would
 
-- auto_change name during readying.
 - Configurable: Clarify killing during warm-up (icon?).
+- Show on-screen warning if sv_cheats is enabled.
 - Intermission for half-time switch.
 - Detect disallowed jumps.
 - Memorize result from previous game.

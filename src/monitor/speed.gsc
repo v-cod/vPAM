@@ -1,91 +1,5 @@
-watchPlayerFastShoot()
-{
-	self endon("spawned");
-
-	while (self.sessionstate == "playing") {
-		// Reference clip count.
-		a1 = self getWeaponSlotClipAmmo("primary");
-		b1 = self getWeaponSlotClipAmmo("primaryb");
-
-		// Wait for clip ammo to change.
-		do {
-			wait 0.05;
-
-			if (self.sessionstate != "playing") {
-				return;
-			}
-
-			a2 = self getWeaponSlotClipAmmo("primary");
-			b2 = self getWeaponSlotClipAmmo("primaryb");
-		} while (a1 == a2 && b1 == b2);
-
-		// Check for reload.
-		if (a1 < a2 || b1 < b2) {
-			continue;
-		}
-
-		a1 = a2;
-		b1 = b2;
-
-		wait level.p_anti_fastshoot;
-
-		if (self.sessionstate != "playing") {
-			return;
-		}
-
-		a2 = self getWeaponSlotClipAmmo("primary");
-		b2 = self getWeaponSlotClipAmmo("primaryb");
-
-		if (a2 < a1 || b2 < b1) {
-			iPrintLn(level.p_prefix +  "^1FASTSHOOT^7: " + self.name);
-		}
-	}
-}
-
-watchPlayerAimRun()
-{
-	self endon("spawned");
-
-	while (self.sessionstate == "playing") {
-		// Reference clip count.
-		a1 = self getWeaponSlotClipAmmo("primary");
-		b1 = self getWeaponSlotClipAmmo("primaryb");
-
-		// Wait for clip ammo to change.
-		do {
-			wait 0.05;
-
-			if (self.sessionstate != "playing") {
-				return;
-			}
-
-			a2 = self getWeaponSlotClipAmmo("primary");
-			b2 = self getWeaponSlotClipAmmo("primaryb");
-		} while (a1 == a2 && b1 == b2);
-
-		// If neither clip count was increased, nothing was reloaded.
-		if (a2 <= a1 && b2 <= b1) {
-			continue;
-		}
-
-		// Rough time between clip change and end of reloading animation.
-		wait 1;
-
-		if (self.sessionstate != "playing") {
-			return;
-		}
-
-		// Keep toggling weapon if aim run glitching.
-		while (self attackButtonPressed()) {
-			self disableWeapon();
-			wait 0.05;
-			self enableWeapon();
-		}
-	}
-}
-
 // Slow down a speeding player.
-watchPlayerSpeed()
+start()
 {
 	self endon("spawned");
 
@@ -104,7 +18,7 @@ watchPlayerSpeed()
 	T = 0.4; // Interval period.
 	F = 3; // Frequency (TF/T).
 
-	speed_limit["stand"] = getCvarInt("g_speed") * level.p_anti_speeding * 1.15; // speed + error margin + weapon scale speed
+	speed_limit["stand"] = getCvarInt("g_speed") * level._anti_speeding * 1.15; // speed + error margin + weapon scale speed
 	speed_limit["crouch"] = speed_limit["stand"] * 0.65; // crouch factor
 	speed_limit["prone"] = speed_limit["stand"] * 0.15; // prone factor
 
@@ -112,7 +26,7 @@ watchPlayerSpeed()
 
 	// A flag that will be set on a stance change or if player goes off ground.
 	self.p_speeding_reset = false;
-	thread watchPlayerSpeedEvents();
+	thread _watch_events();
 
 	// Circular buffer for frames.
 	frame = [];
@@ -144,7 +58,7 @@ watchPlayerSpeed()
 		if (speed_sq > speed_limit_sq) {
 			// Ignore wall running. This is done only by now, because bullet tracing might be too CPU intensive for
 			// every single measurement.
-			if (self is_next_to_wall()) {
+			if (self _is_next_to_wall()) {
 				frame = [];
 				wait T;
 				continue;
@@ -153,7 +67,7 @@ watchPlayerSpeed()
 			// Check wall running retrospectively.
 			wall_run = false;
 			for (j = 0; j < F; j++) {
-				if (is_next_to_wall((frame[j][0], frame[j][1], 0), (0, frame[j][2], 0))) {
+				if (_is_next_to_wall((frame[j][0], frame[j][1], 0), (0, frame[j][2], 0))) {
 					wall_run = true;
 					break;
 				}
@@ -170,7 +84,7 @@ watchPlayerSpeed()
 
 			ups = distance((frame[i][0], frame[i][1], 0), (frame_new[0], frame_new[1], 0)) / TF;
 			iPrintLn(level.p_prefix + "^1SPEEDING ^7(" + (int)(ups) + " u/s): " + self.name);
-			self thread slow_down(factor, TF);
+			self thread _slow_down(factor, TF);
 		}
 
 		frame[i] = frame_new;
@@ -178,8 +92,9 @@ watchPlayerSpeed()
 		wait T;
 	}
 }
+
 // Set a flag if stance chances or player goes off the ground.
-watchPlayerSpeedEvents()
+_watch_events()
 {
 	stance = self getStance();
 
@@ -195,7 +110,7 @@ watchPlayerSpeedEvents()
 	}
 }
 
-slow_down(factor, time)
+_slow_down(factor, time)
 {
 	self notify("p_slow_down");
 	self endon("p_slow_down");
@@ -206,7 +121,7 @@ slow_down(factor, time)
 }
 
 // Test if touching a wall on the player's sides. Does not optimally detect models.
-is_next_to_wall(origin, angles)
+_is_next_to_wall(origin, angles)
 {
 	// Allow origin and angles to be passed in as parameters. Otherwise get from self.
 	if (!isDefined(origin)) {

@@ -343,7 +343,7 @@ Callback_StartGameType()
 
 	game["gamestarted"] = true;
 	
-	setClientNameMode("manual_change");
+/**/// setClientNameMode("manual_change");
 
 /**/// Refer to custom functions.
 /**/thread bombzones();
@@ -684,12 +684,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (level.p_allow_pistol) {
-/**/					maps\mp\gametypes\_teams::givePistol();
-/**/				}
-/**/				if (level.p_allow_nades) {
-/**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
-/**/				}
+					maps\mp\gametypes\_teams::givePistol();
+					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
+
+/**/				self equipment::take_or_set(self.pers["selectedweapon"]);
 				}
 				else
 				{
@@ -710,12 +708,10 @@ Callback_PlayerConnect()
 					self setWeaponSlotClipAmmo("primary", 999);
 					self switchToWeapon(weapon);
 
-/**/				if (level.p_allow_pistol) {
-/**/					maps\mp\gametypes\_teams::givePistol();
-/**/				}
-/**/				if (level.p_allow_nades) {
-/**/					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
-/**/				}
+					maps\mp\gametypes\_teams::givePistol();
+					maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
+
+/**/				self equipment::take_or_set(self.pers["selectedweapon"]);
 				}
 			 	else
 				{			 	
@@ -862,7 +858,6 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 /**/		return;
 /**/}
 /**/
-/**/// TODO: Necessary for damage?:
 /**/if (level.p_stratting) {
 /**/	return;
 /**/}
@@ -883,11 +878,11 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
 
 /**/if (isPlayer(eAttacker) && self != eAttacker && eAttacker.pers["team"] != self.pers["team"]) {
-/**/	eAttacker thread showhit();
+/**/	eAttacker thread hud\hit_blip::show();
 /**/}
 
-/**/// TODO: Configurable damage.
-/**/if(sMeansOfDeath == "MOD_RIFLE_BULLET" || sMeansOfDeath == "MOD_MELEE") {
+/**/// Deal full damage if configured.
+/**/if(level.p_1s1k_rifle && sMeansOfDeath == "MOD_RIFLE_BULLET" || level.p_1s1k_bash && MeansOfDeath == "MOD_MELEE") {
 /**/	iDamage = 100;
 /**/}
 
@@ -1010,7 +1005,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 
 	self.sessionstate = "dead";
 /**/// self.statusicon = "gfx/hud/hud@status_dead.tga";
-/**/if (!level.p_readying || !self.p_ready) {
+/**/if (self.statusicon != game["headicon_carrier"]) {
 /**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
 /**/}
 	self.headicon = "";
@@ -1153,9 +1148,10 @@ spawnPlayer()
 /**/self.p_spawn_origin = spawnpoint.origin;
 	
 	self.spawned = true;
-/**/if(!level.p_readying || !self.p_ready)
-/**/	self.statusicon = "";
 /**/// self.statusicon = "";
+/**/if (self.statusicon != game["headicon_carrier"]) {
+/**/	self.statusicon = "";
+/**/}
 	self.maxhealth = 100;
 	self.health = self.maxhealth;
 	
@@ -1203,26 +1199,11 @@ spawnPlayer()
 
 	maps\mp\gametypes\_teams::givePistol();
 	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
-
-/**/if (!level.p_allow_pistol) {
-/**/	self takeWeapon(self getWeaponSlotWeapon("pistol"));
-/**/}
-/**/if (!level.p_allow_nades) {
-/**/	self takeWeapon(self getWeaponSlotWeapon("grenade"));
-/**/}
+/**/equipment::take_or_set(self.pers["selectedweapon"]);
 
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
-
-/**/if (level.p_anti_fastshoot) {
-/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerFastShoot();
-/**/}
-/**/if (level.p_anti_aimrun) {
-/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerAimRun();
-/**/}
-/**/if (level.p_anti_speeding) {
-/**/	thread maps\mp\gametypes\_pam_utilities::watchPlayerSpeed();
-/**/}
+/**/thread monitor::start();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
@@ -1255,8 +1236,11 @@ spawnSpectator(origin, angles)
 	self.archivetime = 0;
 	self.friendlydamage = undefined;
 
-	if(self.pers["team"] == "spectator")
-		self.statusicon = "";
+/**/// if(self.pers["team"] == "spectator")
+/**/// 	self.statusicon = "";
+/**/if (self.pers["team"] == "spectator" && self.statusicon != game["headicon_carrier"]) {
+/**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
+/**/}
 		
 	maps\mp\gametypes\_teams::SetSpectatePermissions();
 
@@ -1564,7 +1548,7 @@ startRound()
 		{
 /**/		if (level.p_strat && level.graceperiod > 0) {
 /**/			level.clock setTimer(level.graceperiod);
-/**/			thread Hold_All_Players();
+/**/			thread strat::start();
 /**/		}
 
 			wait level.graceperiod;
@@ -1786,7 +1770,6 @@ endRound(roundwinner)
 		logPrint("L;allies" + losers + "\n");
 	}
 
-/**/// iPrintLn("endRound: wait 5 (scores set)");
 /**/// wait 5;
 
 	if(game["matchstarted"])
@@ -1817,6 +1800,27 @@ endRound(roundwinner)
 	if(level.mapended)
 		return;
 	level.mapended = true;
+
+/**/if (level.p_round_restart_delay > 0) {
+/**/	_hud_labels_create();
+/**/
+/**/	if (game["roundsplayed"] > 0) {
+/**/		_hud_scoreboard_create();
+/**/	}
+/**/
+/**/	if (roundwinner == "reset") {
+/**/		_hud_round_next_create(level.p_round_restart_delay, game["p_half"]);
+/**/	} else {
+/**/		_hud_round_next_create(level.p_round_restart_delay);
+/**/	}
+/**/	//level.p_hud_matchover setText(game["overtime"]);
+/**/
+/**/	// _hud_scoreboard_destroy();
+/**/	// _hud_round_next_destroy();
+/**/	// _hud_labels_destroy();
+/**/}
+
+/**/ wait 5;
 
 	// for all living players store their weapons
 	players = getentarray("player", "classname");
@@ -1881,28 +1885,11 @@ endRound(roundwinner)
 		wait 4;
 	}
 
-/**/if (level.p_round_restart_delay > 0) {
-/**/	_hud_labels_create();
-/**/
-/**/	if (game["roundsplayed"] > 0) {
-/**/		_hud_scoreboard_create();
-/**/	}
-/**/
-/**/	if (roundwinner == "reset") {
-/**/		_hud_round_next_create(level.p_round_restart_delay, game["p_half"]);
-/**/	} else {
-/**/		_hud_round_next_create(level.p_round_restart_delay);
-/**/	}
-/**/	//level.p_hud_matchover setText(game["overtime"]);
-/**/
-/**/	wait level.p_round_restart_delay;
-/**/
-/**/	_hud_scoreboard_destroy();
-/**/	_hud_round_next_destroy();
-/**/	_hud_labels_destroy();
+/**/if (level.p_round_restart_delay > 5) {
+/**/	wait level.p_round_restart_delay - 5;
 /**/}
 
-/**/// If this round ended after ready-up phase, do not carry over weapons.
+/**/// If this is the ready-up phase ending, do not carry over weapons.
 /**/if (level.p_readied) {
 /**/	players = getEntArray("player", "classname");
 /**/	for (i = 0; i < players.size; i++) {
@@ -2191,7 +2178,7 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(game["p_hud_alive"]) {	
+/**/if(game["_hud_alive"]) {	
 /**/	hud\alive::update();
 /**/}
 
@@ -3090,85 +3077,6 @@ _hud_matchover_create()
 	level.p_hud_matchover.fontScale = 1;
 	level.p_hud_matchover.color = (1, 1, 0);
 	level.p_hud_matchover setText(game["matchover"]);
-}
-
-Hold_All_Players()
-{
-	// Allow damage or death yet
-	level.p_stratting = true;
-
-	// Strat Time HUD
-	level.strattime = newHudElem();
-	level.strattime.x = 320;
-	level.strattime.y = 440;
-	level.strattime.alignX = "center";
-	level.strattime.alignY = "middle";
-	level.strattime.fontScale = 2;
-	level.strattime.color = (0, 1, 0);
-	level.strattime setText(game["strattime"]);
-
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		players[i].maxspeed = 0;
-	}
-
-	level waittill("round_started");
-
-	level.p_stratting = false;
-
-	if (isDefined(level.strattime)) {
-		level.strattime destroy();
-	}
-
-
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) { 
-		players[i].maxspeed = getCvarInt("g_speed");
-	}
-
-	thread maps\mp\gametypes\_teams::sayMoveIn();
-
-	// Attempt to detect false start (lagbinding).
-	dist_max = getCvarInt("g_speed") * 1.2; // Fastest possible speed (pistol).
-	dist_max = dist_max * dist_max; // squared
-
-	// Wait for players to cover distance.
-	wait 1;
-
-	players = getentarray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		if (players[i].sessionstate != "playing") {
-			continue;
-		}
-
-		dist = distancesquared(players[i].p_spawn_origin, players[i].origin);		
-		if (dist > dist_max) {
-			iPrintLn(level.p_prefix + "^1FALSE START^7: " + players[i].name);
-			players[i] setOrigin(players[i].p_spawn_origin);
-		}
-	}
-}
-
-showhit()
-{
-	if(isDefined(self.p_hitblip)) {
-		self.p_hitblip destroy();
-	}
-
-	self.p_hitblip = newClientHudElem(self);
-	self.p_hitblip.alignX = "center";
-	self.p_hitblip.alignY = "middle";
-	self.p_hitblip.x = 320;
-	self.p_hitblip.y = 240;
-	self.p_hitblip.alpha = 0.5;
-	self.p_hitblip setShader("gfx/hud/hud@fire_ready.tga", 32, 32);
-	self.p_hitblip scaleOverTime(0.15, 64, 64);
-
-	wait 0.15;
-
-	if(isDefined(self.p_hitblip)) {
-		self.p_hitblip destroy();
-	}
 }
 
 // Weapon procedure allowing second weapon pick.

@@ -9,6 +9,7 @@ MOD ?= vpam
 outfile = z_svr_$(MOD).pk3
 homepath = ~/.callofduty
 
+homepath_wine = ~/.wine/drive_c/Program\ Files\ \(x86\)/Call\ of\ Duty\ Server
 
 SRC_FILES = $(shell find src/ -type f)
 PAM_FILES = $(shell find pam/ -type f)
@@ -26,6 +27,8 @@ z_svr_wrs.pk3: $(SRC_FILES) $(WRS_FILES)
 clean:
 	rm $(outfile)
 
+
+# Linux
 .PHONY: run
 run: install
 	HOMEPATH="$$homepath" BINDIR="$$BIN_DIR" ./run \
@@ -36,10 +39,26 @@ run: install
 .PHONY: install
 install: $(outfile)
 	rm -rf $(homepath)/main/
+
 	mkdir --parents $(homepath)/main/
 	cp $(outfile) $(homepath)/main/
 	cp -r cfg $(homepath)/main/
 
-.PHONY: uninstall
-uninstall:
-	rm -f $(homepath)/main/$(outfile)
+
+# Wine (to run Windows server under Linux)
+.PHONY: run-wine
+run-wine: install-wine
+	HOMEPATH="$$homepath_wiine" ./run-wine \
+		+set dedicated 2 +set logfile 2 +set g_logSync 1 \
+		$(ARGS) \
+		+devmap $(MAP)
+
+.PHONY: install-wine
+install-wine: $(outfile)
+	rm -f $(homepath_wine)/main/z_*.pk3
+	rm -f $(homepath_wine)/main/*.cfg
+	rm -f $(homepath_wine)/main/*.log
+	rm -rf $(homepath_wine)/main/cfg/
+
+	cp $(outfile) $(homepath_wine)/main/
+	cp -r cfg $(homepath_wine)/main/

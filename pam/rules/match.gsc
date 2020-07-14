@@ -14,6 +14,7 @@ cvars()
 	setCvar("p_msg_1", "Be civil.");
 
 	// WEAPONS
+	setCvar("p_weapons", "default");
 	setCvar("p_allow_pistol", true);
 	setCvar("p_allow_nades", true);
 	setCvar("p_allow_MG42", false);
@@ -32,4 +33,5 @@ cvars()
 	// STOCK
 	setCvar("scr_teambalance", false);
 	setCvar("scr_killcam", false);
+	setCvar("scr_friendlyfire", 1);
 }

@@ -990,7 +990,7 @@ startGame()
 		level.clock.y = 460;
 		level.clock.alignX = "center";
 		level.clock.alignY = "middle";
-		level.clock.font = "bigfixed";
+		level.clock.fontScale = 1.5;
 		level.clock setTimer(level.timelimit * 60);
 	}
 

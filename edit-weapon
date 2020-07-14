@@ -3,6 +3,8 @@
 # usage: <this> <weapon file> [<original weapon file>]
 # e.g. ./edit-weapon weapons/mp/colt_mp ~/src/cod-paks/weapons/mp/colt_mp
 
+DIFFTOOL="${DIFFTOOL:-nvim -d}"
+
 # Write a more readable and editable version to a temporary file.
 tmp=$(mktemp)
 sed -E 's/\\([^\\]*)\\([^\\]*)/\n\1=\2/g' "$1" > "$tmp"
@@ -16,7 +18,7 @@ else
     sed -E 's/\\([^\\]*)\\([^\\]*)/\n\1=\2/g' "$2" > "$tmp2"
 
     # Open up diff tool.
-    nvim -d "$tmp" "$tmp2"
+    $DIFFTOOL "$tmp" "$tmp2"
     rm "$tmp2"
 fi
 

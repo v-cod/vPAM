@@ -4,7 +4,7 @@
 cvars()
 {
 	// INTERFACE
-	game["p_istr_label_left"] = &"basic";
+	game["p_istr_label_left"] = &"default";
 	game["p_color"] = "^5";
 
 	/// MATCH
@@ -14,7 +14,7 @@ cvars()
 	setCvar("p_bash", false);            // Only allow bash damage to be done.
 
 	setCvar("p_replay_draw", true);      // Do not count rounds ending in a draw.
-	setCvar("p_round_restart_delay", 10);// Time to wait before starting next round. Shows small scoreboard.
+	setCvar("p_round_restart_delay", 10); // Time to wait before starting next round. Shows small scoreboard.
 
 	setCvar("p_strat", false);           // Hold players still during grace period.
 
@@ -27,6 +27,12 @@ cvars()
 	setCvar("p_allow_nades", true);   // Equip players with nades.
 	setCvar("p_allow_MG42", true);    // Keep MG42s in the map.
 
+	// Set nades to specific clip count depending on weapon class.
+	setCvar("p_nades_rifle", 3); // Default nade count numbers.
+	setCvar("p_nades_smg", 2);
+	setCvar("p_nades_mg", 2);
+	setCvar("p_nades_sniper", 1);
+
 	// Multiple values possible.
 	// "default": Do not change weapon menu behaviour.
 	// "opponent": Pick a second weapon from the enemy team.
@@ -34,13 +40,17 @@ cvars()
 	// "<primary>" or "<primary> <secondary>": Fixed weapon loadout. E.g. "bar mp40" or "sten".
 	setCvar("p_weapons", "default");
 
+	setCvar("p_1s1k_rifle", false); // 1 shot one kill with a bolt action rifle.
+	setCvar("p_1s1k_bash", false); // 1 shot one kill by bashing with any weapon.
+
 
 	// MISC
 	setCvar("p_anti_aimrun", true); // Make weapon unusable if aimrunning.
 	setCvar("p_anti_fastshoot", 1.2); // Minimum rechamber time for rifles.
-	setCvar("p_anti_speeding", 1.06); // Punish players that go too fast (A+D spamming).
+	setCvar("p_anti_speeding", false); // Punish players that go too fast (A+D spamming).
 	setCvar("p_hud_alive", true); // Show amount of team players alive.
 
+	setCvar("p_allow_drop", true); // Hold use button to drop secondary weapon.
 
 	/// STOCK
 	// Set stock cvars to defaults. But overwrite some below.

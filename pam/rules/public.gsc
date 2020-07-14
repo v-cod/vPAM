@@ -1,7 +1,7 @@
 cvars()
 {
-	// Build from the basic ruleset. Overwrite values below.
-	rules\basic::cvars();
+	// Build from the default ruleset. Overwrite values below.
+	rules\default::cvars();
 
 
 	// LABEL
