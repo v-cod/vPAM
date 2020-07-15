@@ -9,8 +9,10 @@ cvars()
 
 
 	// MATCH
-	setCvar("scr_sd_scorelimit", 7); // Team to reach this score wins.
-	setCvar("scr_sd_roundlimit", 12); // Tie match if 6-6.
+	setCvar("scr_sd_scorelimit", 11); // First to 11.
+	setCvar("scr_sd_roundlimit", 20); // Tie match if 10-10.
+
+	setCvar("p_bombtimer", true);
 
 
 	// WEAPONS
@@ -19,7 +21,6 @@ cvars()
 	setCvar("p_allow_nades", false); // No chaos.
 	setCvar("p_allow_MG42", true);
 	setCvar("scr_allow_fg42", true);
-
 
 	// STOCK
 	setCvar("scr_teambalance", true);

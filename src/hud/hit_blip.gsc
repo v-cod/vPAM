@@ -1,3 +1,8 @@
+precache()
+{
+	precacheShader("gfx/hud/hud@fire_ready.tga");
+}
+
 show()
 {
 	if(isDefined(self._hitblip)) {

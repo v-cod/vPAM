@@ -4,10 +4,10 @@ start(fastshoot, aimrun)
 	
 	slots[0] = "primary";
 	slots[1] = "primaryb";
-	if (level.p_allow_pistol) {
+	if (level._allow_pistol) {
 		slots[2] = "pistol";
 	}
-	if (level.p_allow_nades) {
+	if (level._allow_nades) {
 		slots[slots.size] = "grenade";
 	}
 
@@ -35,7 +35,7 @@ start(fastshoot, aimrun)
 				shot_last_time = shot_new_time;
 			} else if (clip_new > clip[slots[i]]) {
 				if (aimrun) {
-					thread _check_aim_run(slots[shot_last_i]);
+					thread _check_aim_run(slots[i]);
 				}
 			}
 
@@ -94,7 +94,12 @@ _check_fast_shot(ms, slot_1, slot_2)
 	}
 
 	if (ms < ms_threshold) {
-		iPrintLn(level.p_prefix +  "^1FASTSHOOT^7: " + self.name);
+		if (slot_2 == "pistol" || slot_2 == "grenade") {
+			extra_info = " (^3" + slot_2 + "^7)";
+		} else {
+			extra_info = "";
+		}
+		iPrintLn(level._prefix +  "^1FASTSHOOT^7" + extra_info + ": " + self.name);
 	}
 }
 

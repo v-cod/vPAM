@@ -1,11 +1,14 @@
 cvars()
 {
 	// Use rifles ruleset. But overwrite them below.
-	rules\rifles::cvars();
+	rules\match_rifles::cvars();
 
 	// LABEL
 	game["p_istr_label_left"] = &"vcod^4.^3gg ^7matchmod";
 	game["p_color"] = "^4";
+
+	// MISC
+	setCvar("p_anti_speeding", 1.06);
 
 	// MATCH
 	setCvar("scr_sd_scorelimit", 0);
@@ -23,8 +26,8 @@ cvars()
 	setCvar("p_msg_halftime_3", ""); // Pause.
 
 	// STRAT
-	setCvar("p_strat", true);
-	setCvar("scr_sd_graceperiod", 10);
+	setCvar("p_strat", 10);
+	setCvar("scr_sd_graceperiod", 0);
 
 	// TIMEOUTS
 	setcvar("g_timeoutsAllowed", true);

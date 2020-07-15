@@ -1,19 +1,53 @@
 take_or_set(primary_weapon)
 {
-	if (!level.p_allow_pistol) {
-		self takeWeapon(self getWeaponSlotWeapon("pistol"));
+	if(isDefined(self.pers["weapon1"]) && isDefined(self.pers["weapon2"])) {
+	 	self setWeaponSlotWeapon("primary", self.pers["weapon1"]);
+		self setWeaponSlotAmmo("primary", 999);
+		self setWeaponSlotClipAmmo("primary", 999);
+
+	 	self setWeaponSlotWeapon("primaryb", self.pers["weapon2"]);
+		self setWeaponSlotAmmo("primaryb", 999);
+		self setWeaponSlotClipAmmo("primaryb", 999);
+
+		self setSpawnWeapon(self.pers["spawnweapon"]);
+	} else {
+		self setWeaponSlotWeapon("primary", self.pers["weapon"]);
+		self setWeaponSlotAmmo("primary", 999);
+		self setWeaponSlotClipAmmo("primary", 999);
+
+		// Give second weapon if chosen.
+		if (isDefined(self.pers["weapon_secondary"])) {
+			self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
+			self setWeaponSlotAmmo("primaryb", 999);
+			self setWeaponSlotClipAmmo("primaryb", 999);
+		}
+
+		self setSpawnWeapon(self.pers["weapon"]);
+	}
+
+	self switchToWeapon(self getWeaponSlotWeapon("primary"));
+
+	if (level._allow_pistol) {
+		if (self getWeaponSlotWeapon("pistol") == "none") {
+			maps\mp\gametypes\_teams::givePistol();
+		}
+	} else {
 		self takeWeapon(self getWeaponSlotWeapon("pistol"));
 	}
 
-	if (!level.p_allow_nades) {
-		self takeWeapon(self getWeaponSlotWeapon("grenade"));
-	} else {
+	if (level._allow_nades) {
+		if (self getWeaponSlotWeapon("grenade") == "none") {
+			maps\mp\gametypes\_teams::giveGrenades(primary_weapon);
+		}
+
 		n = self _get_nade_count(primary_weapon);
 		if (n > 0) {
 			self setWeaponSlotClipAmmo("grenade", n);
 		} else {
 			self takeWeapon(self getWeaponSlotWeapon("grenade"));
 		}
+	} else {
+		self takeWeapon(self getWeaponSlotWeapon("grenade"));
 	}
 }
 

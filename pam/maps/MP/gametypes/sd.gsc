@@ -111,6 +111,8 @@ Spectators spawn randomly at one of these positions.
 
 main()
 {
+/**/extra_sd_support::insert_spawns_if_not_supported();
+
 	spawnpointname = "mp_searchanddestroy_spawn_allied";
 	spawnpoints = getentarray(spawnpointname, "classname");
 	
@@ -326,7 +328,7 @@ Callback_StartGameType()
 
 		//thread addBotClients();
 	}
-
+	
 /**/// Call main routine for variable setup and precaching.
 /**/maps\mp\gametypes\_pam::main();
 	maps\mp\gametypes\_teams::modeltype();
@@ -340,15 +342,15 @@ Callback_StartGameType()
 /**/if(level.allow_kar98ksniper != "1") {
 /**/	maps\mp\gametypes\_teams::deletePlacedEntity("mpweapon_kar98k_scoped");
 /**/}
+/**/level thread snipers::check();
 
 	game["gamestarted"] = true;
 	
 /**/// setClientNameMode("manual_change");
 
-/**/// Refer to custom functions.
-/**/thread bombzones();
-/**/thread startGame();
-/**/thread updateGametypeCvars();
+	thread bombzones();
+	thread startGame();
+	thread updateGametypeCvars();
 	//thread addBotClients();
 }
 
@@ -366,13 +368,8 @@ Callback_PlayerConnect()
 	lpselfguid = self getGuid();
 	logPrint("J;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
-/**/self.pers["killer"] = false;
-/**/self.p_name = self.name;
-/**/self.p_ready = false;
-/**/self.p_readying = false;
-
 /**/if (level.p_readying == true) {
-/**/    self thread maps\mp\gametypes\_pam_readyup::monitor_player();
+/**/	self thread maps\mp\gametypes\_pam_readyup::monitor_player();
 /**/}
 
 	if(game["state"] == "intermission")
@@ -381,10 +378,10 @@ Callback_PlayerConnect()
 		return;
 	}
 	
-	if (getCvar("g_autodemo") == "1")
-	{
-		self autoDemoStart();
-	}
+/**/// if (getCvar("g_autodemo") == "1")
+/**/// {
+/**/// 	self autoDemoStart();
+/**/// }
 	
 	level endon("intermission");
 	
@@ -398,7 +395,7 @@ Callback_PlayerConnect()
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
 
 /**/	// When preset weapons, no weapon menu should be shown.
-/**/	if (level.p_weapons == 2) {
+/**/	if (game["_weapons"] == 2) {
 /**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 /**/		self setClientCvar("ui_weapontab", "0");
 /**/	}
@@ -433,6 +430,8 @@ Callback_PlayerConnect()
 
 	for(;;)
 	{
+/**/	level thread snipers::check();
+
 		self waittill("menuresponse", menu, response);
 		
 		if(menu == game["menu_serverinfo"] && response == "close")
@@ -442,13 +441,13 @@ Callback_PlayerConnect()
 		}
 
 /**/	// With preset weapons, no weapons menu should be shown.
-/**/	if (level.p_weapons == 2) {
+/**/	if (game["_weapons"] == 2) {
 /**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
 /**/		self setClientCvar("ui_weapontab", "0");
+/**/		// If the weapon menu is opened, close it and fake a response to process later.
 /**/		if (response == "open" && (menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])) {
 /**/			self closeMenu();
-/**/			menu_weapon(menu, response);
-/**/			continue;
+/**/			response = menu_weapon::process(menu, response);
 /**/		}
 /**/	}
 
@@ -464,12 +463,6 @@ Callback_PlayerConnect()
 			case "autoassign":
 				if (level.lockteams)
 					break;
-/**/			// TODO: Add variable to prevent switch.
-/**/			// Prevent players from switching during match.
-/**/			if (game["matchstarted"] && true && self.sessionteam != "spectator") {
-/**/				// self iPrintLn("Not allowed to switch during match.");
-/**/				break;
-/**/			}
 				if(response == "autoassign")
 				{
 					numonteam["allies"] = 0;
@@ -517,7 +510,9 @@ Callback_PlayerConnect()
 					//Get a count of all players on Axis and Allies
 					players = maps\mp\gametypes\_teams::CountPlayers();
 					
-					if (self.sessionteam != "spectator")
+/**/				// Fix bug where player could still join team by first selecting other.
+/**/				// if (self.sessionteam != "spectator")
+/**/				if (self.pers["team"] != "spectator")
 					{
 						if (((players[response] + 1) - (players[self.pers["team"]] - 1)) > level.teambalance)
 						{
@@ -656,12 +651,16 @@ Callback_PlayerConnect()
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
 
-/**/		if (level.p_weapons > 0) {
-/**/			menu_weapon(menu, response);
-/**/			continue;
+/**/		if (game["_weapons"] > 0) {
+/**/			response = menu_weapon::process(menu, response);
+/**/			if (!isDefined(response)) {
+/**/				continue;
+/**/			}
+/**/			weapon = response;
+/**/		} else {
+/**/			weapon = self maps\mp\gametypes\_teams::restrict(response);
 /**/		}
-
-			weapon = self maps\mp\gametypes\_teams::restrict(response);
+/**/		// weapon = self maps\mp\gametypes\_teams::restrict(response);
 
 			if(weapon == "restricted")
 			{
@@ -732,7 +731,9 @@ Callback_PlayerConnect()
 			}
 			else
 			{
-				if(isDefined(self.pers["weapon"]))
+/**/			// Prevent a double selection to bug round surviving.
+/**/			if(isDefined(self.pers["weapon"]) && !isDefined(self.oldweapon))
+/**/			// if(isDefined(self.pers["weapon"]))
 					self.oldweapon = self.pers["weapon"];
 
 				self.pers["weapon"] = weapon;
@@ -842,6 +843,7 @@ Callback_PlayerDisconnect()
 	logPrint("Q;" + lpselfguid + ";" + lpselfnum + ";" + self.name + "\n");
 
 /**/level thread maps\mp\gametypes\_pam_readyup::update();
+/**/level thread snipers::check();
 
 	if(game["matchstarted"])
 		level thread updateTeamStatus();
@@ -849,15 +851,6 @@ Callback_PlayerDisconnect()
 
 Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc)
 {
-/**/if (level.p_readying) {
-/**/	if (isPlayer(eAttacker) && self != eAttacker) {
-/**/		eAttacker.pers["killer"] = true;
-/**/	}
-/**/	
-/**/	if (!self.pers["killer"])
-/**/		return;
-/**/}
-/**/
 /**/if (level.p_stratting) {
 /**/	return;
 /**/}
@@ -877,12 +870,11 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(!isDefined(vDir))
 		iDFlags |= level.iDFLAGS_NO_KNOCKBACK;
 
-/**/if (isPlayer(eAttacker) && self != eAttacker && eAttacker.pers["team"] != self.pers["team"]) {
+/**/if (game["_hud_hit_blip"] && isPlayer(eAttacker) && self != eAttacker && eAttacker.pers["team"] != self.pers["team"]) {
 /**/	eAttacker thread hud\hit_blip::show();
 /**/}
-
 /**/// Deal full damage if configured.
-/**/if(level.p_1s1k_rifle && sMeansOfDeath == "MOD_RIFLE_BULLET" || level.p_1s1k_bash && MeansOfDeath == "MOD_MELEE") {
+/**/if((level.p_1s1k_rifle && sMeansOfDeath == "MOD_RIFLE_BULLET") || (level.p_1s1k_bash && sMeansOfDeath == "MOD_MELEE")) {
 /**/	iDamage = 100;
 /**/}
 
@@ -891,6 +883,10 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	{
 		if(isPlayer(eAttacker) && (self != eAttacker) && (self.pers["team"] == eAttacker.pers["team"]))
 		{
+/**/		// Ignore friendly fire during warming up.
+/**/		if (level.p_readying) {
+/**/			return;
+/**/		}
 			if(level.friendlyfire == "0")
 			{
 				return;
@@ -990,9 +986,6 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 {
 	self endon("spawned");
 
-/**/if(level.roundended && !level.p_readying)
-/**/	return;
-
 	if(self.sessionteam == "spectator")
 		return;
 
@@ -1004,13 +997,12 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	obituary(self, attacker, sWeapon, sMeansOfDeath);
 
 	self.sessionstate = "dead";
-/**/// self.statusicon = "gfx/hud/hud@status_dead.tga";
-/**/if (self.statusicon != game["headicon_carrier"]) {
-/**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
-/**/}
+	self.statusicon = "gfx/hud/hud@status_dead.tga";
 	self.headicon = "";
+/**/icon::set(); // Override icons.
 /**/if (level.p_readying || level.p_readied) {
 /**/	updateTeamStatus();
+/**/	self.spawned = false;
 /**/	self thread respawn();
 /**/	return;
 /**/}
@@ -1122,12 +1114,12 @@ spawnPlayer()
 	self.archivetime = 0;
 	self.friendlydamage = undefined;
 
-/**/// Allow player to spawn multiple times during warm-up
-/**/// if(isDefined(self.spawned))
-/**///	return;
+	if(isDefined(self.spawned))
+		return;
 
-/**/if (level.p_stratting)
+/**/if (level.p_stratting) {
 /**/	self.maxspeed = 0;
+/**/}
 
 	self.sessionstate = "playing";
 		
@@ -1144,14 +1136,13 @@ spawnPlayer()
 	else
 		maps\mp\_utility::error("NO " + spawnpointname + " SPAWNPOINTS IN MAP");
 	
-/**/// To check later if player didn't false start during strat.
-/**/self.p_spawn_origin = spawnpoint.origin;
-	
-	self.spawned = true;
-/**/// self.statusicon = "";
-/**/if (self.statusicon != game["headicon_carrier"]) {
-/**/	self.statusicon = "";
+/**/if (level.p_strat > 0) {
+/**/	// To check later if player didn't false start during strat.
+/**/	self.p_spawn_origin = spawnpoint.origin;
 /**/}
+
+	self.spawned = true;
+	self.statusicon = "";
 	self.maxhealth = 100;
 	self.health = self.maxhealth;
 	
@@ -1187,23 +1178,15 @@ spawnPlayer()
 		self setWeaponSlotWeapon("primary", self.pers["weapon"]);
 		self setWeaponSlotAmmo("primary", 999);
 		self setWeaponSlotClipAmmo("primary", 999);
-/**/	// Give second weapon if chosen.
-/**/	if (isDefined(self.pers["weapon_secondary"])) {
-/**/		self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
-/**/		self setWeaponSlotAmmo("primaryb", 999);
-/**/		self setWeaponSlotClipAmmo("primaryb", 999);
-/**/	}
 
 		self setSpawnWeapon(self.pers["weapon"]);
 	}
 
 	maps\mp\gametypes\_teams::givePistol();
 	maps\mp\gametypes\_teams::giveGrenades(self.pers["selectedweapon"]);
-/**/equipment::take_or_set(self.pers["selectedweapon"]);
 
 	self.usedweapons = false;
 	thread maps\mp\gametypes\_teams::watchWeaponUsage();
-/**/thread monitor::start();
 
 	if(self.pers["team"] == game["attackers"])
 		self setClientCvar("cg_objectiveText", &"SD_OBJ_ATTACKERS");
@@ -1223,6 +1206,9 @@ spawnPlayer()
 			self.headiconteam = "axis";
 		}
 	}
+/**/icon::set(); // Override icons.
+/**/equipment::take_or_set(self.pers["selectedweapon"]); // Override equipment.
+/**/thread monitor::start();
 }
 
 spawnSpectator(origin, angles)
@@ -1236,11 +1222,9 @@ spawnSpectator(origin, angles)
 	self.archivetime = 0;
 	self.friendlydamage = undefined;
 
-/**/// if(self.pers["team"] == "spectator")
-/**/// 	self.statusicon = "";
-/**/if (self.pers["team"] == "spectator" && self.statusicon != game["headicon_carrier"]) {
-/**/	self.statusicon = "gfx/hud/hud@status_dead.tga";
-/**/}
+	if(self.pers["team"] == "spectator")
+		self.statusicon = "";
+/**/icon::set(); // Override icons.
 		
 	maps\mp\gametypes\_teams::SetSpectatePermissions();
 
@@ -1333,13 +1317,16 @@ waitRespawnButton()
 	self.respawntext.x = 320;
 	self.respawntext.y = 70;
 	self.respawntext.archived = false;
-	self.respawntext setText(&"Press [{+attack}] to respawn");
+	self.respawntext setText(&"Press [{+melee}] to respawn");
 
 	thread removeRespawnText();
 	thread waitRemoveRespawnText("end_respawn");
 	thread waitRemoveRespawnText("respawn");
 
-	while(self attackButtonPressed() != true)
+	while(self meleeButtonPressed() != true)
+		wait .05;
+
+	while(self meleeButtonPressed() == true)
 		wait .05;
 
 	self notify("remove_respawntext");
@@ -1529,36 +1516,34 @@ startRound()
 	level.clock.font = "bigfixed";
 	level.clock setTimer(level.roundlength * 60);
 	
-	if (getCvar("g_autodemo") == "1")
-	{
-		players = getentarray("player", "classname");
-		for(i = 0; i < players.size; i++)
-		{
-			player = players[i];
-		
-			player autoDemoStart();
-		}
-	}
+/**/// if (getCvar("g_autodemo") == "1")
+/**/// {
+/**/// 	players = getentarray("player", "classname");
+/**/// 	for(i = 0; i < players.size; i++)
+/**/// 	{
+/**/// 		player = players[i];
+/**/// 	
+/**/// 		player autoDemoStart();
+/**/// 	}
+/**/// }
 
 	if(game["matchstarted"])
 	{
 		level.clock.color = (0, 1, 0);
 
+/**/	if (level.p_strat > 0) {
+/**/		strat::start(level.p_strat);
+/**/		level.clock setTimer(level.roundlength * 60);
+/**/	}
+/**/	thread maps\mp\gametypes\_teams::sayMoveIn();
+
 		if((level.roundlength * 60) > level.graceperiod)
 		{
-/**/		if (level.p_strat && level.graceperiod > 0) {
-/**/			level.clock setTimer(level.graceperiod);
-/**/			thread strat::start();
-/**/		}
-
 			wait level.graceperiod;
 
 			level notify("round_started");
 			level.roundstarted = true;
 			level.clock.color = (1, 1, 1);
-/**/		if (level.p_strat && level.graceperiod > 0) {
-/**/			level.clock setTimer(level.roundlength * 60);
-/**/		}
 
 			// Players on a team but without a weapon show as dead since they can not get in this round
 			players = getentarray("player", "classname");
@@ -1570,30 +1555,24 @@ startRound()
 					player.statusicon = "gfx/hud/hud@status_dead.tga";
 			}
 		
-/**/		// wait((level.roundlength * 60) - level.graceperiod);
-/**/		wait(level.roundlength * 60);
+			wait((level.roundlength * 60) - level.graceperiod);
 		}
 		else
 			wait(level.roundlength * 60);
 	}
 	else	
 	{
-		level.clock.color = (1, 1, 1);
-/**/	// wait(level.roundlength * 60);
-
 /**/	// Prematch takes forever.
 /**/	level.clock destroy();
-/**/	_hud_labels_create();
-/**/
+/**/	hud\labels::create(game["p_istr_label_left"], game["p_istr_label_right"], undefined, undefined);
 /**/	if (game["roundsplayed"] > 0) {
-/**/		_hud_scoreboard_create();
+/**/		hud\scoreboard::create(game["_hud_halftime"]);
 /**/	}
 
-		if (game["p_half"] == 2) {
-			_hud_halftime_create();
-		}
-/**/
 /**/	return;
+
+		level.clock.color = (1, 1, 1);
+		wait(level.roundlength * 60);
 	}
 	
 	if(level.roundended)
@@ -1662,11 +1641,6 @@ resetScores()
 	setTeamScore("allies", game["alliedscore"]);
 	game["axisscore"] = 0;
 	setTeamScore("axis", game["axisscore"]);
-
-/**/game["p_alliedscore_half_1"] = 0;
-/**/game["p_axisscore_half_1"] = 0; 
-/**/game["p_alliedscore_half_2"] = 0;
-/**/game["p_axisscore_half_2"] = 0;
 }
 
 endRound(roundwinner)
@@ -1685,8 +1659,8 @@ endRound(roundwinner)
 	{
 		player = players[i];
 		
-		if (getCvar("g_autodemo") == "1")
-			player autoDemoStop();
+/**/// 	if (getCvar("g_autodemo") == "1")
+/**/// 		player autoDemoStop();
 		
 		if(isDefined(player.planticon))
 			player.planticon destroy();
@@ -1726,7 +1700,7 @@ endRound(roundwinner)
 			players[i] playLocalSound("MP_announcer_round_draw");
 	}
 
-/**///wait 5;
+/**/// wait 5;
 
 	winners = "";
 	losers = "";
@@ -1736,8 +1710,6 @@ endRound(roundwinner)
 		game["alliedscore"]++;
 		setTeamScore("allies", game["alliedscore"]);
 		
-/**/	game["p_alliedscore_half_" + game["p_half"]]++;
-
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
 		{
@@ -1755,8 +1727,6 @@ endRound(roundwinner)
 		game["axisscore"]++;
 		setTeamScore("axis", game["axisscore"]);
 
-/**/	game["p_axisscore_half_" + game["p_half"]]++;
-
 		players = getentarray("player", "classname");
 		for(i = 0; i < players.size; i++)
 		{
@@ -1770,8 +1740,6 @@ endRound(roundwinner)
 		logPrint("L;allies" + losers + "\n");
 	}
 
-/**/// wait 5;
-
 	if(game["matchstarted"])
 	{
 		checkScoreLimit();
@@ -1784,6 +1752,24 @@ endRound(roundwinner)
 
 	if(!game["matchstarted"] && roundwinner == "reset")
 	{
+/**/	if (getCvarInt("g_autodemo") > 0) {
+/**/		players = getentarray("player", "classname");
+/**/		if (level._force_autodemo) {
+/**/			// Assure clients are setup to accept autoscreenshots.
+/**/			for (i = 0; i < players.size; i++) {
+/**/				player setClientCvar("cg_autodemo", true);
+/**/			}
+/**/			wait 1;
+/**/		} else {
+/**/			iPrintLn(level._prefix +  "Use [^3cg_autodemo 0^7] to ^3ignore ^7autodemo next time.");
+/**/		}
+/**/		for (i = 0; i < players.size; i++) {
+/**/			player = players[i];
+/**/
+/**/			player autoDemoStart();
+/**/		}
+/**/	}
+
 		game["matchstarted"] = true;
 /**/	// thread resetScores();
 /**/	// game["roundsplayed"] = 0;
@@ -1801,26 +1787,17 @@ endRound(roundwinner)
 		return;
 	level.mapended = true;
 
-/**/if (level.p_round_restart_delay > 0) {
-/**/	_hud_labels_create();
-/**/
-/**/	if (game["roundsplayed"] > 0) {
-/**/		_hud_scoreboard_create();
-/**/	}
-/**/
-/**/	if (roundwinner == "reset") {
-/**/		_hud_round_next_create(level.p_round_restart_delay, game["p_half"]);
+/**/hud\labels::create(game["p_istr_label_left"], game["p_istr_label_right"], undefined, undefined);
+/**/if (roundwinner == "reset") {
+/**/	if (game["roundsplayed"] == 0) {
+/**/		hud\scoreboard::create(&"SD_MATCHSTARTING", level.p_round_restart_delay);
 /**/	} else {
-/**/		_hud_round_next_create(level.p_round_restart_delay);
+/**/		hud\scoreboard::create(&"SD_MATCHRESUMING", level.p_round_restart_delay);
 /**/	}
-/**/	//level.p_hud_matchover setText(game["overtime"]);
-/**/
-/**/	// _hud_scoreboard_destroy();
-/**/	// _hud_round_next_destroy();
-/**/	// _hud_labels_destroy();
+/**/} else {
+/**/	hud\scoreboard::create(&"MPSCRIPT_STARTING_NEW_ROUND", level.p_round_restart_delay);
 /**/}
-
-/**/ wait 5;
+/**/ wait level.p_round_restart_delay;
 
 	// for all living players store their weapons
 	players = getentarray("player", "classname");
@@ -1904,22 +1881,12 @@ endRound(roundwinner)
 
 endMap()
 {
-/**/_hud_matchover_create();
-/**/_hud_labels_create();
-/**/_hud_teamwin_create();
-/**/_hud_scoreboard_create();
-/**/
-/**/wait 10;
-/**/
-/**/_hud_labels_destroy();
-/**/_hud_scoreboard_destroy();
-/**/_hud_teamwin_destroy();
-/**/
-/**/if (isdefined(level.p_hud_matchover))
-/**/	level.p_hud_matchover destroy();
-
-	game["state"] = "intermission";
-	level notify("intermission");
+/**/if (getCvarInt("g_autodemo") > 0) {
+/**/	player autoDemoStop();
+/**/}
+/**/// Move to below.
+/**/// game["state"] = "intermission";
+/**/// level notify("intermission");
 	
 	if(isdefined(level.bombmodel))
 		level.bombmodel stopLoopSound();
@@ -1931,6 +1898,23 @@ endMap()
 	else
 		text = &"MPSCRIPT_AXIS_WIN";
 
+/**/hud\labels::create(game["p_istr_label_left"], game["p_istr_label_right"], undefined, undefined);
+/**/hud\scoreboard::create(text, 10);
+/**/
+/**/wait 10;
+/**/
+/**/hud\labels::destroy_();
+/**/hud\scoreboard::destroy_();
+/**/
+/**/if (game["_vote_map"]) {
+/**/	map = vote\map::vote(4);
+/**/	setCvar("sv_mapRotationCurrent", "map " + map);
+/**/}
+/**/
+/**/// Now kick-off the intermission.
+/**/game["state"] = "intermission";
+/**/level notify("intermission");
+	
 	players = getentarray("player", "classname");
 	for(i = 0; i < players.size; i++)
 	{
@@ -1947,6 +1931,13 @@ endMap()
 	if (getCvar("g_autoscreenshot") == "1")
 	{
 		players = getentarray("player", "classname");
+/**/	if (level._force_autoscreenshots) {
+/**/		// Assure clients are setup to accept autoscreenshots.
+/**/		for (i = 0; i < players.size; i++) {
+/**/			player setClientCvar("cg_autoscreenshot", true);
+/**/		}
+/**/		wait 1;
+/**/	}
 		for(i = 0; i < players.size; i++)
 		{
 			player = players[i];
@@ -2178,15 +2169,14 @@ updateTeamStatus()
 			level.exist[player.pers["team"]]++;
 	}
 
-/**/if(game["_hud_alive"]) {	
-/**/	hud\alive::update();
-/**/}
-
 	if(level.exist["allies"])
 		level.didexist["allies"] = true;
 	if(level.exist["axis"])
 		level.didexist["axis"] = true;
 
+/**/if(game["_hud_alive"]) {	
+/**/	hud\alive::update();
+/**/}
 /**/if (level.p_readying || !game["matchstarted"])
 /**/	return;
 
@@ -2292,6 +2282,10 @@ bombzone_think(bombzone_other)
 /**/	return;
 /**/}
 
+/**/if (isDefined(self.squaredradius)) {
+/**/	self thread extra_sd_support::bomb_or_zone_trigger();
+/**/}
+
 	level endon("round_ended");
 
 	level.barincrement = (level.barsize / (20.0 * level.planttime));
@@ -2320,7 +2314,9 @@ bombzone_think(bombzone_other)
 				other.planticon setShader("ui_mp/assets/hud@plantbomb.tga", 64, 64);			
 			}
 			
-			while(other istouching(self) && isAlive(other) && other useButtonPressed())
+/**/		// Custom trigger can not be touched. Not needed anyway, as already triggered anyway.
+/**/		while((isDefined(self.squaredradius) || other istouching(self)) && isAlive(other) && other useButtonPressed())
+/**/// 		while(other istouching(self) && isAlive(other) && other useButtonPressed())
 			{
 				other notify("kill_check_bombzone");
 				
@@ -2357,6 +2353,8 @@ bombzone_think(bombzone_other)
 				{
 					self.progresstime += 0.05;
 					wait 0.05;
+/**/				// Fixes a bug where sometimes the weapon is not disable while progressing.
+/**/				other disableWeapon();
 				}
 	
 				if(isDefined(other.progressbackground))
@@ -2409,7 +2407,11 @@ bombzone_think(bombzone_other)
 					bombtrigger thread bomb_countdown();
 					
 					level notify("bomb_planted");
+
 /**/				// level.clock destroy();
+/**/				if (!level._bombtimer) {
+/**/					level.clock destroy();
+/**/				}
 					
 					return;	//TEMP, script should stop after the wait .05
 				}
@@ -2434,6 +2436,12 @@ check_bombzone(trigger)
 	self endon("kill_check_bombzone");
 	level endon("round_ended");
 
+/**/if (isDefined(trigger.squaredradius)) {
+/**/	while(isDefined(trigger) && !isDefined(trigger.planting) && isAlive(self) && distancesquared(self.origin, trigger.origin) < trigger.squaredradius) {
+/**/		wait 0.05;
+/**/	}
+/**/}
+
 	while(isDefined(trigger) && !isDefined(trigger.planting) && self istouching(trigger) && isAlive(self))
 		wait 0.05;
 
@@ -2450,18 +2458,26 @@ bomb_countdown()
 	
 	countdowntime = 60;
 
-/**/// wait countdowntime;
-
-/**/level.clock setTimer(countdowntime - 1);
-/**/// Fade from yellow to red
-/**/for (i = 0; i < countdowntime - 10; i++) {
-/**/	if (isDefined(level.clock)) {
-/**/		level.clock.color = (1, 1 - i*0.02, 0);
-/**/	}
-/**/	wait 1;
-/**/}
+/**/if (level._bombtimer && isDefined(level.clock)) {
+/**/	// First count normally, then use tenths.
+/**/	level.clock setTimer(60);
 /**/
-/**/wait 10;
+/**/	// Fade from yellow to red.
+/**/	for (i = 0; i < 40; i++) {
+/**/		if (isDefined(level.clock)) {
+/**/			level.clock.color = (1, 1 - i*0.025, 0);
+/**/		}
+/**/		wait 1;
+/**/	}
+/**/
+/**/	if (isDefined(level.clock)) {
+/**/		level.clock setTenthsTimer(20);
+/**/	}
+/**/	wait 20;
+/**/} else {
+/**/	wait countdowntime;
+/**/}
+/**/// wait countdowntime;
 
 	// bomb timer is up
 	objective_delete(0);
@@ -2491,6 +2507,10 @@ bomb_countdown()
 
 bomb_think()
 {
+/**/if (isDefined(self.squaredradius)) {
+/**/	self thread extra_sd_support::bomb_or_zone_trigger();
+/**/}
+
 	self endon("bomb_exploded");
 	level.barincrement = (level.barsize / (20.0 * level.defusetime));
 
@@ -2511,7 +2531,9 @@ bomb_think()
 				other.defuseicon setShader("ui_mp/assets/hud@defusebomb.tga", 64, 64);			
 			}
 			
-			while(other islookingat(self) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
+/**/		// For custom bombs, isLookingAt does not work.
+/**/		while((isDefined(self.squaredradius) || other islookingat(self)) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
+/**/// 		while(other islookingat(self) && distance(other.origin, self.origin) < 64 && isAlive(other) && other useButtonPressed())
 			{
 				other notify("kill_check_bomb");
 
@@ -2546,6 +2568,8 @@ bomb_think()
 				{
 					self.progresstime += 0.05;
 					wait 0.05;
+/**/				// Fixes a bug where sometimes the weapon is not disable while progressing.
+/**/				other disableWeapon();
 				}
 
 				if(isDefined(other.progressbackground))
@@ -2602,6 +2626,12 @@ check_bomb(trigger)
 	self notify("kill_check_bomb");
 	self endon("kill_check_bomb");
 
+/**/if (isDefined(trigger.squaredradius)) {
+/**/	while(isDefined(trigger) && !isDefined(trigger.defusing) && distancesquared(self.origin, trigger.origin) < trigger.squaredradius && isAlive(self)) {
+/**/		wait 0.05;
+/**/	}
+/**/}
+
 	while(isDefined(trigger) && !isDefined(trigger.defusing) && distance(self.origin, trigger.origin) < 32 && self islookingat(trigger) && isAlive(self))
 		wait 0.05;
 
@@ -2644,42 +2674,6 @@ addBotClients()
 	}
 }
 
-_hud_labels_create()
-{
-	if (isDefined(level.p_hud_labels_right)) {
-		return;
-	}
-
-	level.p_hud_labels_right = newHudElem();
-	level.p_hud_labels_right.x = 640 - 10;
-	level.p_hud_labels_right.y = 10;
-	level.p_hud_labels_right.alignX = "right";
-	level.p_hud_labels_right.alignY = "top";
-	level.p_hud_labels_right.fontScale = 1;
-	level.p_hud_labels_right.color = (1, 1, 1);
-	level.p_hud_labels_right setText(game["p_istr_label_right"]);
-
-	level.p_hud_labels_left = newHudElem();
-	level.p_hud_labels_left.x = 10;
-	level.p_hud_labels_left.y = 10;
-	level.p_hud_labels_left.alignX = "left";
-	level.p_hud_labels_left.alignY = "top";
-	level.p_hud_labels_left.fontScale = 1;
-	level.p_hud_labels_left.color = (1, 1, 1);
-	level.p_hud_labels_left setText(game["p_istr_label_left"]);
-
-	if (game["p_overtime"] > 0) {
-		level.p_hud_labels_overtime_mode = newHudElem();
-		level.p_hud_labels_overtime_mode.x = 10;
-		level.p_hud_labels_overtime_mode.y = 30;
-		level.p_hud_labels_overtime_mode.alignX = "left";
-		level.p_hud_labels_overtime_mode.alignY = "middle";
-		level.p_hud_labels_overtime_mode.fontScale = 1;
-		level.p_hud_labels_overtime_mode.color = (1, 1, 0);
-		level.p_hud_labels_overtime_mode setText(game["overtimemode"]);
-	}
-}
-
 _hud_labels_destroy()
 {
 	if (isDefined(level.p_hud_labels_left)) {
@@ -2693,313 +2687,15 @@ _hud_labels_destroy()
 	}
 }
 
-_hud_scoreboard_create()
-{	// Set up Scorboard Vertical Positioning
-	// CHANGE ONLY SCOREBOARDY
-	scoreboardy = 197;
-	teamsy = scoreboardy + 15;
-	half1y = scoreboardy + 28;
-	half2y = scoreboardy + 45;
-	matchy = scoreboardy + 65;
-
-
-	// Display TEAMS
-	level.scorebd = newHudElem();
-	level.scorebd.x = 575;
-	level.scorebd.y = scoreboardy;
-	level.scorebd.alignX = "center";
-	level.scorebd.alignY = "middle";
-	level.scorebd.fontScale = 1;
-	level.scorebd.color = (.99, .99, .75);
-	level.scorebd setText(game["scorebd"]);
-
-	level.team1 = newHudElem();
-	level.team1.x = 535;
-	level.team1.y = teamsy;
-	level.team1.alignX = "center";
-	level.team1.alignY = "middle";
-	level.team1.fontScale = .75;
-	level.team1.color = (.73, .99, .73);
-	level.team1 setText(game["dspteam1"]);
-
-	level.team2 = newHudElem();
-	level.team2.x = 615;
-	level.team2.y = teamsy;
-	level.team2.alignX = "center";
-	level.team2.alignY = "middle";
-	level.team2.fontScale = .75;
-	level.team2.color = (.85, .99, .99);
-	level.team2 setText(game["dspteam2"]);
-
-	// First Half Score Display
-	level.firhalfscore = newHudElem();
-	level.firhalfscore.x = 575;
-	level.firhalfscore.y = half1y;
-	level.firhalfscore.alignX = "center";
-	level.firhalfscore.alignY = "middle";
-	level.firhalfscore.fontScale = .75;
-	level.firhalfscore.color = (.99, .99, .75);
-	level.firhalfscore setText(game["1sthalf"]);
-
-	level.firhalfaxisscorenum = newHudElem();
-	level.firhalfaxisscorenum.x = 532;
-	level.firhalfaxisscorenum.y = half1y;
-	level.firhalfaxisscorenum.alignX = "center";
-	level.firhalfaxisscorenum.alignY = "middle";
-	level.firhalfaxisscorenum.fontScale = .75;
-	level.firhalfaxisscorenum.color = (.73, .99, .75);
-	level.firhalfaxisscorenum setValue(game["p_axisscore_half_1"]);
-
-	level.firhalfalliesscorenum = newHudElem();
-	level.firhalfalliesscorenum.x = 618;
-	level.firhalfalliesscorenum.y = half1y;
-	level.firhalfalliesscorenum.alignX = "center";
-	level.firhalfalliesscorenum.alignY = "middle";
-	level.firhalfalliesscorenum.fontScale = .75;
-	level.firhalfalliesscorenum.color = (.85, .99, .99);
-	level.firhalfalliesscorenum setValue(game["p_alliedscore_half_1"]);
-
-	// Second Half Score Display
-	level.sechalfscore = newHudElem();
-	level.sechalfscore.x = 575;
-	level.sechalfscore.y = half2y;
-	level.sechalfscore.alignX = "center";
-	level.sechalfscore.alignY = "middle";
-	level.sechalfscore.fontScale = .75;
-	level.sechalfscore.color = (.99, .99, .75);
-	level.sechalfscore setText(game["2ndhalf"]);
-			
-	level.sechalfaxisscorenum = newHudElem();
-	level.sechalfaxisscorenum.x = 618;
-	level.sechalfaxisscorenum.y = half2y;
-	level.sechalfaxisscorenum.alignX = "center";
-	level.sechalfaxisscorenum.alignY = "middle";
-	level.sechalfaxisscorenum.fontScale = .75;
-	level.sechalfaxisscorenum.color = (.85, .99, .99);
-	level.sechalfaxisscorenum setValue(game["p_axisscore_half_2"]);
-
-	level.sechalfalliesscorenum = newHudElem();
-	level.sechalfalliesscorenum.x = 532;
-	level.sechalfalliesscorenum.y = half2y;
-	level.sechalfalliesscorenum.alignX = "center";
-	level.sechalfalliesscorenum.alignY = "middle";
-	level.sechalfalliesscorenum.fontScale = .75;
-	level.sechalfalliesscorenum.color = (.73, .99, .75);
-	level.sechalfalliesscorenum setValue(game["p_alliedscore_half_2"]);
-			
-	// Match Score Display
-	level.matchscore = newHudElem();
-	level.matchscore.x = 575;
-	level.matchscore.y = matchy;
-	level.matchscore.alignX = "center";
-	level.matchscore.alignY = "middle";
-	level.matchscore.fontScale = .8;
-	level.matchscore.color = (.99, .99, .75);
-	level.matchscore setText(game["matchscore2"]);
-
-	level.matchaxisscorenum = newHudElem();
-	if(game["p_half"] == 2)
-	{
-		level.matchaxisscorenum.x = 618;
-		level.matchaxisscorenum.color = (.85, .99, .99);
-	}
-	else
-	{
-		level.matchaxisscorenum.x = 532;
-		level.matchaxisscorenum.color = (.73, .99, .75);
-	}
-	level.matchaxisscorenum.y = matchy;
-	level.matchaxisscorenum.alignX = "center";
-	level.matchaxisscorenum.alignY = "middle";
-	level.matchaxisscorenum.fontScale = 1;
-	level.matchaxisscorenum setValue(game["axisscore"]);
-
-	level.matchalliesscorenum = newHudElem();
-	if(game["p_half"] == 2)
-	{
-		level.matchalliesscorenum.x = 532;
-		level.matchalliesscorenum.color = (.73, .99, .75);
-	}
-	else
-	{
-		level.matchalliesscorenum.x = 618;
-		level.matchalliesscorenum.color = (.85, .99, .99);
-	}
-	level.matchalliesscorenum.y = matchy;
-	level.matchalliesscorenum.alignX = "center";
-	level.matchalliesscorenum.alignY = "middle";
-	level.matchalliesscorenum.fontScale = 1;
-	level.matchalliesscorenum setValue(game["alliedscore"]);
-}
-
-_hud_scoreboard_destroy()
-{
-	if(isdefined(level.scorebd))
-		level.scorebd destroy();
-	if(isdefined(level.team1))
-		level.team1 destroy();
-	if(isdefined(level.team2))
-		level.team2 destroy();
-
-	if(isdefined(level.firhalfscore))
-		level.firhalfscore destroy();
-	if(isdefined(level.firhalfaxisscore))
-		level.firhalfaxisscore destroy();
-	if(isdefined(level.firhalfalliesscore))
-		level.firhalfalliesscore destroy();
-	if(isdefined(level.firhalfaxisscorenum))
-		level.firhalfaxisscorenum destroy();
-	if(isdefined(level.firhalfalliesscorenum))
-		level.firhalfalliesscorenum destroy();
-
-	if(isdefined(level.sechalfscore))
-		level.sechalfscore destroy();
-	if(isdefined(level.sechalfaxisscore))
-		level.sechalfaxisscore destroy();
-	if(isdefined(level.sechalfalliesscore))
-		level.sechalfalliesscore destroy();
-	if(isdefined(level.sechalfaxisscorenum))
-		level.sechalfaxisscorenum destroy();
-	if(isdefined(level.sechalfalliesscorenum))
-		level.sechalfalliesscorenum destroy();
-
-	if(isdefined(level.matchscore))
-		level.matchscore destroy();
-	if(isdefined(level.matchaxisscorenum))
-		level.matchaxisscorenum destroy();
-	if(isdefined(level.matchalliesscorenum))
-		level.matchalliesscorenum destroy();
-
-}
-
-_hud_round_next_create(time, half)
-{
-	level.p_hud_round_next_1 = newHudElem();
-	level.p_hud_round_next_1.x = 540;
-	level.p_hud_round_next_1.y = 295;
-	level.p_hud_round_next_1.alignX = "center";
-	level.p_hud_round_next_1.alignY = "middle";
-	level.p_hud_round_next_1.fontScale = 1;
-	level.p_hud_round_next_1.color = (1, 1, 0);
-	level.p_hud_round_next_1 setText(game["round"]);		
-		
-	level.p_hud_round_next_2 = newHudElem();
-	level.p_hud_round_next_2.x = 540;
-	level.p_hud_round_next_2.y = 315;
-	level.p_hud_round_next_2.alignX = "center";
-	level.p_hud_round_next_2.alignY = "middle";
-	level.p_hud_round_next_2.fontScale = 1;
-	level.p_hud_round_next_2.color = (1, 1, 0);
-	round = game["roundsplayed"] + 1;
-	level.p_hud_round_next_2 setValue(round);
-
-	level.p_hud_round_next_3 = newHudElem();
-	level.p_hud_round_next_3.x = 540;
-	level.p_hud_round_next_3.y = 335;
-	level.p_hud_round_next_3.alignX = "center";
-	level.p_hud_round_next_3.alignY = "middle";
-	level.p_hud_round_next_3.fontScale = 1;
-	level.p_hud_round_next_3.color = (1, 1, 0);
-	level.p_hud_round_next_3 setText(game["starting"]);
-	
-	if (isDefined(half)) {
-		level.p_hud_round_next_1 setText(game["p_hud_half_" + half]);
-		level.p_hud_round_next_2 setText(game["half"]);
-	}
-
-	level.p_hud_stopwatch = newHudElem();
-	level.p_hud_stopwatch.x = 590;
-	level.p_hud_stopwatch.y = 315;
-	level.p_hud_stopwatch.alignX = "center";
-	level.p_hud_stopwatch.alignY = "middle";
-	level.p_hud_stopwatch.sort = 9999;
-	level.p_hud_stopwatch.archived = false;
-	level.p_hud_stopwatch setClock(time, 60, "hudStopwatch", 64, 64);
-}
-_hud_round_next_destroy()
-{
-	if (isDefined(level.p_hud_round_next_1)) {
-		level.p_hud_round_next_1 destroy();
-	}
-	if (isDefined(level.p_hud_round_next_2)) {
-		level.p_hud_round_next_2 destroy();
-	}
-	if (isDefined(level.p_hud_round_next_3)) {
-		level.p_hud_round_next_3 destroy();
-	}
-	if (isDefined(level.p_hud_stopwatch)) {
-		level.p_hud_stopwatch destroy();
-	}
-}
-
-
-_hud_teamwin_create()
-{
-	level.teamwin = newHudElem();
-	level.teamwin.x = 575;
-	level.teamwin.y = 155;
-	level.teamwin.alignX = "center";
-	level.teamwin.alignY = "middle";
-	level.teamwin.fontScale = 1.1;
-
-	if (game["axisscore"] == game["alliedscore"])
-	{
-		level.teamwin.color = (1, 1, 0);
-		level.teamwin setText(game["dsptie"]);
-	}
-	else if (game["axisscore"] > game["alliedscore"] && game["p_half"] == 2)
-	{
-		level.teamwin.color = (.85, .99, .99);
-		level.teamwin setText(game["team2win"]);
-	}
-	else if (game["axisscore"] < game["alliedscore"] && game["p_half"] == 1)
-	{
-		level.teamwin.color = (.85, .99, .99);
-		level.teamwin setText(game["team2win"]);
-	}
-	else
-	{
-		level.teamwin.color = (.73, .99, .75);
-		level.teamwin setText(game["team1win"]);
-	}
-}
-
-_hud_teamwin_destroy()
-{
-	if(isdefined(level.teamwin))
-		level.teamwin destroy();
-}
-
-_hud_halftime_create()
-{
-	if (isDefined(level.p_hud_halftime)) {
-		return;
-	}
-
-	level.p_hud_halftime = newHudElem();
-	level.p_hud_halftime.x = 575;
-	level.p_hud_halftime.y = 175;
-	level.p_hud_halftime.alignX = "center";
-	level.p_hud_halftime.alignY = "middle";
-	level.p_hud_halftime.fontScale = 1.5;
-	level.p_hud_halftime.color = (1, 1, 0);
-	level.p_hud_halftime setText(game["halftime"]);
-}
-
 _half_time()
 {
 	game["matchstarted"] = false;
 	game["p_half"] = 2;
 	
-	_hud_labels_create();
-	_hud_halftime_create();
-	_hud_scoreboard_create();
-	Create_HUD_TeamSwap();
+	hud\labels::create(game["p_istr_label_left"], game["p_istr_label_right"], undefined, undefined);
+/**/hud\scoreboard::create(game["_hud_halftime"], 5);
 
-	iPrintLn(level.p_prefix + "_half_time: wait 5");
 	wait 5;
-
-	Destroy_HUD_TeamSwap();
 
 	// Switch team scores.
 	axisscore = game["axisscore"];
@@ -3036,164 +2732,4 @@ _half_time()
 	}
 
 	map_restart(true);
-}
-
-Create_HUD_TeamSwap()
-{
-	level.switching = newHudElem();
-	level.switching.x = 575;
-	level.switching.y = 280;
-	level.switching.alignX = "center";
-	level.switching.alignY = "middle";
-	level.switching.fontScale = 1;
-	level.switching.color = (1, 1, 0);
-	level.switching setText(game["switching"]);
-
-	level.switching2 = newHudElem();
-	level.switching2.x = 575;
-	level.switching2.y = 300;
-	level.switching2.alignX = "center";
-	level.switching2.alignY = "middle";
-	level.switching2.fontScale = 1;
-	level.switching2.color = (1, 1, 0);
-	level.switching2 setText(game["switching2"]);
-}
-
-Destroy_HUD_TeamSwap()
-{
-	if(isdefined(level.switching))
-		level.switching destroy();
-	if(isdefined(level.switching2))
-		level.switching2 destroy();
-}
-
-_hud_matchover_create()
-{
-	level.p_hud_matchover = newHudElem();
-	level.p_hud_matchover.x = 575;
-	level.p_hud_matchover.y = 175;
-	level.p_hud_matchover.alignX = "center";
-	level.p_hud_matchover.alignY = "middle";
-	level.p_hud_matchover.fontScale = 1;
-	level.p_hud_matchover.color = (1, 1, 0);
-	level.p_hud_matchover setText(game["matchover"]);
-}
-
-// Weapon procedure allowing second weapon pick.
-menu_weapon(menu, response)
-{
-	if (level.p_weapons == 2) {
-		self.pers["weapon"] = level.p_weapons_arr[0];
-		self.pers["selectedweapon"] = self.pers["weapon"];
-		if (level.p_weapons_arr.size > 1) {
-			self.pers["weapon_secondary"] = level.p_weapons_arr[1];
-		}
-
-		menu_weapon_proceed();
-		return;
-	}
-
-	// Allow enemy team weapons.
-	weapon = self maps\mp\gametypes\_teams::restrict_anyteam(response);
-	if (weapon == "restricted") {
-		self openMenu(menu);
-		return;
-	}
-
-	// The menu that is opened for them differs per team
-	if (self.pers["team"] == "allies") {
-		menu_1 = game["menu_weapon_allies"];
-		menu_2 = game["menu_weapon_axis"];
-	} else {
-		menu_1 = game["menu_weapon_axis"];
-		menu_2 = game["menu_weapon_allies"];
-	}
-
-	// If this is the first weapon picked, or if it is and second weapon is picked too
-	if (menu == menu_1) {
-		self.pers["weapon"] = weapon;
-		self.pers["selectedweapon"] = weapon;
-
-		self openMenu(menu_2);
-		return;
-	} else {
-		self.pers["weapon_secondary"] = weapon;
-	}
-
-	menu_weapon_proceed();
-}
-
-menu_weapon_proceed()
-{
-	if (!game["matchstarted"] || !level.roundstarted) {
-		if (self.sessionstate == "playing") {
-			self setWeaponSlotWeapon("primary", self.pers["weapon"]);
-			self setWeaponSlotAmmo("primary", 999);
-			self setWeaponSlotClipAmmo("primary", 999);
-			
-			if (isDefined(self.pers["weapon_secondary"])) {
-				self setWeaponSlotWeapon("primaryb", self.pers["weapon_secondary"]);
-				self setWeaponSlotAmmo("primaryb", 999);
-				self setWeaponSlotClipAmmo("primaryb", 999);
-			}
-
-			self switchToWeapon(self.pers["weapon"]);
-		} else {
-			spawnPlayer();
-			self thread printJoinedTeam(self.pers["team"]);
-			level checkMatchStart();
-		}
-	} else {
-		self.sessionteam = self.pers["team"];
-
-		if (self.sessionstate != "playing") {
-			self.statusicon = "gfx/hud/hud@status_dead.tga";
-		}
-
-		if (self.pers["team"] == "allies") {
-			otherteam = "axis";
-		} else if (self.pers["team"] == "axis") {
-			otherteam = "allies";
-		}
-
-		// if joining a team that has no opponents, just spawn
-		if (!level.didexist[otherteam] && !level.roundended) {
-			spawnPlayer();
-			self thread printJoinedTeam(self.pers["team"]);
-		} else if (!level.didexist[self.pers["team"]] && !level.roundended) {
-			self.spawned = undefined;
-			spawnPlayer();
-			self thread printJoinedTeam(self.pers["team"]);
-			level checkMatchStart();
-		} else {
-			_you_will_spawn_with_next_round(self.pers["weapon"]);
-			if (isDefined(self.pers["weapon_secondary"])) {
-				_you_will_spawn_with_next_round(self.pers["weapon_secondary"]);
-			}
-		}
-	}
-
-	self thread maps\mp\gametypes\_teams::SetSpectatePermissions();
-	if (isDefined(self.autobalance_notify))
-		self.autobalance_notify destroy();
-}
-
-// Print informative message telling weapons will be given after death.
-_you_will_spawn_with_next_round(weapon)
-{
-	weaponname = maps\mp\gametypes\_teams::getWeaponName(weapon);
-
-	if (self.pers["team"] == "allies") {
-		if (maps\mp\gametypes\_teams::useAn(weapon)) {
-			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_AN_NEXT_ROUND", weaponname);
-		} else {
-			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_ALLIED_WITH_A_NEXT_ROUND", weaponname);
-		}
-	} else if (self.pers["team"] == "axis") {
-		if (maps\mp\gametypes\_teams::useAn(weapon)) {
-			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_AN_NEXT_ROUND", weaponname);
-		} else {
-			self iprintln(&"MPSCRIPT_YOU_WILL_SPAWN_AXIS_WITH_A_NEXT_ROUND", weaponname);
-		}
-	}
 }

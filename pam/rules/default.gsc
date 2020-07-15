@@ -14,13 +14,12 @@ cvars()
 	setCvar("p_bash", false);            // Only allow bash damage to be done.
 
 	setCvar("p_replay_draw", true);      // Do not count rounds ending in a draw.
-	setCvar("p_round_restart_delay", 10); // Time to wait before starting next round. Shows small scoreboard.
+	setCvar("p_round_restart_delay", 5); // Time before starting next round. (5 is minimum.)
 
-	setCvar("p_strat", false);           // Hold players still during grace period.
+	setCvar("p_strat", 0);               // Freeze time before round kicks off.
 
 	setCvar("p_overtime_on_tie", false);
 	setCvar("p_overtime_roundlimit", 4);
-
 
 	/// WEAPONS
 	setCvar("p_allow_pistol", true);  // Equip players with pistol.
@@ -43,19 +42,31 @@ cvars()
 	setCvar("p_1s1k_rifle", false); // 1 shot one kill with a bolt action rifle.
 	setCvar("p_1s1k_bash", false); // 1 shot one kill by bashing with any weapon.
 
+	setCvar("p_allow_drop", false); // Hold use button to drop secondary weapon.
+	setCvar("p_allow_drop_sniper", true); // If drop is allowed, whether to allow snipers to be dropped.
+
+	setCvar("p_sniper_limit", false); // Limit snipers per team. 0 to disable check. 1 or above to limit to that amount.
 
 	// MISC
 	setCvar("p_anti_aimrun", true); // Make weapon unusable if aimrunning.
-	setCvar("p_anti_fastshoot", 1.2); // Minimum rechamber time for rifles.
+	setCvar("p_anti_fastshoot", true); // Detect fast shooting (or throwing nades).
 	setCvar("p_anti_speeding", false); // Punish players that go too fast (A+D spamming).
 	setCvar("p_hud_alive", true); // Show amount of team players alive.
 
-	setCvar("p_allow_drop", true); // Hold use button to drop secondary weapon.
+	setCvar("p_hitblip", false); // Whether to show the attacker a hit marker if he hits his target.
+
+	setCvar("p_force_autoscreenshots", true); // Set cg_autoscreenshot enabled at client.
+	setCvar("p_force_autodemo", false);       // set cg_autodemo on at client.
+
+	setCvar("p_bombtimer", false); // Use the clock to show time before bomb explodes.
+
+	setCvar("p_vote_map", false); // Hold a map vote (with maps from sv_mapRotation) at end of map.
 
 	/// STOCK
 	// Set stock cvars to defaults. But overwrite some below.
 	defaults();
 
+	setCvar("g_autoscreenshot", true);   // Tell client to take a screenshot at end of map scoreboard.
 	setCvar("scr_sd_roundlength", 2.5);  // Time length per S&D round.
 
 	setCvar("g_deadchat", true);         // Living players can see dead players' chats.
@@ -165,18 +176,18 @@ defaults()
 	// setCvar("g_motd", "");
 	setCvar("g_no_script_spam", "0");
 	// setCvar("g_password", "");
-	setCvar("g_ScoresBanner_Allies", "gfx/hud/hud@mpflag_russian.tga");
-	setCvar("g_ScoresBanner_Axis", "gfx/hud/hud@mpflag_german.tga");
-	setCvar("g_ScoresBanner_None", "gfx/hud/hud@mpflag_none.tga");
-	setCvar("g_ScoresBanner_Spectators", "gfx/hud/hud@mpflag_spectator.tga");
+	// setCvar("g_ScoresBanner_Allies", "gfx/hud/hud@mpflag_russian.tga");
+	// setCvar("g_ScoresBanner_Axis", "gfx/hud/hud@mpflag_german.tga");
+	// setCvar("g_ScoresBanner_None", "gfx/hud/hud@mpflag_none.tga");
+	// setCvar("g_ScoresBanner_Spectators", "gfx/hud/hud@mpflag_spectator.tga");
 	setCvar("g_scriptMainMenu", "");
 	setCvar("g_smoothClients", "1");
 	setCvar("g_speed", "190");
 	setCvar("g_synchronousClients", "0");
-	setCvar("g_TeamColor_Allies", ".75 .25 .25");
-	setCvar("g_TeamColor_Axis", ".6 .6 .6");
-	setCvar("g_TeamName_Allies", "MPSCRIPT_RUSSIAN");
-	setCvar("g_TeamName_Axis", "MPSCRIPT_GERMAN");
+	// setCvar("g_TeamColor_Allies", ".75 .25 .25");
+	// setCvar("g_TeamColor_Axis", ".6 .6 .6");
+	// setCvar("g_TeamName_Allies", "MPSCRIPT_RUSSIAN");
+	// setCvar("g_TeamName_Axis", "MPSCRIPT_GERMAN");
 	setCvar("g_timeoutBank", "180000");
 	setCvar("g_timeoutlength", "90000");
 	setCvar("g_timeoutRecovery", "10000");

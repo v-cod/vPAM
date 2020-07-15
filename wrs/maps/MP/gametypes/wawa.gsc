@@ -142,21 +142,23 @@ main()
 	level.arenaFree[-1] = 0;
 	level.bodies = [];
 	level.arenaPlayer = [];
-	level.weaponname = [];
 	for(i = 0; i < 10; i++)
 	{
 		level.arenaPlayer[i] = undefined;
 		level.arenaFree[i] = 2;
 		level.bodies[i] = [];
 	}
-		level.weapons = [];
-		level.weaponOrigin = getEntArray("misc_box", "targetname");
-		for(i = 0; i < 3; i++)
-			level.weaponPlaces[i] = level.weaponOrigin[i].origin + (0, 0, 2);
 
-		level.weaponName[0] = "mpweapon_ppsh";
-		level.weaponName[1] = "mpweapon_mp40";
-		level.weaponName[2] = "mpweapon_fg42";
+	level.weapons = [];
+	boxes = getEntArray("misc_box", "targetname");
+	for (i = 0; i < boxes.size; i++) {
+		level.weaponPlaces[i] = boxes[i].origin + (0, 0, 2);
+	}
+
+	level.weaponname = [];
+	level.weaponName[0] = "mpweapon_ppsh";
+	level.weaponName[1] = "mpweapon_mp40";
+	level.weaponName[2] = "mpweapon_fg42";
 }
 
 Callback_StartGameType()
@@ -284,9 +286,6 @@ Callback_PlayerConnect()
 	self.statusicon = "";
 
 	iprintln(&"MPSCRIPT_CONNECTED", self);
-
-	if(self.name == "" || self.name == "^7" || self.name == "^7 " || self.name.size == 0 || self.name == "Unknown Soldier" || self.name == "UnnamedPlayer")
-		self setClientCvar("name", "^3BEST W^7AWA ^3F^7AN #" + randomInt(1000));
 
 	lpselfnum = self getEntityNumber();
 	lpselfguid = self getGuid();
@@ -521,7 +520,7 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 			return;
 		}
 
-		eAttacker thread maps\mp\gametypes\_wrs::_blip();
+		eAttacker thread hud\hit_blip::show();
 	}
 
 	self finishPlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sWeapon, vPoint, vDir, sHitLoc);
@@ -965,8 +964,6 @@ waitRemoveRespawnText(message)
 
 killcam(attackerNum, delay, won, spawn)
 {
-//	if(won)
-//		wait delay;
 	self endon("spawned");
 
 	// killcam
@@ -976,18 +973,16 @@ killcam(attackerNum, delay, won, spawn)
 	self.sessionstate = "spectator";
 	self.spectatorclient = attackerNum;
 	self.archivetime = delay + 7;
-
+	
 	// wait till the next server frame to allow code a chance to update archivetime if it needs trimming
 	wait 0.05;
 
 	if(self.archivetime <= delay)
 	{
-		//self iprintlnbold("killcam 3 (failed)");
-
 		self.spectatorclient = -1;
 		self.archivetime = 0;
 		self.sessionstate = "dead";
-
+		
 		if(!isDefined(self.lose))
 		{
 			hud_score_create_update();
@@ -1037,10 +1032,7 @@ killcam(attackerNum, delay, won, spawn)
 		self.kc_title.sort = 1; // force to draw after the bars
 		self.kc_title.fontScale = 3.5;
 	}
-//	if(won)
-//		self.kc_title setText(level.kc_won);
-//	else
-		self.kc_title setText(&"MPSCRIPT_KILLCAM");
+	self.kc_title setText(&"MPSCRIPT_KILLCAM");
 
 	if(!isDefined(self.kc_skiptext))
 	{

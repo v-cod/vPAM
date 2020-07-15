@@ -10,4 +10,7 @@ tail --follow "$BASEPATH/main/games_mp.log" &
 
 cd "$BASEPATH"
 
-WINEDEBUG=fixme-all __GL_ExtensionStringVersion=17700 wine "CoDMP.exe" "$@"
+WINEDEBUG=fixme-all MESA_EXTENSION_MAX_YEAR=2004 __GL_ExtensionStringVersion=17700 wine "CoDMP.exe" "$@"
+
+# Kill backgrounded processes from this session (tail).
+jobs -p | xargs kill

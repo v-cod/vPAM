@@ -1,15 +1,15 @@
-start()
+start(time)
 {
-	// Allow damage or death yet
 	level.p_stratting = true;
 
-	// Freeze all the players.
-	players = getEntArray("player", "classname");
-	for (i = 0; i < players.size; i++) {
-		players[i].maxspeed = 0;
-	}
+	// Used to set all players' speed to zero here, but apparently the player
+	// entities aren't available here yet. Should be done in spawnPlayer routine.
 
-	level waittill("round_started");
+	// Abuse the existing clock into showing the strat period.
+	level.clock setTimer(time);
+	level.clock.color = (0, 1, 0);
+
+	wait time;
 
 	level.p_stratting = false;
 
@@ -19,10 +19,13 @@ start()
 		players[i].maxspeed = getCvarInt("g_speed");
 	}
 
-	thread maps\mp\gametypes\_teams::sayMoveIn();
+	thread _detect_false_start();
+}
 
-	// Attempt to detect false start (lagbinding).
-	dist_max = getCvarInt("g_speed") * 1.2; // Fastest possible speed (pistol).
+// Attempt to detect false start (lagbinding).
+_detect_false_start()
+{
+	dist_max = getCvarInt("g_speed") * 1.2; // Fastest possible speed (pistol/nade).
 	dist_max = dist_max * dist_max; // squared
 
 	// Wait for players to cover distance.
@@ -36,7 +39,7 @@ start()
 
 		dist = distanceSquared(players[i].p_spawn_origin, players[i].origin);		
 		if (dist > dist_max) {
-			iPrintLn(level.p_prefix + "^1FALSE START^7: " + players[i].name);
+			iPrintLn(level._prefix + "^1FALSE START^7: " + players[i].name);
 			players[i] setOrigin(players[i].p_spawn_origin);
 		}
 	}

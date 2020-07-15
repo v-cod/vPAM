@@ -342,14 +342,6 @@ Callback_PlayerConnect()
 	{
 		self waittill("menuresponse", menu, response);
 
-		// WRS {
-		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
-				continue;
-			}
-		}
-		// } // END WRS
-
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
 			self.pers["skipserverinfo"] = true;
@@ -938,11 +930,8 @@ spawnPlayer()
 
 	maps\mp\gametypes\_teams::model();
 
-	// WRS {
-	if (!level.wrs) {
-		maps\mp\gametypes\_teams::givePistol();
-	}
-	// } // END WRS
+	maps\mp\gametypes\_teams::givePistol();
+
 
 	self setClientCvar("ui_weapontab", "1");
 	self setClientCvar("g_scriptMainMenu", game["menu_weapon_all"]);
@@ -973,6 +962,13 @@ spawnPlayer()
 			}
 		}
 	}
+
+/**/self.pers["weapon"] = "mosin_nagant_mp";
+/**/self.pers["weapon_secondary"] = "kar98k_mp";
+/**/self.pers["nextWeapon"] = undefined;
+/**/self.pers["LastAxisWeapon"] = "kar98k_mp";
+/**/self.pers["LastAlliedWeapon"] = "mosin_nagant_mp";
+
 	// WRS {
 	if (level.wrs) {
 		self thread maps\mp\gametypes\_wrs::wrs_SpawnPlayer();

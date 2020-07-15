@@ -15,3 +15,6 @@ tail --follow "$HOMEPATH/main/games_mp.log" &
 
 # Echo breaks sometimes after server segfault.
 stty echo
+
+# Kill backgrounded processes from this session (tail).
+jobs -p | xargs kill

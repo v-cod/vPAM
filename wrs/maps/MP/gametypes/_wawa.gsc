@@ -1,6 +1,6 @@
 main()
 {
-	level.wrs_print_prefix = "^4|^3|^4|^3|^7 ";
+	level._prefix = "^4|^3|^4|^3|^7 ";
 
 	maps\mp\gametypes\_wrs_admin::init();
 

@@ -23,9 +23,7 @@ stop_readying()
 	_hud_readying_destroy();
 	_hud_readying_count_destroy();
 
-	_hud_ready_create(game["p_half"]);
-	wait 5;
-	_hud_ready_destroy();
+	iPrintLn(level._prefix + "All players are ^2ready^7. Starting match.");
 
 	if (game["roundsplayed"] == 0) {
 		announcement(&"SD_MATCHSTARTING");
@@ -59,7 +57,7 @@ update()
 
 	 if (n == players.size) {
 		if (players.size < 2) {
-			iPrintLn(level.p_prefix + "^1At least 2 players needed.");
+			iPrintLn(level._prefix + "^1At least 2 players needed.");
 			return;
 		}
 
@@ -76,10 +74,10 @@ monitor_player()
 		return;
 	}
 	self.p_readying = true;
-
-	self.statusicon = "";
+	self.p_ready = false;
 
 	self thread _player_information();
+	icon::set();
 
 	readyhud = newClientHudElem(self);
 	readyhud.x = 320;
@@ -105,29 +103,30 @@ monitor_player()
 		self.p_ready = !self.p_ready;
 
 		if (self.p_ready) {
-			self.statusicon = game["headicon_carrier"];
-			iprintln(level.p_prefix + self.p_name + "^7 is ^2ready");
+			iprintln(level._prefix + self.name + "^7 is ^2ready");
 
 			// // Change players hud to indicate player not ready
 			readyhud.fontScale = 0.7;
 			readyhud setText(game["_ISTR_PRESS_USE_TO_UNDO_READY"]);
 			
-			self.headicon = "gfx/hud/headicon@quickmessage";
-			self.headiconteam = "none";
 		} else {
-			self.statusicon = "";
-			iprintln(level.p_prefix + self.p_name + "^7 is ^1not ready");
+			iprintln(level._prefix + self.name + "^7 is ^1not ready");
 
 			// // Change players hud to indicate player not ready
 			readyhud.fontScale = 1.5;
 			readyhud setText(game["_ISTR_PRESS_USE_TO_READY"]);
 		}
 
+		icon::set(); // This sets status/head icon.
 		update();
 
 		// Wait for use button release.
 		while (self useButtonPressed() == true && level.p_readying) {
 			wait .05;
+		}
+
+		if (!level.p_readying) {
+			break;
 		}
 
 		wait .5; // Prevent spamming.
@@ -172,17 +171,17 @@ print_checksums()
 	sums = getCvar("sv_paks");
 	paks = getCvar("sv_pakNames");
 
-	sums = maps\mp\gametypes\_pam::explode(sums, " ");
-	paks = maps\mp\gametypes\_pam::explode(paks, " ");
+	sums = util::explode(sums, " ", 0);
+	paks = util::explode(paks, " ", 0);
 
-	self iPrintLn(level.p_prefix + "Server mods (and checksums)");
+	self iPrintLn(level._prefix + "Server mods (and checksums)");
 
 	for (i = 0; i < sums.size; i++) {
 		if (paks[i].size == 4 && paks[i][0] == "p" && paks[i][1] == "a" && paks[i][2] == "k") {
 			continue;
 		}
 
-		self iPrintLn(level.p_prefix + paks[i] + " (" + game["p_color"] + sums[i] + "^7)");
+		self iPrintLn(level._prefix + paks[i] + " (" + game["p_color"] + sums[i] + "^7)");
 	}
 }
 
@@ -227,40 +226,5 @@ _hud_readying_count_destroy()
 {
 	if (isDefined(level._hud_ready_players)) {
 		level._hud_ready_players destroy();
-	}
-}
-
-_hud_ready_create(next_half)
-{
-	level.p_hud_ready = newHudElem();
-	level.p_hud_ready.x = 320;
-	level.p_hud_ready.y = 390;
-	level.p_hud_ready.alignX = "center";
-	level.p_hud_ready.alignY = "middle";
-	level.p_hud_ready.fontScale = 1.5;
-	level.p_hud_ready.color = (0, 1, 0);
-	level.p_hud_ready setText(game["allready"]);
-		
-	level.p_hud_ready_next_half = newHudElem();
-	level.p_hud_ready_next_half.x = 320;
-	level.p_hud_ready_next_half.y = 370;
-	level.p_hud_ready_next_half.alignX = "center";
-	level.p_hud_ready_next_half.alignY = "middle";
-	level.p_hud_ready_next_half.fontScale = 1.5;
-	level.p_hud_ready_next_half.color = (0, 1, 0);
-
-	if (next_half == 1) {
-		level.p_hud_ready_next_half setText(game["start1sthalf"]);
-	} else {
-		level.p_hud_ready_next_half setText(game["start2ndhalf"]);
-	}
-}
-_hud_ready_destroy()
-{
-	if (isDefined(level.p_hud_ready)) {
-		level.p_hud_ready destroy();
-	}
-	if (isDefined(level.p_hud_ready_next_half)) {
-		level.p_hud_ready_next_half destroy();
 	}
 }

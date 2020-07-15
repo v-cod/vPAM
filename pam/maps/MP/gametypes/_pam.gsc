@@ -5,20 +5,21 @@ main()
 
 	if (!isDefined(game["gamestarted"])) {
 		ruleset = getCvar("pam_mode");
+		mode = _find_mode(ruleset);
 
 		// Default to pub ruleset.
-		if (!isDefined(level.p_rules[ruleset])) {
+		if (!isDefined(mode)) {
 			ruleset = "pub";
 			setCvar("pam_mode", ruleset);
 		}
 
 		// Set cvars according to the ruleset.
-		[[level.p_rules[ruleset]]]();
+		[[mode["function"]]]();
 	}
 
 	thread _watch_pam_mode();
 
-	level.p_prefix = "PAM " + game["p_color"] + "# ^7";
+	level._prefix = "PAM " + game["p_color"] + "# ^7";
 
 	// Require prematch ready-up phase.
 	level.p_ready = !!getCvarInt("p_ready");
@@ -28,7 +29,7 @@ main()
 	level.p_readied = false;
 
 	// Freeze players during grace period.
-	level.p_strat = !!getCvarInt("p_strat");
+	level.p_strat = getCvarInt("p_strat");
 	// Currently in strat time.
 	level.p_stratting = false;
 
@@ -44,17 +45,29 @@ main()
 	level.p_replay_draw = !!getCvarInt("p_replay_draw");
 
 	level._anti_aimrun = !!getCvarInt("p_anti_aimrun");
-	level._anti_fastshoot = getCvarFloat("p_anti_fastshoot");
+	level._anti_fastshoot = !!getCvarInt("p_anti_fastshoot");
 	level._anti_speeding = getCvarFloat("p_anti_speeding");
+
+	level._afk_to_spec = false;
+	level._fence = true;
+
+	level._sprint = false;
+	level._sprint_time = 0;
+	level._sprint_time_recover = 0;
+
+	level._jumper = false;
 
 	level.p_round_restart_delay = getCvarInt("p_round_restart_delay");
 
-	level.p_allow_pistol = !!getCvarInt("p_allow_pistol");
-	level.p_allow_nades = !!getCvarInt("p_allow_nades");
+	level._allow_pistol = !!getCvarInt("p_allow_pistol");
+	level._allow_nades = !!getCvarInt("p_allow_nades");
 
 	level.p_1s1k_rifle = !!getCvarInt("p_1s1k_rifle");
 	level.p_1s1k_bash = !!getCvarInt("p_1s1k_bash");
 
+	level.p_sniper_limit = getCvarInt("p_sniper_limit");
+
+	level._allow_drop_sniper = !!getCvarInt("p_allow_drop_sniper");
 	level._allow_drop = !!getCvarInt("p_allow_drop");
 
 	level._nade_count_rifle = getCvarInt("p_nades_rifle");
@@ -62,74 +75,56 @@ main()
 	level._nade_count_mg = getCvarInt("p_nades_mg");
 	level._nade_count_sniper = getCvarInt("p_nades_sniper");
 
-	// Weapon choice mechanism.
-	// 0 for default.
-	// 1 for picking a secondary weapon, optionally from specified allies.
-	// 2 for fixed, pre-selected weapons.
-	level.p_weapons = 0;
-	s = getCvar("p_weapons");
-	if (s == "opponent") {
-		level.p_weapons = 1;
-	} else if (s == "american" || s == "british" || s == "russian") {
-		level.p_weapons = 1;
-		game["menu_weapon_allies"] = "weapon_" + s;
-	} else if (s != "" && s != "0" && s != "default") {
-		level.p_weapons = 2;
-		level.p_weapons_arr = explode(s, " ");
-		for (i = 0; i < level.p_weapons_arr.size; i++) {
-			level.p_weapons_arr[i] += "_mp";
-		}
-	}
+	level._force_autoscreenshots = !!getCvarInt("p_force_autoscreenshots");
+	level._force_autodemo = !!getCvarInt("p_force_autodemo");
+
+	level._bombtimer = !!getCvarInt("p_bombtimer");
 
 	if (!isDefined(game["gamestarted"])) {
+		game["_vote_map"] = !!getCvarInt("p_vote_map");
+		if (game["_vote_map"]) {
+			vote\main::precache();
+			vote\map::precache();
+		}
+
 		game["_hud_alive"] = !!getCvarInt("p_hud_alive");
+		game["_hud_hit_blip"] = !!getCvarInt("p_hitblip");
 		hud::precache();
+
+		// Scoreboard strings for SD.
+		precacheString(&"MPSCRIPT_STARTING_NEW_ROUND");
+		precacheString(&"MPSCRIPT_THE_GAME_IS_A_TIE");
+		precacheString(&"MPSCRIPT_ALLIES_WIN");
+		precacheString(&"MPSCRIPT_AXIS_WIN");
+		hud\scoreboard::precache();
 
 		_precache();
 
-		if (level.p_weapons == 1) {
-			precacheMenu(game["menu_weapon_allies"]);
-			switch (getCvar("p_weapons")) {
-			case "american":
-				precacheItem("fraggrenade_mp");
-				precacheItem("colt_mp");
-				precacheItem("m1carbine_mp");
-				precacheItem("m1garand_mp");
-				precacheItem("thompson_mp");
-				precacheItem("bar_mp");
-				precacheItem("springfield_mp");
-				break;
-			case "british":
-				precacheItem("mk1britishfrag_mp");
-				precacheItem("colt_mp");
-				precacheItem("enfield_mp");
-				precacheItem("sten_mp");
-				precacheItem("bren_mp");
-				precacheItem("springfield_mp");
-				break;
-			case "russian":
-				precacheItem("rgd-33russianfrag_mp");
-				precacheItem("luger_mp");
-				precacheItem("ppsh_mp");
-				precacheItem("mosin_nagant_sniper_mp");
-				break;
-			}
-		} else if (level.p_weapons == 2) {
-			for (i = 0; i < level.p_weapons_arr.size; i++) {
-				precacheItem(level.p_weapons_arr[i]);
+		// Weapon choice mechanism.
+		// 0 for default.
+		// 1 for picking a secondary weapon, optionally from specified allies.
+		// 2 for fixed, pre-selected weapons.
+		game["_weapons"] = 0;
+		s = getCvar("p_weapons");
+		if (s == "opponent") {
+			game["_weapons"] = 1;
+		} else if (s == "american" || s == "british" || s == "russian") {
+			game["_weapons"] = 1;
+			game["menu_weapon_allies"] = "weapon_" + s;
+		} else if (s != "" && s != "0" && s != "default") {
+			game["_weapons"] = 2;
+			game["_weapons_arr"] = util::explode(s, " ", 0);
+			for (i = 0; i < game["_weapons_arr"].size; i++) {
+				game["_weapons_arr"][i] += "_mp";
 			}
 		}
+		menu_weapon::precache();
 
 		// Current or next half.
 		game["p_half"] = 1;
 
 		// Current or next overtime.
 		game["p_overtime"] = 0;
-
-		game["round1alliesscore"] = 0;
-		game["round1axisscore"] = 0; 
-		game["round2alliesscore"] = 0;
-		game["round2axisscore"] = 0;
 	}
 
 	if (isDefined(game["matchstarted"]) && game["matchstarted"]) {
@@ -150,32 +145,14 @@ main()
 	if(!getCvarInt("p_allow_mg42")) {
 		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
 	}
-}
-explode(string, delimiter) {
-	array = 0;
-	result[array] = "";
 
-	for (i = 0; i < string.size; i++) {
-		if (string[i] == delimiter) {
-			if (result[array] != "") {
-				array++;
-				result[array] = "";
-			}
-		} else {
-			result[array] += string[i];
-		}
-	}
-
-	if (result.size > 1 && result[array] == "") {
-		result[array] = undefined;
-	}
-	return result;
+	// thread hud\scoreboard::show(undefined, undefined);
 }
 
 _precache()
 {
 	// For respawning during ready-up.
-	precacheString(&"Press [{+attack}] to respawn");
+	precacheString(&"Press [{+melee}] to respawn");
 
 	if (!isDefined(game["p_istr_label_left"])) {
 		game["p_istr_label_left"] = &"^1unknown";
@@ -188,52 +165,15 @@ _precache()
 	precacheString(game["p_istr_label_left"]);
 	precacheString(game["p_istr_label_right"]);
 
+	game["_hud_icon_ready"] = "gfx/hud/headicon@re_objcarrier.tga";
+	precacheStatusIcon(game["_hud_icon_ready"]);
+	precacheHeadIcon(game["_hud_icon_ready"]);
+
 	game["overtimemode"] = &"Overtime";
 	precacheString(game["overtimemode"]);
 
-	// Team Win Hud Elements
-	game["team1win"] = &"Team 1 Wins!";
-	precacheString(game["team1win"]);
-	game["team2win"] = &"Team 2 Wins!";
-	precacheString(game["team2win"]);
-	game["dsptie"] = &"Its a TIE!";
-	precacheString(game["dsptie"]);
-	game["matchover"] = &"Match Over";
-	precacheString(game["matchover"]);
-	game["overtime"] = &"Going to OverTime";
-	precacheString(game["overtime"]);
-
-	game["halftime"] = &"Halftime";
-	precacheString(game["halftime"]);
-
-	//Round Starting Display
-	game["round"] = &"Round";
-	precacheString(game["round"]);
-	game["starting"] = &"Starting";
-	precacheString(game["starting"]);
-
-	//Teams Swithcing Announcement
-	game["switching"] = &"Team Auto-Switch";
-	precacheString(game["switching"]);	
-	game["switching2"] = &"Please wait";
-	precacheString(game["switching2"]);
-
-	game["allready"] = &"All Players are Ready";
-	precacheString(game["allready"]);
-	game["start2ndhalf"] = &"Starting Second Half!";
-	precacheString(game["start2ndhalf"]);
-	game["start1sthalf"] = &"Starting the First Half!";
-	precacheString(game["start1sthalf"]);
-
-	//Half Starting Display
-	game["p_hud_half_1"] = &"First";
-	precacheString(game["p_hud_half_1"]);
-	game["p_hud_half_2"] = &"Second";
-	precacheString(game["p_hud_half_2"]);
-	game["half"] = &"Half";
-	precacheString(game["half"]);
-	game["starting"] = &"Starting";
-	precacheString(game["starting"]);
+	game["_hud_halftime"] = &"Halftime";
+	precacheString(game["_hud_halftime"]);
 
 	// Ready-Up Plugin Requires:
 	game["_ISTR_READYING"] = &"READYING";
@@ -250,41 +190,6 @@ _precache()
 
 	game["_ISTR_WAITING_FOR_PLAYERS"] = &"Waiting on players: ^1";
 	precacheString(game["_ISTR_WAITING_FOR_PLAYERS"]);
-
-
-	game["playerstext"] = &"Players";
-	precacheString(game["playerstext"]);
-	game["status"] = &"Your Status";
-	precacheString(game["status"]);
-	game["ready"] = &"Ready";
-	precacheString(game["ready"]);
-	game["notready"] = &"Not Ready";
-	precacheString(game["notready"]);
-	game["headicon_carrier"] = "gfx/hud/headicon@re_objcarrier.tga";
-	precacheStatusIcon(game["headicon_carrier"]);
-
-	game["round"] = &"Round";
-	precacheString(game["round"]);
-
-	// Scoreboard Text
-	game["dspteam1"] = &"TEAM 1";
-	precacheString(game["dspteam1"]);
-	game["dspteam2"] = &"TEAM 2";
-	precacheString(game["dspteam2"]);
-	game["scorebd"] = &"Scoreboard";
-	precacheString(game["scorebd"]);
-	game["1sthalf"] = &"1st Half";
-	precacheString(game["1sthalf"]);	
-	game["2ndhalf"] = &"2nd Half";
-	precacheString(game["2ndhalf"]);
-	game["matchscore2"] = &"Match";
-	precacheString(game["matchscore2"]);
-
-	//Clock
-	precacheShader("hudStopwatch");
-	precacheShader("hudStopwatchNeedle");
-
-	precacheShader("gfx/hud/hud@fire_ready.tga");
 }
 
 _watch_pam_mode()
@@ -295,17 +200,57 @@ _watch_pam_mode()
 		while (m == getCvar("pam_mode")) {
 			wait 1;
 		}
-		
+
 		m_new = getCvar("pam_mode");
-		if (!isDefined(level.p_rules[m_new])) {
-			iPrintLn(level.p_prefix +  "^1Unknown mode: ^7" + m_new);
+		mode = _find_mode(m_new);
+
+		if (!isDefined(mode)) {
+			// Helpful printing of all modes (and their aliases) available.
+			if (m_new == "?") {
+				iPrintLn(level._prefix + "pam_mode values available" + game["p_color"] + ": ");
+				for (i = 0; i < level.p_rules.size; i++) {
+					name = level.p_rules[i]["names"][0];
+
+					// Bit of mumbo-jumbo to get comma-separated values.
+					aliases = "";
+					if (isDefined(level.p_rules[i]["names"][1])) {
+						aliases += level.p_rules[i]["names"][1];
+					}
+					for (j = 2; j < level.p_rules[i]["names"].size; j++) {
+						aliases += ", " + level.p_rules[i]["names"][j];
+					}
+					if (aliases != "") {
+						aliases = " (or: " + aliases + ")";
+					}
+
+					iPrintLn(level._prefix + name + aliases);
+				}
+			} else {
+				iPrintLn(level._prefix + "^1Unknown mode: ^7" + m_new);
+			}
 
 			setCvar("pam_mode", m);
 			continue;
 		}
 
+		// Set the mode to the primary name if an alias is used.
+		if (m_new != mode["names"][0]) {
+			setCvar("pam_mode", mode["names"][0]);
+		}
+
 		setCvar("sv_maprotationcurrent", "map " + getCvar("mapname"));
 		exitLevel(false);
 		return;
+	}
+}
+
+_find_mode(name)
+{
+	for (i = 0; i < level.p_rules.size; i++) {
+		for (j = 0; j < level.p_rules[i]["names"].size; j++) {
+			if (level.p_rules[i]["names"][j] == name) {
+				return level.p_rules[i];
+			}
+		}
 	}
 }

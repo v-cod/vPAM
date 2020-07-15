@@ -250,6 +250,12 @@ Callback_PlayerConnect()
 		else
 			self setClientCvar("g_scriptMainMenu", game["menu_weapon_axis"]);
 
+/**/	// When preset weapons, no weapon menu should be shown.
+/**/	if (game["_weapons"] == 2) {
+/**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+/**/		self setClientCvar("ui_weapontab", "0");
+/**/	}
+
 		if(isDefined(self.pers["weapon"]))
 			spawnPlayer();
 		else
@@ -280,13 +286,16 @@ Callback_PlayerConnect()
 	{
 		self waittill("menuresponse", menu, response);
 
-		// WRS {
-		if (level.wrs) {
-			if (maps\mp\gametypes\_wrs::menu(menu, response) == true) {
-				continue;
-			}
-		}
-		// } // END WRS
+/**/	// With preset weapons, no weapons menu should be shown.
+/**/	if (game["_weapons"] == 2) {
+/**/		self setClientCvar("g_scriptMainMenu", game["menu_team"]);
+/**/		self setClientCvar("ui_weapontab", "0");
+/**/		if (response == "open" && (menu == game["menu_weapon_allies"] || menu == game["menu_weapon_axis"])) {
+/**/			self closeMenu();
+/**/			menu_weapon::process(menu, response);
+/**/			continue;
+/**/		}
+/**/	}
 
 		if(menu == game["menu_serverinfo"] && response == "close")
 		{
@@ -387,6 +396,11 @@ Callback_PlayerConnect()
 
 			if(!isDefined(self.pers["team"]) || (self.pers["team"] != "allies" && self.pers["team"] != "axis"))
 				continue;
+
+/**/		if (game["_weapons"] > 0) {
+/**/			menu_weapon::process(menu, response);
+/**/			continue;
+/**/		}
 
 			weapon = self maps\mp\gametypes\_teams::restrict(response);
 

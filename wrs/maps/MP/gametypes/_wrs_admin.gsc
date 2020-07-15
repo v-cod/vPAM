@@ -96,7 +96,7 @@ monitor()
 				setCvar(pc[i]["c"], "");
 			}
 
-			arg = explode(" ", v, pc[i]["e"]);
+			arg = util::explode(v, " ", pc[i]["e"]);
 
 			if (arg[0] == "-1") {
 				players = getentarray("player", "classname");
@@ -134,7 +134,7 @@ monitor()
 				setCvar(gc[i]["c"], "");
 			}
 
-			arg = explode(" ", v, gc[i]["e"]);
+			arg = util::explode(v, " ", gc[i]["e"]);
 
 			thread [[gc[i]["f"]]](arg);
 
@@ -154,8 +154,8 @@ _annoy()
 
 	self.wrs_annoy = true;
 
-	self iPrintLnBold(level.wrs_print_prefix + "Follow the rules! Listen to the admin(s)!");
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 is being ^1annoyed^7.");
+	self iPrintLnBold(level._prefix + "Follow the rules! Listen to the admin(s)!");
+	iPrintLn(level._prefix + self.name + "^7 is being ^1annoyed^7.");
 
 	for (i = 0; isDefined(self.wrs_annoy) && self.sessionstate == "playing"; i++) {
 		if (i == 8) {
@@ -173,13 +173,13 @@ _bunny()
 {
 	if (isDefined(self.wrs_bunny)) {
 		self.wrs_bunny = undefined;
-		self iPrintLnBold(level.wrs_print_prefix + "You are not a ^1bunny^7 anymore.");
-		iPrintLn(level.wrs_print_prefix + self.name + "^7 is no ^1bunny^7 anymore.");
+		self iPrintLnBold(level._prefix + "You are not a ^1bunny^7 anymore.");
+		iPrintLn(level._prefix + self.name + "^7 is no ^1bunny^7 anymore.");
 		return;
 	}
 
-	self iPrintLnBold(level.wrs_print_prefix + "You've become a ^1bunny^7: jump!");
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 is now a ^1bunny^7!");
+	self iPrintLnBold(level._prefix + "You've become a ^1bunny^7: jump!");
+	iPrintLn(level._prefix + self.name + "^7 is now a ^1bunny^7!");
 
 	self.wrs_bunny = true;
 	while (isDefined(self.wrs_bunny)) {
@@ -211,8 +211,8 @@ _disarm()
 		return;
 	}
 
-	self iPrintLnBold(level.wrs_print_prefix + "You have been ^1disarmed^7.");
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 has been ^1disarmed^7.");
+	self iPrintLnBold(level._prefix + "You have been ^1disarmed^7.");
+	iPrintLn(level._prefix + self.name + "^7 has been ^1disarmed^7.");
 
 	self dropItem(self getWeaponSlotWeapon("grenade"));
 	self dropItem(self getWeaponSlotWeapon("pistol"));
@@ -225,12 +225,10 @@ _jumper()
 		return;
 	}
 
-	if (isDefined(self.wrs_jumper)) {
-		self.wrs_jumper = undefined;
+	if (isDefined(self._jumper)) {
+		self._jumper = undefined;
 
-		self switchToWeapon(self getWeaponSlotWeapon("primary"));
-		self takeWeapon(self getWeaponSlotWeapon("grenade"));
-		self takeWeapon(self getWeaponSlotWeapon("pistol"));
+		self equipment::take_or_set(self.pers["weapon"]);
 
 		if(!isDefined(self.pers["savedmodel"])) {
 			maps\mp\gametypes\_teams::model();
@@ -251,7 +249,7 @@ _jumper()
 	if (self.sessionstate == "playing") {
 	}
 
-	self thread maps\mp\gametypes\_wrs_jumper::_monitor();
+	self thread monitor\jumper::start();
 }
 _kill()
 {
@@ -261,8 +259,8 @@ _kill()
 
 	self suicide();
 
-	self iPrintLnBold(level.wrs_print_prefix + "You have been ^1killed^7.");
-	iPrintLn(level.wrs_print_prefix + self.name+ " ^7was ^1killed^7.");
+	self iPrintLnBold(level._prefix + "You have been ^1killed^7.");
+	iPrintLn(level._prefix + self.name+ " ^7was ^1killed^7.");
 }
 _mortar()
 {
@@ -277,7 +275,7 @@ _mortar()
 
 	self.wrs_mortar = true;
 
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 is targeted by ^1mortars^7.");
+	iPrintLn(level._prefix + self.name + "^7 is targeted by ^1mortars^7.");
 	self iPrintLnBold("You are targeted by mortars. Listen to the admin(s)!");
 
 	sound_src = spawn("script_model", self.origin);
@@ -322,16 +320,16 @@ _nades()
 	if (isDefined(self.wrs_nades)) {
 		self.wrs_nades = undefined;
 
-		self iPrintLnBold(level.wrs_print_prefix + "your ^1nades^7 have been taken away.");
-		iPrintLn(level.wrs_print_prefix + self.name + "^7 had their ^1nades^7 taken away.");
+		self iPrintLnBold(level._prefix + "your ^1nades^7 have been taken away.");
+		iPrintLn(level._prefix + self.name + "^7 had their ^1nades^7 taken away.");
 
 		return;
 	}
 
 	self.wrs_nades = true;
 
-	self iPrintLnBold(level.wrs_print_prefix + "You've received unlimited ^1nades^7.");
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 received unlimited ^1nades^7.");
+	self iPrintLnBold(level._prefix + "You've received unlimited ^1nades^7.");
+	iPrintLn(level._prefix + self.name + "^7 received unlimited ^1nades^7.");
 
 	maps\mp\gametypes\_teams::giveGrenades(self getWeaponSlotWeapon("primary"));
 	self setWeaponSlotClipAmmo("grenade", 3);
@@ -362,15 +360,15 @@ _smite()
 
 	self suicide();
 
-	self iPrintLnBold(level.wrs_print_prefix + "Follow the rules! Listen to the admin(s)!");
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1smitten^7.");
+	self iPrintLnBold(level._prefix + "Follow the rules! Listen to the admin(s)!");
+	iPrintLn(level._prefix + self.name + " ^7is ^1smitten^7.");
 }
 _spall()
 {
 	if (!isDefined(self.pers["spall"])) {
 		self.pers["spall"] = true;
 
-		self iPrintLn(level.wrs_print_prefix + "^1Spectate-all^7 enabled.");
+		self iPrintLn(level._prefix + "^1Spectate-all^7 enabled.");
 	}
 
 	if (isDefined(self.wrs_spall)) {
@@ -396,7 +394,7 @@ _spec()
 
 	self notify("menuresponse", game["menu_team"], "spectator");
 
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is moved to spectator mode.");
+	iPrintLn(level._prefix + self.name + " ^7is moved to spectator mode.");
 }
 _tk()
 {
@@ -411,8 +409,8 @@ _tk()
 
 	self.wrs_tk = true;
 
-	self iPrintLnBold(level.wrs_print_prefix + "You're a ^1teamkiller^7.");
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is now a ^1teamkiller^7.");
+	self iPrintLnBold(level._prefix + "You're a ^1teamkiller^7.");
+	iPrintLn(level._prefix + self.name + " ^7is now a ^1teamkiller^7.");
 }
 
 
@@ -430,7 +428,7 @@ _ccvar(arg)
 	} else if (arg[1] == "score") {
 		self.score = arg[2];
 	} else if (arg[1] == "origin") {
-		p = explode(" ", arg[2], 3);
+		p = util::explode(arg[2], " ", 3);
 
 		if (!isDefined(p[1]) || !isDefined(p[2])) {
 			iPrintLn("^1--");
@@ -443,7 +441,7 @@ _ccvar(arg)
 		self setClientCvar(arg[1], arg[2]);
 	}
 
-	self iPrintLn(level.wrs_print_prefix + "^3" + arg[1] + " ^2" + arg[2]);
+	self iPrintLn(level._prefix + "^3" + arg[1] + " ^2" + arg[2]);
 }
 _name(arg)
 {
@@ -496,7 +494,7 @@ _model(arg)
 
 	self setModel(level.wrs_model[model_i][1]);
 
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 turned into a(n) ^1" + model + "^7!");
+	iPrintLn(level._prefix + self.name + "^7 turned into a(n) ^1" + model + "^7!");
 
 	while (isDefined(self.wrs_model) && self.sessionstate == "playing") {
 		wait .05;
@@ -507,7 +505,7 @@ _model(arg)
 	self.maxspeed = 190;
 	self setClientCvar("cg_thirdperson", 0);
 	if (self.sessionstate == "playing") {
-		iPrintLn(level.wrs_print_prefix + self.name + "^7 is not a(n) ^1" + model + "^7 anymore.");
+		iPrintLn(level._prefix + self.name + "^7 is not a(n) ^1" + model + "^7 anymore.");
 
 		self enableWeapon();
 		self detachAll();
@@ -522,7 +520,7 @@ _warn(arg)
 		msg = "Please listen to the ^1admin^7.";
 	}
 
-	self iPrintLnBold(level.wrs_print_prefix + msg);
+	self iPrintLnBold(level._prefix + msg);
 }
 
 _print(arg)
@@ -537,7 +535,7 @@ _cvar(arg)
 
 	setCvar(arg[0], arg[1]);
 
-	iPrintLn(level.wrs_print_prefix + "^3" + arg[0] + " ^2" + arg[1]);
+	iPrintLn(level._prefix + "^3" + arg[0] + " ^2" + arg[1]);
 }
 
 
@@ -612,7 +610,7 @@ _hide()
 	}
 	self.wrs_hide = true;
 
-	iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1invisble^7.");
+	iPrintLn(level._prefix + self.name + " ^7is ^1invisble^7.");
 
 	self.maxspeed = 300;
 	self detachAll();
@@ -626,7 +624,7 @@ _hide()
 	self.maxspeed = 190;
 
 	if (self.sessionstate == "playing") {
-		iPrintLn(level.wrs_print_prefix + self.name + " ^7is ^1visible^7 again.");
+		iPrintLn(level._prefix + self.name + " ^7is ^1visible^7 again.");
 
 		self detachAll();
 		self maps\mp\_utility::loadModel(self.pers["savedmodel"]);
@@ -646,15 +644,15 @@ _sj()
 {
 	if (isDefined(self.wrs_sj)) {
 		self.wrs_sj = undefined;
-		self iPrintLnBold(level.wrs_print_prefix + "Your ^1super jump^7 has been disabled.");
-		iPrintLn(level.wrs_print_prefix + self.name + "^7 had their ^1super jump^7 taken away.");
+		self iPrintLnBold(level._prefix + "Your ^1super jump^7 has been disabled.");
+		iPrintLn(level._prefix + self.name + "^7 had their ^1super jump^7 taken away.");
 		return;
 	}
 
-	iPrintLn(level.wrs_print_prefix + self.name + "^7 received ^1super jump^7.");
-	self iPrintLnBold(level.wrs_print_prefix + "You have received ^1super jump^7.");
-	self iPrintLn(level.wrs_print_prefix + "Press [{+melee}] and");
-	self iPrintLn(level.wrs_print_prefix + "[{+activate}] at the same time to be kicked up.");
+	iPrintLn(level._prefix + self.name + "^7 received ^1super jump^7.");
+	self iPrintLnBold(level._prefix + "You have received ^1super jump^7.");
+	self iPrintLn(level._prefix + "Press [{+melee}] and");
+	self iPrintLn(level._prefix + "[{+activate}] at the same time to be kicked up.");
 	self.wrs_sj = true;
 
 	while (isDefined(self.wrs_sj)) {
@@ -672,28 +670,6 @@ _sj()
 	}
 }
 
-
-
-explode(delimiter, string, limit) {
-	array = 0;
-	result[array] = "";
-
-	for (i = 0; i < string.size; i++) {
-		if ((array + 1 < limit || limit == 0) && string[i] == delimiter) {
-			if (result[array] != "") {
-				array++;
-				result[array] = "";
-			}
-		}else{
-			result[array] += string[i];
-		}
-	}
-
-	if (result.size > 1 && result[array] == "") {
-		result[array] = undefined;
-	}
-	return result;
-}
 _get_player(n)
 {
 	players = getentarray("player", "classname");

@@ -25,12 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ready up immediately from map start.
 - No bomb plant pre-match.
 - Rifle damage upped through script instead of weapon file.
+- Configurably override user preference of autodemo/autoscreenshot.
 - Halftime always at middle of rounds. (rounds / 2)
 - Replaced scr_end_score and scr_end_round with stock equivalents (scr_sd).
 - PK3 checker prints checksum of all paks.
 - CHANGELOG, TODO and Makefile.
 
 ### Removed
+- 'Killers' during ready-up.
 - Removed feature to give spectator black screen.
 - 'Check Sniper' functionality; wasn't used or useful.
 - Removed feature to allow dropping second weapon.
@@ -41,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unused PAM sounds.
 - Removed score-based halftime and second half score limit.
 - Printing sv_pure switch.
+
+### Fixed
+- Selecting a different weapon twice could bug round surviving saving the weapons.
 
 
 ## [1.08] - 2005-05-01
