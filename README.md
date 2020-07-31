@@ -21,7 +21,8 @@ Punkbuster (guides): https://web.archive.org/web/20130217023131/http://www.evenb
 
 ## Punkbuster
 
-Get user values: `/rcon pb_sv_cvarval fs_homepath`
+Get client values from server: `/rcon pb_sv_cvarval fs_homepath`
+Get server values from client: `/rcon pb_cvarval pam_mode`
 
 ## Cvars
 
