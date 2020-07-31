@@ -1003,7 +1003,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 /**/icon::set(); // Override icons.
 /**/if (level.p_readying || level.p_readied) {
 /**/	updateTeamStatus();
-/**/	self.spawned = false;
+/**/	self.spawned = undefined;
 /**/	self thread respawn();
 /**/	return;
 /**/}
