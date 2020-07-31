@@ -1754,6 +1754,7 @@ endMap()
 
 /**/hud\scoreboard::create(text, 5);
 /**/wait 5;
+/**/hud\scoreboard::destroy_();
 /**/maps\mp\gametypes\_wrs::end_map(text);
 
 /**/game["state"] = "intermission";

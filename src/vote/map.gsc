@@ -97,6 +97,19 @@ _add_istrings(rotation)
 	return rotation_new;
 }
 
+mapname_to_istring(mapname)
+{
+	var = _local(); // TODO: EFFICIENCY!
+
+	for (i = 0; i < var["maps"].size; i++) {
+		if (var["maps"][i][0] == mapname) {
+			return var["maps"][i][1];
+		}
+	}
+
+	return undefined;
+}
+
 _remove_by_minimal_required(rotation)
 {
 	player_size = getEntArray("player", "classname").size;

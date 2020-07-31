@@ -8,11 +8,9 @@ explode(string, delimiter, limit) {
 
 	for (i = 0; i < string.size; i++) {
 		if ((limit == 0 || array + 1 < limit) && string[i] == delimiter) {
-			if (result[array] != "") {
-				array++;
-				result[array] = "";
-			}
-		}else{
+			array++;
+			result[array] = "";
+		} else {
 			result[array] += string[i];
 		}
 	}
@@ -21,4 +19,18 @@ explode(string, delimiter, limit) {
 		result[array] = undefined;
 	}
 	return result;
+}
+
+strip_spaces(str)
+{
+	str_dull = "";
+	for (i = 0; i < str.size; i++) {
+		if (str[i] == " ") {
+			continue;
+		}
+
+		str_dull += str[i];
+	}
+
+	return str_dull;
 }

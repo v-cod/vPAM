@@ -844,6 +844,7 @@ Callback_PlayerDisconnect()
 
 /**/level thread maps\mp\gametypes\_pam_readyup::update();
 /**/level thread snipers::check();
+/**/level thread maps\mp\gametypes\_pam::player_disconnected();
 
 	if(game["matchstarted"])
 		level thread updateTeamStatus();
@@ -1769,7 +1770,7 @@ endRound(roundwinner)
 /**/			player autoDemoStart();
 /**/		}
 /**/	}
-
+/**/	history::assign();
 		game["matchstarted"] = true;
 /**/	// thread resetScores();
 /**/	// game["roundsplayed"] = 0;
@@ -1881,6 +1882,7 @@ endRound(roundwinner)
 
 endMap()
 {
+/**/history::push();
 /**/if (getCvarInt("g_autodemo") > 0) {
 /**/	player autoDemoStop();
 /**/}
@@ -2693,9 +2695,11 @@ _half_time()
 	game["p_half"] = 2;
 	
 	hud\labels::create(game["p_istr_label_left"], game["p_istr_label_right"], undefined, undefined);
-/**/hud\scoreboard::create(game["_hud_halftime"], 5);
+	hud\scoreboard::create(game["_hud_halftime"], 5);
 
 	wait 5;
+
+	history::swap();
 
 	// Switch team scores.
 	axisscore = game["axisscore"];

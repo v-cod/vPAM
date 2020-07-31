@@ -254,3 +254,21 @@ _find_mode(name)
 		}
 	}
 }
+
+player_disconnected()
+{
+	wait 0; // Wait for possible disconnect of player.
+
+	players = getEntArray("player", "classname");
+	if (players.size > 2) {
+		return;
+	}
+
+	history::reset();
+
+	if (players.size > 0) {
+		return;
+	}
+	
+	exitLevel(false);
+}

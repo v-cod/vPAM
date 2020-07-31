@@ -294,7 +294,7 @@ wrs_PlayerConnect()
 		_hud_stats_create();
 	}
 
-	if (_strip_colors(_strip_spaces(self.name)) == ""
+	if (_strip_colors(util::strip_spaces(self.name)) == ""
 	    || self.name == "Unknown Soldier"
 	    || self.name == "UnnamedPlayer"
 	    || _substr(self.name, 0, 11) == "^1Free Porn"
@@ -598,19 +598,6 @@ _strip_colors(str)
 					break;
 			}
 		}
-		str_dull += str[i];
-	}
-
-	return str_dull;
-}
-_strip_spaces(str)
-{
-	str_dull = "";
-	for (i = 0; i < str.size; i++) {
-		if (str[i] == " ") {
-			continue;
-		}
-
 		str_dull += str[i];
 	}
 
