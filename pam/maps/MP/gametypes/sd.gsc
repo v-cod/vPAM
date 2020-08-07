@@ -2353,10 +2353,10 @@ bombzone_think(bombzone_other)
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.planttime))
 				{
-					self.progresstime += 0.05;
-					wait 0.05;
 /**/				// Fixes a bug where sometimes the weapon is not disable while progressing.
 /**/				other disableWeapon();
+					self.progresstime += 0.05;
+					wait 0.05;
 				}
 	
 				if(isDefined(other.progressbackground))
@@ -2568,10 +2568,10 @@ bomb_think()
 				self.progresstime = 0;
 				while(isAlive(other) && other useButtonPressed() && (self.progresstime < level.defusetime))
 				{
-					self.progresstime += 0.05;
-					wait 0.05;
 /**/				// Fixes a bug where sometimes the weapon is not disable while progressing.
 /**/				other disableWeapon();
+					self.progresstime += 0.05;
+					wait 0.05;
 				}
 
 				if(isDefined(other.progressbackground))

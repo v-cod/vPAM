@@ -2,6 +2,32 @@
 
 vPAM is continuing the legacy of the most popular competetive server mod for Call of Duty (2003). This project aims to be a more central hub to collect ideas and changes surrounding competetive gameplay.
 
+## Building
+
+Build the default vPAM:
+```sh
+make # or make z_svr_vpam.pk3
+```
+
+Build the WRS (EURO) mod:
+```sh
+make z_svr_wrs.pk3
+```
+
+## Running locally
+
+Note: This will use and clean the `$HOME/.callofduty` directory.
+
+A local server can be run if the server binaries are available. With the `cod_lnxded` located at `/srv/cod/cod_lnxded` use the following:
+```
+make BIN_DIR=/srv/cod ARGS='+g_gametype sd +set pam_mode match_aw' run
+```
+
+Or for WRS:
+```
+make BIN_DIR=/srv/cod ARGS='+g_gametype sd +set pam_mode match_aw' MOD=wrs run
+```
+
 ## History
 
 PAM was first conceived by Michael Berkowitz (GaretJax) and last released version [1.08](https://web.archive.org/web/20060205201311/http://garetgg.com/xoops/modules/mydownloads/) in 2005. reissue_/zyquist built his 1.11 (2015) rPAM version supposedly on a 1.09 ClanBase and 1.10 CyberGamer version.
@@ -24,7 +50,7 @@ Punkbuster (guides): https://web.archive.org/web/20130217023131/http://www.evenb
 Get client values from server: `/rcon pb_sv_cvarval fs_homepath`
 Get server values from client: `/rcon pb_cvarval pam_mode`
 
-## Cvars
+## Handy CVARS for debuggin
 
 `arch`: architecture (?)
 `fs_homepath`/`fs_basepath`: paths to game files.
