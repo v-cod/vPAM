@@ -1279,7 +1279,7 @@ respawn()
 	if(!isDefined(self.pers["weapon"]))
 		return;
 
-	self endon("end_respawn");
+	self endon("spawned");
 
 	if(getCvarInt("scr_forcerespawn") > 0)
 	{
@@ -1298,7 +1298,7 @@ respawn()
 
 waitForceRespawnTime()
 {
-	self endon("end_respawn");
+	self endon("spawned");
 	self endon("respawn");
 
 	wait getCvarInt("scr_forcerespawn");
@@ -1307,7 +1307,7 @@ waitForceRespawnTime()
 
 waitRespawnButton()
 {
-	self endon("end_respawn");
+	self endon("spawned");
 	self endon("respawn");
 
 	wait 0; // Required or the "respawn" notify could happen before it's waittill has begun
@@ -1321,7 +1321,7 @@ waitRespawnButton()
 	self.respawntext setText(&"Press [{+melee}] to respawn");
 
 	thread removeRespawnText();
-	thread waitRemoveRespawnText("end_respawn");
+	thread waitRemoveRespawnText("spawned");
 	thread waitRemoveRespawnText("respawn");
 
 	while(self meleeButtonPressed() != true)
