@@ -82,8 +82,9 @@ start()
 			factor = speed_limit_sq / speed_sq * 0.9;
 			factor *= factor;
 
-			ups = distance((frame[i][0], frame[i][1], 0), (frame_new[0], frame_new[1], 0)) / TF;
-			iPrintLn(level._prefix + "^1SPEEDING ^7(" + (int)(ups) + " u/s): " + self.name);
+			// ups = distance((frame[i][0], frame[i][1], 0), (frame_new[0], frame_new[1], 0)) / TF;
+			// self iPrintLn(level._prefix + "^1SPEEDING ^7(" + (int)(ups) + " u/s): ");
+			self iPrintLn(level._prefix + "^1SPEEDING");
 			self thread _slow_down(factor, TF);
 		}
 
