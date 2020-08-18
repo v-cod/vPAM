@@ -2176,11 +2176,11 @@ updateTeamStatus()
 	if(level.exist["axis"])
 		level.didexist["axis"] = true;
 
-/**/if(game["_hud_alive"]) {	
+/**/if (level.p_readying || !game["matchstarted"]) {
+/**/	return;
+/**/} else if(game["_hud_alive"]) {	
 /**/	hud\alive::update();
 /**/}
-/**/if (level.p_readying || !game["matchstarted"])
-/**/	return;
 
 	if(level.roundended)
 		return;

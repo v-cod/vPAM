@@ -23,7 +23,7 @@ stop_readying()
 	_hud_readying_destroy();
 	_hud_readying_count_destroy();
 
-	iPrintLn(level._prefix + "All players are ^2ready^7. Starting match.");
+	iPrintLn(level._prefix + "All players are ^3ready^7. Starting match.");
 
 	if (game["roundsplayed"] == 0) {
 		announcement(&"SD_MATCHSTARTING");
@@ -42,26 +42,82 @@ update()
 		return;
 	}
 
-	wait 0; // Wait for possible disconnect of player.
+	// Wait for possible disconnect of player.
+	wait 0;
 
 	n = 0;
+	players_to_ready = [];
 
 	players = getEntArray("player", "classname");
-	for(i = 0; i < players.size; i++) {
-		n += players[i].p_ready;
+	for (i = 0; i < players.size; i++) {
+		if (players[i].p_ready) {
+			n++;
+		} else {
+			players_to_ready[players_to_ready.size] = players[i];
+		}
 	}
 
-	// level.p_readying_count_3 setValue(players.size - n);
-	level._hud_ready_players setValue(players.size - n);
-	// level._hud_ready_players_total setValue();
+	level._hud_ready_players[1] setValue(n);
+	level._hud_ready_players[3] setValue(players.size - n);
 
-	 if (n == players.size) {
+	if (n == players.size) {
+		level notify("_readying_inform");
+
 		if (players.size < 2) {
 			iPrintLn(level._prefix + "^1At least 2 players needed.");
 			return;
 		}
 
 		thread stop_readying();
+	} else if (n / (float)players.size > 0.75) {
+		level thread inform(players_to_ready, players.size);
+	}
+}
+
+inform(players_to_ready, players_total)
+{
+	level notify("_readying_inform");
+	level endon("_readying_inform");
+
+	for (i = 0; i < players_to_ready.size; i++) {
+		players_to_ready[i] thread flash_star_monitor();
+	}
+
+	while (true) {
+		if (players_to_ready.size == 1) {
+			players_to_ready[0] iPrintLnBold("^1ALL PLAYERS HAVE READIED EXCEPT YOU");
+		} else {
+			for (i = 0; i < players_to_ready.size; i++) {
+				players_to_ready[i] iPrintLnBold("Please ^3ready ^7up for the match to start.");
+			}
+		}
+
+		wait 10;
+	}
+}
+
+flash_star_monitor()
+{
+	level endon("_readying_inform");
+
+	while (!self.p_ready) {
+		self thread flash_star();
+
+		wait 0.25;
+	}
+}
+flash_star()
+{
+	alpha = self._hud_readying_star.alpha;
+
+	if (isDefined(self._hud_readying_star) && self._hud_readying_star.color == (1, 0, 0)) {
+		self._hud_readying_star.alpha = 0;
+	}
+
+	wait 0.1;
+
+	if (isDefined(self._hud_readying_star) && self._hud_readying_star.color == (1, 0, 0)) {
+		self._hud_readying_star.alpha = alpha;
 	}
 }
 
@@ -79,13 +135,7 @@ monitor_player()
 	self thread _player_information();
 	icon::set();
 
-	readyhud = newClientHudElem(self);
-	readyhud.x = 320;
-	readyhud.y = 384;
-	readyhud.alignX = "center";
-	readyhud.alignY = "middle";
-	readyhud.fontScale = 1.5;
-	readyhud setText(game["_ISTR_PRESS_USE_TO_READY"]);
+	self _hud_client_create();
 
 	update();
 
@@ -103,18 +153,21 @@ monitor_player()
 		self.p_ready = !self.p_ready;
 
 		if (self.p_ready) {
-			iprintln(level._prefix + self.name + "^7 is ^2ready");
+			iPrintLn(level._prefix + self.name + "^7 is ^3ready");
 
-			// // Change players hud to indicate player not ready
-			readyhud.fontScale = 0.7;
-			readyhud setText(game["_ISTR_PRESS_USE_TO_UNDO_READY"]);
-			
+			// Change players hud to indicate player ready
+			self._hud_readying_star.color = (1, 1, 1);
+			self._hud_readying_star.alpha = 0.6;
+			self._hud_readying_text.alpha = 0;
+			self._hud_readying_star_text setText(&"READY");
 		} else {
-			iprintln(level._prefix + self.name + "^7 is ^1not ready");
+			iPrintLn(level._prefix + self.name + "^7 is ^1not ready");
 
-			// // Change players hud to indicate player not ready
-			readyhud.fontScale = 1.5;
-			readyhud setText(game["_ISTR_PRESS_USE_TO_READY"]);
+			// Change players hud to indicate player not ready
+			self._hud_readying_star.color = (1, 0, 0);
+			self._hud_readying_star.alpha = 0.3;
+			self._hud_readying_text.alpha = 1;
+			self._hud_readying_star_text setText(&"NOT READY");
 		}
 
 		icon::set(); // This sets status/head icon.
@@ -129,13 +182,10 @@ monitor_player()
 			break;
 		}
 
-		wait .5; // Prevent spamming.
+		wait 1; // Prevent spamming.
 	}
 
-	if(isdefined(readyhud))
-		readyhud destroy();
-	if(isdefined(status))
-		status destroy();
+	self _hud_client_destroy();
 }
 
 _player_information()
@@ -197,7 +247,7 @@ _hud_readying_create()
 	level.p_hud_readying.alignX = "center";
 	level.p_hud_readying.alignY = "middle";
 	level.p_hud_readying.font = "bigfixed";
-	level.p_hud_readying.color = (1, 0, 0);
+	level.p_hud_readying.color = (1, 1, 0);
 	level.p_hud_readying setText(game["_ISTR_READYING"]);
 }
 
@@ -213,18 +263,102 @@ _hud_readying_count_create()
 	if (isDefined(level._hud_ready_players)) {
 		return;
 	}
-	
-	level._hud_ready_players = newHudElem();
-	level._hud_ready_players.alpha = 0;
-	level._hud_ready_players.x = 320;
-	level._hud_ready_players.y = 352;
-	level._hud_ready_players.alignX = "center";
-	level._hud_ready_players.fontScale = 1.3;
-	level._hud_ready_players.label = game["_ISTR_WAITING_FOR_PLAYERS"];
+
+	level._hud_ready_players = [];
+
+	level._hud_ready_players[0] = newHudElem();
+	level._hud_ready_players[0].x = 450;
+	level._hud_ready_players[0].y = 466;
+	level._hud_ready_players[0].alignX = "center";
+	level._hud_ready_players[0].alignY = "middle";
+	level._hud_ready_players[0].alpha = .33;
+	level._hud_ready_players[0].sort = -1;
+	level._hud_ready_players[0] setShader("gfx/hud/headicon@re_objcarrier.tga", 24, 24);
+
+	level._hud_ready_players[1] = newHudElem();
+	level._hud_ready_players[1].x = level._hud_ready_players[0].x;
+	level._hud_ready_players[1].y = level._hud_ready_players[0].y - 1;
+	level._hud_ready_players[1].alignX = "center";
+	level._hud_ready_players[1].alignY = "middle";
+	level._hud_ready_players[1].fontScale = 0.9;
+	level._hud_ready_players[1] setValue(0);
+
+	level._hud_ready_players[2] = newHudElem();
+	level._hud_ready_players[2].x = 450 + 20;
+	level._hud_ready_players[2].y = 466;
+	level._hud_ready_players[2].alignX = "center";
+	level._hud_ready_players[2].alignY = "middle";
+	level._hud_ready_players[2].alpha = .33;
+	level._hud_ready_players[2].sort = -1;
+	level._hud_ready_players[2].color = (1, 0, 0);
+	level._hud_ready_players[2] setShader("gfx/hud/headicon@re_objcarrier.tga", 24, 24);
+
+	level._hud_ready_players[3] = newHudElem();
+	level._hud_ready_players[3].x = level._hud_ready_players[2].x;
+	level._hud_ready_players[3].y = level._hud_ready_players[2].y - 1;
+	level._hud_ready_players[3].alignX = "center";
+	level._hud_ready_players[3].alignY = "middle";
+	level._hud_ready_players[3].fontScale = 0.9;
+	level._hud_ready_players[3] setValue(0);
 }
 _hud_readying_count_destroy()
 {
 	if (isDefined(level._hud_ready_players)) {
-		level._hud_ready_players destroy();
+		level._hud_ready_players[0] destroy();
+		level._hud_ready_players[1] destroy();
+		level._hud_ready_players[2] destroy();
+		level._hud_ready_players[3] destroy();
+	}
+}
+
+_hud_client_create()
+{
+	if (isDefined(self._hud_readying_text)) {
+		return;
+	}
+
+	self._hud_readying_text = newClientHudElem(self);
+	self._hud_readying_text.archived = false;
+	self._hud_readying_text.x = 320;
+	self._hud_readying_text.y = 88;
+	self._hud_readying_text.alignX = "center";
+	self._hud_readying_text.alignY = "middle";
+	self._hud_readying_text setText(game["_ISTR_PRESS_USE_TO_READY"]);
+
+	self._hud_readying_star = newClientHudElem(self);
+	self._hud_readying_star.archived = false;
+	self._hud_readying_star.x = 119;
+	self._hud_readying_star.y = 400;
+	self._hud_readying_star.alignX = "center";
+	self._hud_readying_star.alignY = "middle";
+	self._hud_readying_star.alpha = 0.3;
+	self._hud_readying_star.sort = -1;
+	self._hud_readying_star.color = (1, 0, 0);
+	self._hud_readying_star setShader("gfx/hud/headicon@re_objcarrier.tga", 48, 48);
+
+	self._hud_readying_star_text = newClientHudElem(self);
+	self._hud_readying_star_text.archived = false;
+	self._hud_readying_star_text.x = 119;
+	self._hud_readying_star_text.y = 396;
+	self._hud_readying_star_text.alignX = "center";
+	self._hud_readying_star_text.alignY = "middle";
+	self._hud_readying_star_text.fontScale = 0.6;
+	self._hud_readying_star_text.alpha = 0.8;
+	self._hud_readying_star_text.sort = 0;
+	self._hud_readying_star_text setText(&"NOT READY");
+}
+
+_hud_client_destroy()
+{
+	if (isDefined(self._hud_readying_text)) {
+		self._hud_readying_text destroy();
+	}
+
+	if (isDefined(self._hud_readying_star)) {
+		self._hud_readying_star destroy();
+	}
+
+	if (isDefined(self._hud_readying_star_text)) {
+		self._hud_readying_star_text destroy();
 	}
 }

@@ -133,20 +133,17 @@ main()
 		setClientNameMode("auto_change");
 	}
 
-	if (game["_hud_alive"]) {
-		hud\alive::create();
-	}
-
 	// Ready up phase before match start.
 	if (!game["matchstarted"] && level.p_ready) {
 		maps\mp\gametypes\_pam_readyup::start_readying();
+	// Otherwise, e.g. during match, show alive players if enabled.
+	} else if (game["_hud_alive"]) {
+		hud\alive::create();
 	}
 
 	if(!getCvarInt("p_allow_mg42")) {
 		maps\mp\gametypes\_teams::deletePlacedEntity("misc_mg42");
 	}
-
-	// thread hud\scoreboard::show(undefined, undefined);
 }
 
 _precache()
@@ -182,14 +179,13 @@ _precache()
 	game["_ISTR_STARTING"] = &"STARTING";
 	precacheString(game["_ISTR_STARTING"]);
 
-	game["_ISTR_PRESS_USE_TO_READY"] = &"Press [{+activate}] to ^2ready ^7up";
+	game["_ISTR_PRESS_USE_TO_READY"] = &"Press [{+activate}] to ^3ready ^7up";
 	precacheString(game["_ISTR_PRESS_USE_TO_READY"]);
 
-	game["_ISTR_PRESS_USE_TO_UNDO_READY"] = &"Press [{+activate}] to ^1undo ^7ready up";
-	precacheString(game["_ISTR_PRESS_USE_TO_UNDO_READY"]);
+	precacheString(&"READY");
+	precacheString(&"NOT READY");
 
-	game["_ISTR_WAITING_FOR_PLAYERS"] = &"Waiting on players: ^1";
-	precacheString(game["_ISTR_WAITING_FOR_PLAYERS"]);
+	precacheShader("gfx/hud/headicon@re_objcarrier.tga");
 }
 
 _watch_pam_mode()
