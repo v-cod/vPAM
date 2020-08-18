@@ -49,7 +49,7 @@ main()
 	level._anti_speeding = getCvarFloat("p_anti_speeding");
 
 	level._afk_to_spec = false;
-	level._fence = true;
+	level._fence = false;
 
 	level._sprint = false;
 	level._sprint_time = 0;
