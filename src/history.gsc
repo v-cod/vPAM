@@ -9,8 +9,6 @@
 assign()
 {
 	if (isDefined(game["_history_team_1"]) && isDefined(game["_history_team_2"])) {
-		iPrintLn("assigned already: team_1: " + game["_history_team_1"]);
-		iPrintLn("assigned already: team_2: " + game["_history_team_2"]);
 		return;
 	}
 
@@ -41,9 +39,6 @@ assign()
 			iPrintLn(level._prefix + "^1ERROR RETRIEVING PREVIOUS MAP RESULTS");
 		}
 	}
-
-	iPrintLn("assign: team_1: " + game["_history_team_1"]);
-	iPrintLn("assign: team_2: " + game["_history_team_2"]);
 
 	game["_history_data"] = data_from_cvars();
 }
@@ -78,8 +73,6 @@ push()
 	} else {
 		setCvar("p_history_maps", maps + " " + getCvar("mapname"));
 	}
-
-	iPrintLn("pushed!");
 }
 
 swap()
