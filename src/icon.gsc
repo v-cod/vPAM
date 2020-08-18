@@ -6,12 +6,14 @@ set()
 		self.headiconteam = "none";
 	}
 
-	if (self.sessionstate != "playing") {
+	if (self.sessionstate != "playing" && self.sessionteam != "spectator") {
 		self.statusicon = "gfx/hud/hud@status_dead.tga";
 		self.headicon = "";
 	} else {
 		self.statusicon = "";
-		self.headicon = game["headicon_" + self.pers["team"]];
+		if (self.pers["team"] == "allies" || self.pers["team"] == "axis") {
+			self.headicon = game["headicon_" + self.pers["team"]];
+		}
 	}
 
 	// Overwrite ready players with star icons.
