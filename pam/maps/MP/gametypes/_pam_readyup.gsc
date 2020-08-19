@@ -165,7 +165,7 @@ monitor_player()
 
 			// Change players hud to indicate player not ready
 			self._hud_readying_star.color = (1, 0, 0);
-			self._hud_readying_star.alpha = 0.3;
+			self._hud_readying_star.alpha = 0.15;
 			self._hud_readying_text.alpha = 1;
 			self._hud_readying_star_text setText(&"NOT READY");
 		}
@@ -331,7 +331,7 @@ _hud_client_create()
 	self._hud_readying_star.y = 400;
 	self._hud_readying_star.alignX = "center";
 	self._hud_readying_star.alignY = "middle";
-	self._hud_readying_star.alpha = 0.3;
+	self._hud_readying_star.alpha = 0.15;
 	self._hud_readying_star.sort = -1;
 	self._hud_readying_star.color = (1, 0, 0);
 	self._hud_readying_star setShader("gfx/hud/headicon@re_objcarrier.tga", 48, 48);
