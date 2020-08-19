@@ -11,6 +11,7 @@ main()
 		if (!isDefined(mode)) {
 			ruleset = "pub";
 			setCvar("pam_mode", ruleset);
+			mode = _find_mode(ruleset);
 		}
 
 		// Set cvars according to the ruleset.
