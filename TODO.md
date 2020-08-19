@@ -1,6 +1,8 @@
 ## Must
 
 - Help command to show variables available.
+- Show damage done in round end (or after death) in AW.
+- Show round scoreboard during strat.
 
 ## Should
 
