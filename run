@@ -8,7 +8,7 @@ mkdir --parents "$HOMEPATH/main"
 touch "$HOMEPATH/main/console_mp_server.log" "$HOMEPATH/main/games_mp.log"
 
 # Mix output of logs with server output. Console log outputs extra errors.
-tail --follow "$HOMEPATH/main/console_mp_server.log" | sed -n '/\*\*\*\*\*/,/\*\*\*\*\*/p' &
+tail --follow "$HOMEPATH/main/console_mp_server.log" | sed -nE '/^[\*]+/,/^[\*]+/p' &
 tail --follow "$HOMEPATH/main/games_mp.log" &
 
 "$BINDIR/cod_lnxded" +set fs_basepath "$basepath" +set fs_homepath "$HOMEPATH" "$@"
