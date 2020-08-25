@@ -50,7 +50,7 @@ update()
 
 	players = getEntArray("player", "classname");
 	for (i = 0; i < players.size; i++) {
-		if (players[i].p_ready) {
+		if (isDefined(players[i].p_ready) && players[i].p_ready) {
 			n++;
 		} else {
 			players_to_ready[players_to_ready.size] = players[i];
@@ -100,7 +100,7 @@ flash_star_monitor()
 {
 	level endon("_readying_inform");
 
-	while (!self.p_ready) {
+	while (isDefined(self.p_ready) && !self.p_ready) {
 		self thread flash_star();
 
 		wait 0.25;
