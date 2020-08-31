@@ -6,12 +6,14 @@ vPAM is continuing the legacy of the most popular competetive server mod for Cal
 
 Build the default vPAM:
 ```sh
-make # or make z_svr_vpam.pk3
+make
+# or explicitly
+make MOD=vpam
 ```
 
-Build the WRS (EURO) mod:
+To build the WRS (EURO) mod:
 ```sh
-make z_svr_wrs.pk3
+make MOD=wrs
 ```
 
 ## Running locally
@@ -50,7 +52,7 @@ Punkbuster (guides): https://web.archive.org/web/20130217023131/http://www.evenb
 Get client values from server: `/rcon pb_sv_cvarval fs_homepath`
 Get server values from client: `/rcon pb_cvarval pam_mode`
 
-## Handy CVARS for debuggin
+## Handy CVARS for debugging
 
 `arch`: architecture (?)
 `fs_homepath`/`fs_basepath`: paths to game files.

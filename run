@@ -1,17 +1,24 @@
 #!/bin/sh
 
 HOMEPATH="${HOMEPATH:-$HOME/.callofduty}"
-BINDIR="${BINDIR:-../cod/out}"
+BINDIR="${BINDIR:-$HOME/opt/cod}"
 basepath="$BINDIR"
 
-mkdir --parents "$HOMEPATH/main"
-touch "$HOMEPATH/main/console_mp_server.log" "$HOMEPATH/main/games_mp.log"
+binary_name='cod_lnxded'
+gamepath="$HOMEPATH/main"
+if test "$UO" -gt 0 2> /dev/null ; then
+	binary_name='coduo_lnxded'
+	gamepath="$HOMEPATH/uo"
+fi
+
+mkdir --parents "$gamepath"
+touch "$gamepath/console_mp_server.log" "$gamepath/games_mp.log"
 
 # Mix output of logs with server output. Console log outputs extra errors.
-tail --follow "$HOMEPATH/main/console_mp_server.log" | sed -nE '/^[\*]+/,/^[\*]+/p' &
-tail --follow "$HOMEPATH/main/games_mp.log" &
+tail --follow "$gamepath/console_mp_server.log" | sed -nE '/^[\*]+/,/^[\*]+/p' &
+tail --follow "$gamepath/games_mp.log" &
 
-"$BINDIR/cod_lnxded" +set fs_basepath "$basepath" +set fs_homepath "$HOMEPATH" "$@"
+"$BINDIR/$binary_name" +set fs_basepath "$basepath" +set fs_homepath "$HOMEPATH" "$@"
 
 # Echo breaks sometimes after server segfault.
 stty echo

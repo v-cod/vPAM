@@ -1,16 +1,23 @@
 #!/bin/sh
 
-BASEPATH="${BASEPATH:-$HOME/.wine/drive_c/Program Files (x86)/Call of Duty Server}"
+BASEPATH="${BASEPATH:-$HOME/opt/cod-windows}"
 
-touch "$BASEPATH/main/console_mp.log" "$BASEPATH/main/games_mp.log"
+binary_name='CoDMP.exe'
+mainpath="$BASEPATH/main"
+if test "$UO" -gt 0 2> /dev/null ; then
+	binary_name='CoDUOMP.exe'
+	mainpath="$BASEPATH/uo"
+fi
+
+touch "$mainpath/console_mp.log" "$mainpath/games_mp.log"
 
 # Mix output of logs with server output. Console log outputs extra errors.
-tail --follow "$BASEPATH/main/console_mp.log" &
-tail --follow "$BASEPATH/main/games_mp.log" &
+tail --follow "$mainpath/console_mp.log" &
+tail --follow "$mainpath/games_mp.log" &
 
 cd "$BASEPATH"
 
-WINEDEBUG=fixme-all MESA_EXTENSION_MAX_YEAR=2004 __GL_ExtensionStringVersion=17700 wine "CoDMP.exe" "$@"
+WINEDEBUG=fixme-all MESA_EXTENSION_MAX_YEAR=2004 __GL_ExtensionStringVersion=17700 wine "$binary_name" "$@"
 
 # Kill backgrounded processes from this session (tail).
 jobs -p | xargs kill
