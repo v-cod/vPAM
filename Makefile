@@ -20,19 +20,11 @@ main_dirname = uo
 endif
 
 SRC_FILES = $(shell find src/ -type f)
-PAM_FILES = $(shell find pam/ -type f)
-WRS_FILES = $(shell find wrs/ -type f)
+MOD_FILES = $(shell find $(MOD)/ -type f)
 
-.PHONY: build
-build: $(outfile)
-
-z_svr_vpam.pk3: $(SRC_FILES) $(PAM_FILES)
-	cd src/ && zip -r ../$@ $(SRC_FILES:src/%=%)
-	cd pam/ && zip -r ../$@ $(PAM_FILES:pam/%=%)
-
-z_svr_wrs.pk3: $(SRC_FILES) $(WRS_FILES)
-	cd src/ && zip -r ../$@ $(SRC_FILES:src/%=%)
-	cd wrs/ && zip -r ../$@ $(WRS_FILES:wrs/%=%)
+$(outfile): $(SRC_FILES) $(MOD_FILES)
+	cd src/    && zip -r ../$@ $(SRC_FILES:src/%=%)
+	cd $(MOD)/ && zip -r ../$@ $(MOD_FILES:$(MOD)/%=%)
 
 .PHONY: clean
 clean:
